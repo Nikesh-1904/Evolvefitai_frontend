@@ -26,7 +26,7 @@ export function AuthProvider({ children }) {
     async function checkAuth() {
       if (token) {
         try {
-          const response = await axios.get(`${API_URL}/users/me`);
+          const response = await axios.get(`${API_URL}/auth/me`);
           setUser(response.data);
         } catch (error) {
           console.error('Auth check failed:', error);
@@ -45,66 +45,63 @@ export function AuthProvider({ children }) {
       formData.append('username', email);
       formData.append('password', password);
 
-      const response = await axios.post(`${API_URL}/auth/login`, formData);
+      const response = await axios.post(`${API_URL}/auth/jwt/login`, formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+      
       const { access_token } = response.data;
-
       localStorage.setItem('token', access_token);
       setToken(access_token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       
-      const userResponse = await axios.get(`${API_URL}/users/me`);
+      const userResponse = await axios.get(`${API_URL}/auth/me`);
       setUser(userResponse.data);
       
       return { success: true };
     } catch (error) {
+      console.error("Login failed:", error);
       return { 
         success: false, 
-        error: error.response?.data?.detail || 'Login failed' 
+        error: error.response?.data?.detail || "Login failed" 
       };
     }
   };
 
-  const register = async (email, password, fullName) => {
+  const register = async (email, password, userData = {}) => {
     try {
-      await axios.post(`${API_URL}/auth/register`, {
+      const response = await axios.post(`${API_URL}/auth/register`, {
         email,
         password,
-        full_name: fullName,
-        username: email.split('@')[0]
+        ...userData
       });
       
+      // Auto-login after successful registration
       return await login(email, password);
     } catch (error) {
+      console.error("Registration failed:", error);
       return { 
         success: false, 
-        error: error.response?.data?.detail || 'Registration failed' 
+        error: error.response?.data?.detail || "Registration failed" 
       };
     }
   };
 
   const loginWithGoogle = async () => {
     try {
+      // Get Google authorization URL from backend
       const response = await axios.get(`${API_URL}/auth/google/authorize`);
       const { authorization_url } = response.data;
+      
+      // Redirect to Google OAuth
       window.location.href = authorization_url;
     } catch (error) {
-      console.error("Failed to get Google auth URL", error);
-    }
-  };
-  
-  const handleOAuthCallback = async (accessToken) => {
-    try {
-      localStorage.setItem('token', accessToken);
-      setToken(accessToken);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-
-      const userResponse = await axios.get(`${API_URL}/users/me`);
-      setUser(userResponse.data);
-      
-      return { success: true };
-    } catch (error) {
-      console.error("Failed to handle OAuth callback:", error);
-      logout();
-      return { success: false, error: "Failed to fetch user data after login." };
+      console.error("Google OAuth initiation failed:", error);
+      return { 
+        success: false, 
+        error: "Failed to start Google authentication" 
+      };
     }
   };
 
@@ -117,13 +114,35 @@ export function AuthProvider({ children }) {
 
   const updateProfile = async (profileData) => {
     try {
-      const response = await axios.patch(`${API_URL}/users/me`, profileData);
+      const response = await axios.patch(`${API_URL}/auth/me`, profileData);
       setUser(response.data);
-      return { success: true };
+      return { success: true, data: response.data };
     } catch (error) {
+      console.error("Profile update failed:", error);
       return { 
         success: false, 
-        error: error.response?.data?.detail || 'Profile update failed' 
+        error: error.response?.data?.detail || "Profile update failed" 
+      };
+    }
+  };
+
+  // Handle OAuth callback token from URL hash
+  const handleOAuthCallback = async (accessToken) => {
+    try {
+      localStorage.setItem('token', accessToken);
+      setToken(accessToken);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+      
+      const userResponse = await axios.get(`${API_URL}/auth/me`);
+      setUser(userResponse.data);
+      
+      return { success: true };
+    } catch (error) {
+      console.error("OAuth callback failed:", error);
+      logout();
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || "Failed to complete OAuth login" 
       };
     }
   };
@@ -137,12 +156,8 @@ export function AuthProvider({ children }) {
     logout,
     updateProfile,
     token,
-    handleOAuthCallback // Add the new function here
+    handleOAuthCallback
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
