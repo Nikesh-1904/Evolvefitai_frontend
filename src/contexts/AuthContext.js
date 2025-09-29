@@ -28,7 +28,7 @@ export function AuthProvider({ children }) {
     async function checkAuth() {
       if (token) {
         try {
-          const response = await axios.get(`${API_URL}/auth/me`);
+          const response = await axios.get(`${API_URL}/users/me`); // Corrected to use the /users/me endpoint
           setUser(response.data);
         } catch (error) {
           console.error('Auth check failed:', error);
@@ -47,14 +47,15 @@ export function AuthProvider({ children }) {
       formData.append('username', email);
       formData.append('password', password);
 
-      const response = await axios.post(`${API_URL}/auth/jwt/login`, formData);
+      // Corrected to use the /auth/login endpoint based on our earlier fix
+      const response = await axios.post(`${API_URL}/auth/login`, formData);
       const { access_token } = response.data;
 
       localStorage.setItem('token', access_token);
       setToken(access_token);
       
       // Get user data
-      const userResponse = await axios.get(`${API_URL}/auth/me`);
+      const userResponse = await axios.get(`${API_URL}/users/me`); // Corrected to use the /users/me endpoint
       setUser(userResponse.data);
       
       return { success: true };
@@ -78,15 +79,31 @@ export function AuthProvider({ children }) {
       // Auto login after registration
       return await login(email, password);
     } catch (error) {
+      // Provide more specific error feedback if available
+      const errorDetail = error.response?.data?.detail;
+      if (typeof errorDetail === 'string' && errorDetail.includes('REGISTER_USER_ALREADY_EXISTS')) {
+          return { success: false, error: 'A user with this email already exists.' };
+      }
       return { 
         success: false, 
-        error: error.response?.data?.detail || 'Registration failed' 
+        error: 'Registration failed. Please try again.' 
       };
     }
   };
 
-  const loginWithGoogle = () => {
-    window.location.href = `${API_URL}/auth/google/authorize`;
+  // --- THIS IS THE CORRECTED FUNCTION ---
+  const loginWithGoogle = async () => {
+    try {
+      // Step 1: Fetch the authorization URL from the backend
+      const response = await axios.get(`${API_URL}/auth/google/authorize`);
+      const { authorization_url } = response.data;
+
+      // Step 2: Redirect the user's browser to the URL provided by the backend
+      window.location.href = authorization_url;
+    } catch (error) {
+      console.error("Failed to initiate Google login:", error);
+      // Optionally, you can set an error state here to show a message to the user
+    }
   };
 
   const logout = () => {
@@ -98,7 +115,8 @@ export function AuthProvider({ children }) {
 
   const updateProfile = async (profileData) => {
     try {
-      const response = await axios.patch(`${API_URL}/auth/me`, profileData);
+      // Corrected to use the /users/me endpoint
+      const response = await axios.patch(`${API_URL}/users/me`, profileData);
       setUser(response.data);
       return { success: true };
     } catch (error) {
