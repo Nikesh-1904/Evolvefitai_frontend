@@ -1,4 +1,4 @@
-// src/services/apiService.js - Add workout session methods
+// src/services/apiService.js - Fixed API endpoint
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
 
@@ -31,9 +31,9 @@ class ApiService {
     return response.json();
   }
 
-  // Workout generation
+  // Workout generation - FIXED ENDPOINT
   async generateWorkout(preferences) {
-    return this.request('/ai/generate-workout', {
+    return this.request('/ai/workouts/generate', {  // Changed from '/ai/generate-workout'
       method: 'POST',
       body: JSON.stringify(preferences),
     });
@@ -41,7 +41,7 @@ class ApiService {
 
   // Exercise details
   async getExerciseDetails(exerciseName) {
-    return this.request(`/workouts/exercises/${encodeURIComponent(exerciseName)}`);
+    return this.request(`/ai/exercises/search?name=${encodeURIComponent(exerciseName)}`);
   }
 
   // Workout plans
@@ -56,7 +56,7 @@ class ApiService {
     return this.request('/workouts/plans');
   }
 
-  // Workout sessions - NEW METHODS
+  // Workout sessions
   async saveWorkoutSession(sessionData) {
     return this.request('/workouts/sessions', {
       method: 'POST',
@@ -95,11 +95,11 @@ class ApiService {
 
   // Exercise feedback
   async submitExerciseFeedback(exerciseId, feedback) {
-    return this.request('/workouts/feedback', {
+    return this.request('/ai/tips/interact', {
       method: 'POST',
       body: JSON.stringify({
-        exercise_id: exerciseId,
-        feedback_type: feedback, // 'like' or 'dislike'
+        tip_id: exerciseId,
+        interaction_type: feedback, // 'like' or 'dislike'
       }),
     });
   }
