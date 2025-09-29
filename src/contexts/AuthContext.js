@@ -14,7 +14,6 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
 
-  // Configure axios defaults
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -23,12 +22,11 @@ export function AuthProvider({ children }) {
     }
   }, [token]);
 
-  // Check if user is logged in on app start
   useEffect(() => {
     async function checkAuth() {
       if (token) {
         try {
-          const response = await axios.get(`${API_URL}/users/me`); // Corrected to use the /users/me endpoint
+          const response = await axios.get(`${API_URL}/users/me`);
           setUser(response.data);
         } catch (error) {
           console.error('Auth check failed:', error);
@@ -47,15 +45,13 @@ export function AuthProvider({ children }) {
       formData.append('username', email);
       formData.append('password', password);
 
-      // Corrected to use the /auth/login endpoint based on our earlier fix
       const response = await axios.post(`${API_URL}/auth/login`, formData);
       const { access_token } = response.data;
 
       localStorage.setItem('token', access_token);
       setToken(access_token);
       
-      // Get user data
-      const userResponse = await axios.get(`${API_URL}/users/me`); // Corrected to use the /users/me endpoint
+      const userResponse = await axios.get(`${API_URL}/users/me`);
       setUser(userResponse.data);
       
       return { success: true };
@@ -76,33 +72,39 @@ export function AuthProvider({ children }) {
         username: email.split('@')[0]
       });
       
-      // Auto login after registration
       return await login(email, password);
     } catch (error) {
-      // Provide more specific error feedback if available
-      const errorDetail = error.response?.data?.detail;
-      if (typeof errorDetail === 'string' && errorDetail.includes('REGISTER_USER_ALREADY_EXISTS')) {
-          return { success: false, error: 'A user with this email already exists.' };
-      }
       return { 
         success: false, 
-        error: 'Registration failed. Please try again.' 
+        error: error.response?.data?.detail || 'Registration failed' 
       };
     }
   };
 
-  // --- THIS IS THE CORRECTED FUNCTION ---
   const loginWithGoogle = async () => {
     try {
-      // Step 1: Fetch the authorization URL from the backend
       const response = await axios.get(`${API_URL}/auth/google/authorize`);
       const { authorization_url } = response.data;
-
-      // Step 2: Redirect the user's browser to the URL provided by the backend
       window.location.href = authorization_url;
     } catch (error) {
-      console.error("Failed to initiate Google login:", error);
-      // Optionally, you can set an error state here to show a message to the user
+      console.error("Failed to get Google auth URL", error);
+    }
+  };
+  
+  const handleOAuthCallback = async (accessToken) => {
+    try {
+      localStorage.setItem('token', accessToken);
+      setToken(accessToken);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+
+      const userResponse = await axios.get(`${API_URL}/users/me`);
+      setUser(userResponse.data);
+      
+      return { success: true };
+    } catch (error) {
+      console.error("Failed to handle OAuth callback:", error);
+      logout();
+      return { success: false, error: "Failed to fetch user data after login." };
     }
   };
 
@@ -115,7 +117,6 @@ export function AuthProvider({ children }) {
 
   const updateProfile = async (profileData) => {
     try {
-      // Corrected to use the /users/me endpoint
       const response = await axios.patch(`${API_URL}/users/me`, profileData);
       setUser(response.data);
       return { success: true };
@@ -135,12 +136,13 @@ export function AuthProvider({ children }) {
     loginWithGoogle,
     logout,
     updateProfile,
-    token
+    token,
+    handleOAuthCallback // Add the new function here
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 }
