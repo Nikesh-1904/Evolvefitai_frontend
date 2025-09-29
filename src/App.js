@@ -1,16 +1,16 @@
+// src/App.js - Updated with WorkoutSession route
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-
 import Navbar from './components/Navbar';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import WorkoutGenerator from './pages/WorkoutGenerator';
 import WorkoutHistory from './pages/WorkoutHistory';
 import Profile from './pages/Profile';
-// --- 1. IMPORT THE NEW COMPONENT ---
+import WorkoutSession from './pages/WorkoutSession'; // Add this import
 import OAuthCallback from './pages/OAuthCallback';
 
 const theme = createTheme({
@@ -41,35 +41,58 @@ function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   
   if (loading) {
-    // You might want a better loading spinner here
-    return <div>Loading session...</div>;
+    return <div>Loading...</div>;
   }
   
-  return user ? children : <Navigate to="/login" />;
+  return user ? children : <Navigate to="/login" replace />;
 }
 
-// We need a wrapper for our routes so they can use the useAuth hook
-// which requires being inside the AuthProvider.
-function AppRoutes() {
+function AppContent() {
+  const { user } = useAuth();
+
   return (
     <div className="App">
+      {user && <Navbar />}
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        {/* --- 2. ADD THE NEW ROUTE --- */}
+        <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
         <Route path="/auth/callback" element={<OAuthCallback />} />
         <Route
-          path="/*"
+          path="/"
           element={
             <ProtectedRoute>
-              <Navbar />
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/generate-workout" element={<WorkoutGenerator />} />
-                <Route path="/workout-history" element={<WorkoutHistory />} />
-                <Route path="/profile" element={<Profile />} />
-                {/* Add a catch-all for any other protected routes */}
-                <Route path="*" element={<Navigate to="/" />} />
-              </Routes>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/generate-workout"
+          element={
+            <ProtectedRoute>
+              <WorkoutGenerator />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workout-session"
+          element={
+            <ProtectedRoute>
+              <WorkoutSession />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workout-history"
+          element={
+            <ProtectedRoute>
+              <WorkoutHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           }
         />
@@ -80,15 +103,14 @@ function AppRoutes() {
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Router>
-        {/* AuthProvider now correctly wraps the routes */}
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
-      </Router>
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Router>
+          <AppContent />
+        </Router>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 
