@@ -1,4 +1,4 @@
-// src/services/apiService.js - Fixed API endpoint
+// src/services/apiService.js
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
 
@@ -25,17 +25,23 @@ class ApiService {
     const response = await fetch(url, config);
     
     if (!response.ok) {
-      throw new Error(`API request failed: ${response.status}`);
+      const errorData = await response.json().catch(() => ({ detail: 'API request failed' }));
+      throw new Error(errorData.detail || `API request failed: ${response.status}`);
     }
     
-    return response.json();
+    // Handle cases where the response body might be empty
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.indexOf("application/json") !== -1) {
+      return response.json();
+    }
+    return {};
   }
 
-  // Workout generation - FIXED ENDPOINT
-  async generateWorkout(preferences) {
-    return this.request('/ai/workouts/generate', {  // Changed from '/ai/generate-workout'
+  // Workout generation
+  async generateWorkout(requestData) {
+    return this.request('/ai/workouts/generate', {
       method: 'POST',
-      body: JSON.stringify(preferences),
+      body: JSON.stringify(requestData),
     });
   }
 
@@ -56,41 +62,32 @@ class ApiService {
     return this.request('/workouts/plans');
   }
 
-  // Workout sessions
-  async saveWorkoutSession(sessionData) {
-    return this.request('/workouts/sessions', {
+  // Workout Logs (Sessions)
+  async logWorkout(logData) {
+    return this.request('/workouts/logs', {
       method: 'POST',
-      body: JSON.stringify({
-        workout_plan_id: sessionData.workout_plan?.id || null,
-        duration_minutes: sessionData.duration_minutes,
-        exercises_completed: sessionData.exercises_completed,
-        notes: sessionData.notes,
-        completed_sets: sessionData.completed_sets,
-        calories_burned: sessionData.estimated_calories || null,
-        difficulty_rating: sessionData.difficulty_rating || null,
-        workout_date: sessionData.completed_at || new Date().toISOString()
-      }),
+      body: JSON.stringify(logData),
     });
   }
 
-  async getWorkoutSessions() {
-    return this.request('/workouts/sessions');
+  async getWorkoutLogs(limit = 20) {
+    return this.request(`/workouts/logs?limit=${limit}`);
   }
 
-  async getWorkoutSession(sessionId) {
-    return this.request(`/workouts/sessions/${sessionId}`);
+  async getWorkoutLog(logId) {
+    return this.request(`/workouts/logs/${logId}`); // Assuming an endpoint like this exists or will be created
   }
 
   // User profile
   async updateUserProfile(profileData) {
-    return this.request('/auth/me', {
+    return this.request('/auth/users/me', {
       method: 'PATCH',
       body: JSON.stringify(profileData),
     });
   }
 
   async getUserProfile() {
-    return this.request('/auth/me');
+    return this.request('/auth/users/me');
   }
 
   // Exercise feedback
@@ -99,7 +96,7 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify({
         tip_id: exerciseId,
-        interaction_type: feedback, // 'like' or 'dislike'
+        interaction_type: feedback,
       }),
     });
   }
@@ -114,14 +111,14 @@ class ApiService {
 
   // Meal plans
   async generateMealPlan(preferences) {
-    return this.request('/ai/generate-meal-plan', {
+    return this.request('/ai/meal-plans/generate', { // Corrected endpoint based on convention
       method: 'POST',
       body: JSON.stringify(preferences),
     });
   }
 
   async getMealPlans() {
-    return this.request('/meals/plans');
+    return this.request('/meal-plans'); // Corrected endpoint based on convention
   }
 }
 

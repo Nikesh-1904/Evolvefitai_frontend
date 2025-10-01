@@ -1,5 +1,6 @@
-// src/pages/WorkoutSession.js
-import React, { useState, useEffect, useRef } from 'react';
+// src/pages/WorkoutSession.js - Reworked for data logging
+
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -7,7 +8,6 @@ import {
   CardContent,
   Button,
   Box,
-  LinearProgress,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -23,434 +23,247 @@ import {
   ListItemText,
   ListItemIcon,
   TextField,
-  Rating
+  InputAdornment
 } from '@mui/material';
 import {
-  PlayArrow,
-  Pause,
   SkipNext,
   SkipPrevious,
-  Stop,
-  Timer,
-  FitnessCenter,
-  RestaurantMenu,
   CheckCircle,
-  Cancel,
-  VolumeUp,
-  VolumeOff,
-  Add,
-  Remove,
+  FitnessCenter,
+  AddCircle,
+  Delete,
   Notes,
-  Star
+  Warning,
 } from '@mui/icons-material';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import apiService from '../services/apiService';
 
 const WorkoutSession = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const workoutPlan = location.state?.workoutPlan;
-  
-  // Workout state
+
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
-  const [currentSet, setCurrentSet] = useState(1);
-  const [isResting, setIsResting] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(0);
-  const [workoutStartTime] = useState(new Date());
-  const [completedSets, setCompletedSets] = useState({});
-  const [workoutComplete, setWorkoutComplete] = useState(false);
+  const [loggedData, setLoggedData] = useState({});
+  const [notes, setNotes] = useState('');
+  const [startTime] = useState(new Date());
+  const [error, setError] = useState('');
   const [showQuitDialog, setShowQuitDialog] = useState(false);
-  const [exerciseNotes, setExerciseNotes] = useState({});
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  
-  // Timer ref
-  const timerRef = useRef(null);
-  const audioRef = useRef(new Audio());
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!workoutPlan) {
       navigate('/generate-workout');
-      return;
+    } else {
+      // Pre-populate one set for each exercise to start
+      const initialData = {};
+      workoutPlan.exercises.forEach((exercise, index) => {
+        const reps = parseInt(String(exercise.reps).split('-')[0]) || 8;
+        initialData[index] = [{ reps: reps, weight: 0 }];
+      });
+      setLoggedData(initialData);
     }
   }, [workoutPlan, navigate]);
 
-  useEffect(() => {
-    if (timeRemaining > 0 && !isPaused) {
-      timerRef.current = setInterval(() => {
-        setTimeRemaining(prev => {
-          if (prev <= 1) {
-            handleTimerComplete();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    } else {
-      clearInterval(timerRef.current);
-    }
+  const handleSetChange = (exerciseIndex, setIndex, field, value) => {
+    const updatedSets = [...(loggedData[exerciseIndex] || [])];
+    if (!updatedSets[setIndex]) updatedSets[setIndex] = { reps: '', weight: '' };
+    updatedSets[setIndex][field] = value;
+    setLoggedData({ ...loggedData, [exerciseIndex]: updatedSets });
+  };
 
-    return () => clearInterval(timerRef.current);
-  }, [timeRemaining, isPaused]);
-
-  const playSound = (type = 'beep') => {
-    if (!soundEnabled) return;
+  const handleAddSet = (exerciseIndex) => {
+    const sets = loggedData[exerciseIndex] || [];
+    const previousSet = sets.length > 0 ? sets[sets.length - 1] : null;
+    const planExercise = workoutPlan.exercises[exerciseIndex];
     
-    // Create different sound frequencies for different events
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    switch(type) {
-      case 'start':
-        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-        break;
-      case 'rest':
-        oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
-        break;
-      case 'complete':
-        oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
-        break;
-      default:
-        oscillator.frequency.setValueAtTime(500, audioContext.currentTime);
-    }
-    
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.3);
+    const newSet = {
+      reps: previousSet ? previousSet.reps : (parseInt(String(planExercise.reps).split('-')[0]) || 8),
+      weight: previousSet ? previousSet.weight : 0,
+    };
+
+    setLoggedData({ ...loggedData, [exerciseIndex]: [...sets, newSet] });
   };
 
-  const handleTimerComplete = () => {
-    playSound(isResting ? 'start' : 'rest');
-    
-    if (isResting) {
-      // Rest period complete, start next set or exercise
-      setIsResting(false);
-      if (currentSet < getCurrentExercise().sets) {
-        setCurrentSet(prev => prev + 1);
-      } else {
-        // Move to next exercise
-        if (currentExerciseIndex < workoutPlan.exercises.length - 1) {
-          setCurrentExerciseIndex(prev => prev + 1);
-          setCurrentSet(1);
-        } else {
-          // Workout complete
-          completeWorkout();
-        }
-      }
-    } else {
-      // Exercise set complete, start rest period
-      markSetComplete();
-      if (currentSet < getCurrentExercise().sets) {
-        startRestPeriod();
-      } else if (currentExerciseIndex < workoutPlan.exercises.length - 1) {
-        startRestPeriod(120); // Longer rest between exercises
-      } else {
-        // Workout complete
-        completeWorkout();
-      }
-    }
+  const handleRemoveSet = (exerciseIndex, setIndex) => {
+    const updatedSets = [...(loggedData[exerciseIndex] || [])];
+    updatedSets.splice(setIndex, 1);
+    setLoggedData({ ...loggedData, [exerciseIndex]: updatedSets });
   };
 
-  const getCurrentExercise = () => {
-    return workoutPlan?.exercises[currentExerciseIndex] || {};
-  };
-
-  const startExercise = () => {
-    const exercise = getCurrentExercise();
-    const duration = exercise.duration_seconds || 30;
-    setTimeRemaining(duration);
-    playSound('start');
-  };
-
-  const startRestPeriod = (customDuration = null) => {
-    const restTime = customDuration || 60; // Default 60 seconds rest
-    setIsResting(true);
-    setTimeRemaining(restTime);
-    playSound('rest');
-  };
-
-  const markSetComplete = () => {
-    const exerciseId = `${currentExerciseIndex}-${currentSet}`;
-    setCompletedSets(prev => ({
-      ...prev,
-      [exerciseId]: {
-        completed: true,
-        timestamp: new Date(),
-        reps: getCurrentExercise().reps,
-        weight: getCurrentExercise().weight || null
-      }
-    }));
-  };
-
-  const completeWorkout = () => {
-    setWorkoutComplete(true);
-    playSound('complete');
-    logWorkoutSession();
-  };
-
-  const logWorkoutSession = async () => {
-    try {
-      const workoutData = {
-        workout_plan: workoutPlan,
-        duration_minutes: Math.round((new Date() - workoutStartTime) / (1000 * 60)),
-        exercises_completed: Object.keys(completedSets).length,
-        completed_sets: completedSets,
-        notes: exerciseNotes,
-        completed_at: new Date().toISOString()
-      };
-
-      // TODO: Call API to save workout session
-      console.log('Logging workout session:', workoutData);
-      
-      // For now, just store in localStorage
-      const existingSessions = JSON.parse(localStorage.getItem('workoutSessions') || '[]');
-      existingSessions.push(workoutData);
-      localStorage.setItem('workoutSessions', JSON.stringify(existingSessions));
-      
-    } catch (error) {
-      console.error('Failed to log workout session:', error);
-    }
-  };
-
-  const handlePauseResume = () => {
-    setIsPaused(!isPaused);
-  };
-
-  const handleSkipSet = () => {
-    if (currentSet < getCurrentExercise().sets) {
-      setCurrentSet(prev => prev + 1);
-    } else {
-      handleSkipExercise();
-    }
-  };
-
-  const handleSkipExercise = () => {
+  const handleNextExercise = () => {
     if (currentExerciseIndex < workoutPlan.exercises.length - 1) {
-      setCurrentExerciseIndex(prev => prev + 1);
-      setCurrentSet(1);
-      setIsResting(false);
-      setTimeRemaining(0);
-    } else {
-      completeWorkout();
+      setCurrentExerciseIndex(currentExerciseIndex + 1);
     }
   };
 
-  const handlePreviousExercise = () => {
+  const handlePrevExercise = () => {
     if (currentExerciseIndex > 0) {
-      setCurrentExerciseIndex(prev => prev - 1);
-      setCurrentSet(1);
-      setIsResting(false);
-      setTimeRemaining(0);
+      setCurrentExerciseIndex(currentExerciseIndex - 1);
     }
   };
 
-  const handleQuitWorkout = () => {
-    setShowQuitDialog(true);
-  };
+  const handleFinishWorkout = async () => {
+    setIsSubmitting(true);
+    setError('');
 
-  const confirmQuit = () => {
-    logWorkoutSession(); // Log partial session
-    navigate('/dashboard');
-  };
+    const exercises_completed = workoutPlan.exercises
+      .map((exercise, index) => ({
+        name: exercise.name,
+        sets: (loggedData[index] || []).map(set => ({
+          reps: parseInt(set.reps, 10) || 0,
+          weight: parseFloat(set.weight) || 0,
+        })),
+      }))
+      .filter(exercise => exercise.sets.length > 0 && exercise.sets.some(s => s.reps > 0)); // Only include exercises with at least one logged set
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
+    if (exercises_completed.length === 0) {
+      setError('Please log at least one set with reps to finish the workout.');
+      setIsSubmitting(false);
+      return;
+    }
+    
+    const duration_minutes = Math.round((new Date() - startTime) / (1000 * 60));
 
-  const calculateProgress = () => {
-    const totalExercises = workoutPlan?.exercises.length || 1;
-    const totalSets = workoutPlan?.exercises.reduce((sum, ex) => sum + (ex.sets || 1), 0) || 1;
-    const completedSetsCount = Object.keys(completedSets).length;
-    return (completedSetsCount / totalSets) * 100;
+    const logPayload = {
+      workout_plan_id: workoutPlan.id,
+      duration_minutes,
+      notes,
+      exercises_completed,
+      workout_date: new Date().toISOString(),
+    };
+
+    try {
+      await apiService.logWorkout(logPayload);
+      navigate('/workout-history');
+    } catch (err) {
+      setError(err.message || 'Failed to save workout log. Please try again.');
+      setIsSubmitting(false);
+    }
   };
 
   if (!workoutPlan) {
-    return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <Alert severity="error">No workout plan found. Please generate a workout first.</Alert>
-      </Container>
-    );
+    return null; // Redirecting in useEffect
   }
 
-  const currentExercise = getCurrentExercise();
-  const progress = calculateProgress();
+  const currentExercise = workoutPlan.exercises[currentExerciseIndex];
+  const currentLoggedSets = loggedData[currentExerciseIndex] || [];
 
   return (
-    <Container maxWidth="md" sx={{ py: 2 }}>
-      {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h4" component="h1">
-          Workout Session
-        </Typography>
-        <Box display="flex" gap={1}>
-          <IconButton onClick={() => setSoundEnabled(!soundEnabled)} color="primary">
-            {soundEnabled ? <VolumeUp /> : <VolumeOff />}
-          </IconButton>
-          <Button variant="outlined" color="error" onClick={handleQuitWorkout}>
-            Quit
-          </Button>
-        </Box>
-      </Box>
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        Log: {workoutPlan.name}
+      </Typography>
 
-      {/* Progress */}
-      <Card sx={{ mb: 2 }}>
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+      <Card>
         <CardContent>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-            <Typography variant="h6">Overall Progress</Typography>
-            <Typography variant="body2" color="text.secondary">
-              {Math.round(progress)}% Complete
-            </Typography>
-          </Box>
-          <LinearProgress variant="determinate" value={progress} sx={{ mb: 1, height: 8, borderRadius: 4 }} />
-          <Box display="flex" justifyContent="space-between">
-            <Typography variant="body2">
-              Exercise {currentExerciseIndex + 1} of {workoutPlan.exercises.length}
-            </Typography>
-            <Typography variant="body2">
-              Set {currentSet} of {currentExercise.sets || 1}
-            </Typography>
-          </Box>
-        </CardContent>
-      </Card>
-
-      {/* Current Exercise */}
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Box display="flex" justify="space-between" alignItems="flex-start" mb={2}>
-            <Box flex={1}>
-              <Typography variant="h5" gutterBottom>
-                {currentExercise.name || 'Exercise'}
-              </Typography>
-              <Box display="flex" gap={1} mb={2}>
-                {currentExercise.muscle_groups?.map((muscle, index) => (
-                  <Chip key={index} label={muscle} size="small" color="primary" variant="outlined" />
-                ))}
-              </Box>
-              {currentExercise.instructions && (
-                <Typography variant="body2" color="text.secondary" paragraph>
-                  {currentExercise.instructions}
-                </Typography>
-              )}
-            </Box>
-            <Box textAlign="center" minWidth={120}>
-              <Typography variant="h3" color={isResting ? "warning.main" : "primary.main"}>
-                {formatTime(timeRemaining)}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {isResting ? 'Rest Time' : 'Exercise Time'}
-              </Typography>
-            </Box>
-          </Box>
-
-          {/* Exercise Details */}
-          <Grid container spacing={2} mb={2}>
-            {currentExercise.reps && (
-              <Grid item xs={6} sm={3}>
-                <Paper variant="outlined" sx={{ p: 1, textAlign: 'center' }}>
-                  <Typography variant="h6">{currentExercise.reps}</Typography>
-                  <Typography variant="caption">Reps</Typography>
-                </Paper>
-              </Grid>
-            )}
-            {currentExercise.sets && (
-              <Grid item xs={6} sm={3}>
-                <Paper variant="outlined" sx={{ p: 1, textAlign: 'center' }}>
-                  <Typography variant="h6">{currentExercise.sets}</Typography>
-                  <Typography variant="caption">Sets</Typography>
-                </Paper>
-              </Grid>
-            )}
-            {currentExercise.weight && (
-              <Grid item xs={6} sm={3}>
-                <Paper variant="outlined" sx={{ p: 1, textAlign: 'center' }}>
-                  <Typography variant="h6">{currentExercise.weight}</Typography>
-                  <Typography variant="caption">Weight</Typography>
-                </Paper>
-              </Grid>
-            )}
-            {currentExercise.duration_seconds && (
-              <Grid item xs={6} sm={3}>
-                <Paper variant="outlined" sx={{ p: 1, textAlign: 'center' }}>
-                  <Typography variant="h6">{currentExercise.duration_seconds}s</Typography>
-                  <Typography variant="caption">Duration</Typography>
-                </Paper>
-              </Grid>
-            )}
-          </Grid>
-
-          {/* Control Buttons */}
-          <Box display="flex" justifyContent="center" gap={1} mb={2}>
-            <IconButton onClick={handlePreviousExercise} disabled={currentExerciseIndex === 0}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <IconButton onClick={handlePrevExercise} disabled={currentExerciseIndex === 0}>
               <SkipPrevious />
             </IconButton>
-            
-            {timeRemaining === 0 && !isResting && (
-              <Button
-                variant="contained"
-                size="large"
-                onClick={startExercise}
-                startIcon={<PlayArrow />}
-                sx={{ minWidth: 120 }}
-              >
-                Start Set
-              </Button>
-            )}
-            
-            {timeRemaining > 0 && (
-              <Button
-                variant="contained"
-                size="large"
-                onClick={handlePauseResume}
-                startIcon={isPaused ? <PlayArrow /> : <Pause />}
-                color={isPaused ? "success" : "warning"}
-                sx={{ minWidth: 120 }}
-              >
-                {isPaused ? 'Resume' : 'Pause'}
-              </Button>
-            )}
-            
-            <IconButton onClick={handleSkipSet}>
+            <Box textAlign="center">
+              <Typography variant="h5" sx={{ fontWeight: 'bold' }}>{currentExercise.name}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Exercise {currentExerciseIndex + 1} of {workoutPlan.exercises.length}
+              </Typography>
+              <Chip label={`AI Target: ${currentExercise.sets} sets of ${currentExercise.reps} reps`} sx={{ mt: 1 }} />
+            </Box>
+            <IconButton onClick={handleNextExercise} disabled={currentExerciseIndex === workoutPlan.exercises.length - 1}>
               <SkipNext />
             </IconButton>
           </Box>
+          <Divider sx={{ my: 2 }} />
 
-          {/* Exercise Notes */}
-          <TextField
-            fullWidth
-            multiline
-            rows={2}
-            label="Notes for this exercise"
+          <Typography variant="h6" gutterBottom>Your Performance</Typography>
+
+          {currentLoggedSets.map((set, setIndex) => (
+            <Grid container spacing={2} key={setIndex} alignItems="center" sx={{ mb: 2 }}>
+              <Grid item xs={1}>
+                <Chip label={setIndex + 1} color="primary" />
+              </Grid>
+              <Grid item xs={5}>
+                <TextField
+                  label="Weight"
+                  type="number"
+                  value={set.weight}
+                  onChange={(e) => handleSetChange(currentExerciseIndex, setIndex, 'weight', e.target.value)}
+                  fullWidth
+                  InputProps={{ endAdornment: <InputAdornment position="end">kg</InputAdornment> }}
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  label="Reps"
+                  type="number"
+                  value={set.reps}
+                  onChange={(e) => handleSetChange(currentExerciseIndex, setIndex, 'reps', e.target.value)}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={2}>
+                <IconButton onClick={() => handleRemoveSet(currentExerciseIndex, setIndex)} color="error" aria-label="Remove Set">
+                  <Delete />
+                </IconButton>
+              </Grid>
+            </Grid>
+          ))}
+          {currentLoggedSets.length === 0 && (
+            <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ my: 2 }}>
+                Click "Add Set" to log your performance.
+            </Typography>
+          )}
+
+          <Button 
+            onClick={() => handleAddSet(currentExerciseIndex)} 
+            startIcon={<AddCircle />}
             variant="outlined"
-            size="small"
-            value={exerciseNotes[currentExerciseIndex] || ''}
-            onChange={(e) => setExerciseNotes(prev => ({
-              ...prev,
-              [currentExerciseIndex]: e.target.value
-            }))}
-            InputProps={{
-              startAdornment: <Notes sx={{ mr: 1, color: 'text.secondary' }} />
-            }}
+            fullWidth
+            sx={{ mt: 1 }}
+          >
+            Add Set
+          </Button>
+
+        </CardContent>
+      </Card>
+      
+      <Card sx={{ mt: 3 }}>
+        <CardContent>
+          <TextField
+            label="Workout Notes"
+            multiline
+            rows={3}
+            fullWidth
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Add any notes about your workout..."
+            InputProps={{ startAdornment: <Notes sx={{ mr: 1, color: 'text.secondary' }} /> }}
           />
         </CardContent>
       </Card>
 
+      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Button onClick={() => setShowQuitDialog(true)} color="error" variant="text" startIcon={<Warning />}>
+          Cancel Workout
+        </Button>
+        <Button onClick={handleFinishWorkout} color="primary" variant="contained" size="large" startIcon={<CheckCircle />} disabled={isSubmitting}>
+          {isSubmitting ? 'Saving...' : 'Finish & Log Workout'}
+        </Button>
+      </Box>
+
       {/* Exercise List */}
-      <Card>
+      <Card sx={{ mt: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            Exercise List
+            Workout Plan
           </Typography>
           <List dense>
             {workoutPlan.exercises.map((exercise, index) => (
               <ListItem
                 key={index}
+                button
+                onClick={() => setCurrentExerciseIndex(index)}
                 sx={{
                   bgcolor: index === currentExerciseIndex ? 'action.selected' : 'transparent',
                   borderRadius: 1,
@@ -458,17 +271,15 @@ const WorkoutSession = () => {
                 }}
               >
                 <ListItemIcon>
-                  {index < currentExerciseIndex ? (
+                  {loggedData[index] && loggedData[index].length > 0 ? (
                     <CheckCircle color="success" />
-                  ) : index === currentExerciseIndex ? (
-                    <FitnessCenter color="primary" />
                   ) : (
-                    <FitnessCenter color="disabled" />
+                    <FitnessCenter color={index === currentExerciseIndex ? 'primary' : 'disabled'} />
                   )}
                 </ListItemIcon>
                 <ListItemText
                   primary={exercise.name}
-                  secondary={`${exercise.sets} sets × ${exercise.reps || exercise.duration_seconds + 's'}`}
+                  secondary={`${exercise.sets} sets × ${exercise.reps}`}
                 />
               </ListItem>
             ))}
@@ -476,49 +287,15 @@ const WorkoutSession = () => {
         </CardContent>
       </Card>
 
-      {/* Quit Dialog */}
       <Dialog open={showQuitDialog} onClose={() => setShowQuitDialog(false)}>
-        <DialogTitle>Quit Workout?</DialogTitle>
+        <DialogTitle>Cancel Workout?</DialogTitle>
         <DialogContent>
-          <Typography>
-            Are you sure you want to quit this workout? Your progress will be saved.
-          </Typography>
+          <Typography>Are you sure you want to cancel this session? Any logged data for this workout will be lost.</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowQuitDialog(false)}>Continue</Button>
-          <Button onClick={confirmQuit} color="error">
-            Quit Workout
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Completion Dialog */}
-      <Dialog open={workoutComplete} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ textAlign: 'center' }}>
-          <CheckCircle color="success" sx={{ fontSize: 48, mb: 1 }} />
-          <Typography variant="h5">Workout Complete!</Typography>
-        </DialogTitle>
-        <DialogContent>
-          <Box textAlign="center" mb={2}>
-            <Typography variant="h6" gutterBottom>
-              Great job! 🎉
-            </Typography>
-            <Typography color="text.secondary" mb={2}>
-              You completed your workout in {Math.round((new Date() - workoutStartTime) / (1000 * 60))} minutes
-            </Typography>
-            
-            <Typography variant="subtitle2" gutterBottom>
-              Rate this workout:
-            </Typography>
-            <Rating size="large" />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
-          <Button variant="contained" onClick={() => navigate('/workout-history')}>
-            View History
-          </Button>
-          <Button variant="outlined" onClick={() => navigate('/dashboard')}>
-            Back to Dashboard
+          <Button onClick={() => setShowQuitDialog(false)}>Continue Logging</Button>
+          <Button onClick={() => navigate('/dashboard')} color="error">
+            Yes, Cancel
           </Button>
         </DialogActions>
       </Dialog>
