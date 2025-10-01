@@ -20,6 +20,9 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  List,
+  ListItem,
+  ListItemText,
 } from '@mui/material';
 import { AutoAwesome, RestaurantMenu, LocalFireDepartment, Save } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
