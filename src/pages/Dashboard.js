@@ -9,12 +9,15 @@ import {
   Box,
   Alert,
   Chip,
+  Paper, // Import Paper for better UI consistency
 } from '@mui/material';
 import {
   FitnessCenter,
   Restaurant,
   TrendingUp,
   PlayArrow,
+  Create, // Import Create icon
+  AutoAwesome, // Import AutoAwesome icon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -68,40 +71,73 @@ function Dashboard() {
       {(!user?.fitness_goal || !user?.experience_level) && (
         <Alert severity="info" sx={{ mb: 3 }}>
           Complete your profile to get better AI workout recommendations!{' '}
-          <Button onClick={() => navigate('/profile')} size="small">
+          <Button onClick={() => navigate('/profile')} size="small" variant="outlined">
             Update Profile
           </Button>
         </Alert>
       )}
 
-      <Grid container spacing={3}>
-        {/* Quick Actions */}
-        <Grid item xs={12} md={6} lg={3}>
-          <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <CardContent sx={{ flex: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <FitnessCenter color="primary" />
-                <Typography variant="h6" sx={{ ml: 1 }}>
-                  AI Workout
-                </Typography>
-              </Box>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Generate a personalized workout using AI
-              </Typography>
-              <Button
-                fullWidth
-                variant="contained"
-                onClick={handleGenerateWorkout}
-                startIcon={<PlayArrow />}
-              >
-                Generate Now
-              </Button>
-            </CardContent>
-          </Card>
+      {/* --- UPDATED: Quick Actions Section --- */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} md={4}>
+            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <AutoAwesome color="primary" sx={{ mr: 1 }} />
+                        <Typography variant="h6">AI Workout</Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                        Generate a new, personalized workout plan using AI based on your goals.
+                    </Typography>
+                </CardContent>
+                <Box sx={{ p: 2, pt: 0 }}>
+                    <Button fullWidth variant="contained" onClick={handleGenerateWorkout} startIcon={<PlayArrow />}>
+                        Generate Now
+                    </Button>
+                </Box>
+            </Card>
         </Grid>
+        <Grid item xs={12} md={4}>
+            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <Create color="secondary" sx={{ mr: 1 }} />
+                        <Typography variant="h6">Freestyle Log</Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                        Manually log a workout you completed, adding exercises and sets as you go.
+                    </Typography>
+                </CardContent>
+                <Box sx={{ p: 2, pt: 0 }}>
+                    <Button fullWidth variant="outlined" color="secondary" onClick={() => navigate('/log-workout')} startIcon={<Create />}>
+                        Log a Workout
+                    </Button>
+                </Box>
+            </Card>
+        </Grid>
+        <Grid item xs={12} md={4}>
+            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <Restaurant sx={{ mr: 1, color: 'success.main' }} />
+                        <Typography variant="h6">AI Meal Planner</Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                        Generate a customized meal plan to complement your fitness journey (coming soon).
+                    </Typography>
+                </CardContent>
+                <Box sx={{ p: 2, pt: 0 }}>
+                    <Button fullWidth variant="outlined" color="success" disabled>
+                        Generate Meals
+                    </Button>
+                </Box>
+            </Card>
+        </Grid>
+      </Grid>
 
-        {/* Recent Workout Plans */}
-        <Grid item xs={12} md={6} lg={9}>
+
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -157,7 +193,6 @@ function Dashboard() {
           </Card>
         </Grid>
 
-        {/* Recent Workouts */}
         <Grid item xs={12} md={6}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
@@ -198,7 +233,6 @@ function Dashboard() {
           </Card>
         </Grid>
 
-        {/* User Stats */}
         <Grid item xs={12} md={6}>
           <Card sx={{ height: '100%' }}>
             <CardContent>

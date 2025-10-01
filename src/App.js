@@ -1,4 +1,4 @@
-// src/App.js - Updated with WorkoutSession route
+// src/App.js - Updated with WorkoutSession and FreestyleLog routes
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
@@ -10,7 +10,8 @@ import Dashboard from './pages/Dashboard';
 import WorkoutGenerator from './pages/WorkoutGenerator';
 import WorkoutHistory from './pages/WorkoutHistory';
 import Profile from './pages/Profile';
-import WorkoutSession from './pages/WorkoutSession'; // Add this import
+import WorkoutSession from './pages/WorkoutSession';
+import FreestyleLog from './pages/FreestyleLog'; // --- NEW IMPORT ---
 import OAuthCallback from './pages/OAuthCallback';
 
 const theme = createTheme({
@@ -93,6 +94,15 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        {/* --- NEW ROUTE --- */}
+        <Route
+          path="/log-workout"
+          element={
+            <ProtectedRoute>
+              <FreestyleLog />
             </ProtectedRoute>
           }
         />
