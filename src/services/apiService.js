@@ -111,14 +111,14 @@ class ApiService {
 
   // Meal plans
   async generateMealPlan(preferences) {
-    return this.request('/ai/meal-plans/generate', { // Corrected endpoint based on convention
+    return this.request('/ai/meal-plans/generate', {
       method: 'POST',
       body: JSON.stringify(preferences),
     });
   }
 
   async getMealPlans() {
-    return this.request('/meal-plans'); // Corrected endpoint based on convention
+    return this.request('/meal-plans');
   }
 }
 

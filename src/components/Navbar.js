@@ -14,6 +14,7 @@ import {
   FitnessCenter,
   Dashboard,
   History,
+  RestaurantMenu,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -61,6 +62,14 @@ function Navbar() {
             Generate Workout
           </Button>
           
+          <Button
+           color="inherit"
+            startIcon={<RestaurantMenu />}
+             onClick={() => navigate('/meal-planner')}
+          >
+            Meal Planner
+          </Button>
+
           <Button
             color="inherit"
             startIcon={<History />}
