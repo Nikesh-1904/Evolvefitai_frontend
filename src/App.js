@@ -12,6 +12,7 @@ import WorkoutHistory from './pages/WorkoutHistory';
 import Profile from './pages/Profile';
 import WorkoutSession from './pages/WorkoutSession';
 import FreestyleLog from './pages/FreestyleLog'; // --- NEW IMPORT ---
+import MealPlanGenerator from './pages/MealPlanGenerator'; // --- NEW IMPORT ---
 import OAuthCallback from './pages/OAuthCallback';
 
 const theme = createTheme({
@@ -106,6 +107,16 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+         path="/meal-planner"
+         element={
+          <ProtectedRoute>
+            <MealPlanGenerator />
+          </ProtectedRoute>
+        } 
+      />
+
       </Routes>
     </div>
   );
