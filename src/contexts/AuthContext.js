@@ -1,3 +1,4 @@
+// src/contexts/AuthContext.js
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 
@@ -41,11 +42,13 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     try {
-      const formData = new FormData();
-      formData.append('username', email);
-      formData.append('password', password);
+      // *** FIX: Use URLSearchParams for application/x-www-form-urlencoded data. ***
+      // This is the standard and most reliable way to send this content type with Axios.
+      const params = new URLSearchParams();
+      params.append('username', email);
+      params.append('password', password);
 
-      const response = await axios.post(`${API_URL}/auth/jwt/login`, formData, {
+      const response = await axios.post(`${API_URL}/auth/jwt/login`, params, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
