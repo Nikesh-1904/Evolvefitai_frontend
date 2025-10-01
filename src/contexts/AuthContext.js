@@ -27,7 +27,8 @@ export function AuthProvider({ children }) {
     async function checkAuth() {
       if (token) {
         try {
-          const response = await axios.get(`${API_URL}/auth/me`);
+          // *** FIX: Use the standard endpoint provided by get_users_router ***
+          const response = await axios.get(`${API_URL}/auth/users/me`);
           setUser(response.data);
         } catch (error) {
           console.error('Auth check failed:', error);
@@ -42,8 +43,6 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     try {
-      // *** FIX: Use URLSearchParams for application/x-www-form-urlencoded data. ***
-      // This is the standard and most reliable way to send this content type with Axios.
       const params = new URLSearchParams();
       params.append('username', email);
       params.append('password', password);
@@ -59,7 +58,8 @@ export function AuthProvider({ children }) {
       setToken(access_token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       
-      const userResponse = await axios.get(`${API_URL}/auth/me`);
+      // *** FIX: Use the standard endpoint provided by get_users_router ***
+      const userResponse = await axios.get(`${API_URL}/auth/users/me`);
       setUser(userResponse.data);
       
       return { success: true };
@@ -74,13 +74,12 @@ export function AuthProvider({ children }) {
 
   const register = async (email, password, userData = {}) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/register`, {
+      await axios.post(`${API_URL}/auth/register`, {
         email,
         password,
         ...userData
       });
       
-      // Auto-login after successful registration
       return await login(email, password);
     } catch (error) {
       console.error("Registration failed:", error);
@@ -93,11 +92,8 @@ export function AuthProvider({ children }) {
 
   const loginWithGoogle = async () => {
     try {
-      // Get Google authorization URL from backend
       const response = await axios.get(`${API_URL}/auth/google/authorize`);
       const { authorization_url } = response.data;
-      
-      // Redirect to Google OAuth
       window.location.href = authorization_url;
     } catch (error) {
       console.error("Google OAuth initiation failed:", error);
@@ -117,7 +113,8 @@ export function AuthProvider({ children }) {
 
   const updateProfile = async (profileData) => {
     try {
-      const response = await axios.patch(`${API_URL}/auth/me`, profileData);
+      // *** FIX: Use the standard endpoint provided by get_users_router ***
+      const response = await axios.patch(`${API_URL}/auth/users/me`, profileData);
       setUser(response.data);
       return { success: true, data: response.data };
     } catch (error) {
@@ -129,14 +126,14 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Handle OAuth callback token from URL hash
   const handleOAuthCallback = async (accessToken) => {
     try {
       localStorage.setItem('token', accessToken);
       setToken(accessToken);
       axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
       
-      const userResponse = await axios.get(`${API_URL}/auth/me`);
+      // *** FIX: Use the standard endpoint provided by get_users_router ***
+      const userResponse = await axios.get(`${API_URL}/auth/users/me`);
       setUser(userResponse.data);
       
       return { success: true };
