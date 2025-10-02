@@ -1,4 +1,4 @@
-// src/services/apiService.js - Enhanced with better exercise functionality
+// src/services/apiService.js - Complete API Service with Authentication
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
 
@@ -22,9 +22,13 @@ class ApiService {
       ...options,
     };
 
+    console.log(`🌐 API Request: ${options.method || 'GET'} ${url}`);
+
     const response = await fetch(url, config);
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ detail: 'API request failed' }));
+      console.error(`❌ API Error: ${response.status} - ${errorData.detail}`);
       throw new Error(errorData.detail || `API request failed: ${response.status}`);
     }
 
@@ -37,7 +41,94 @@ class ApiService {
     return {};
   }
 
-  // Workout generation
+  // ==========================================
+  // AUTHENTICATION ENDPOINTS (FIXED)
+  // ==========================================
+
+  async login(email, password) {
+    console.log('🔐 Attempting login for:', email);
+
+    // FastAPI Users expects form data for JWT login
+    const formData = new URLSearchParams();
+    formData.append('username', email);
+    formData.append('password', password);
+
+    const response = await fetch(`${this.baseURL}/auth/jwt/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: 'Login failed' }));
+      throw new Error(errorData.detail || 'Invalid credentials');
+    }
+
+    const data = await response.json();
+    console.log('✅ Login successful, saving token');
+
+    // Save token to localStorage
+    localStorage.setItem('token', data.access_token);
+    localStorage.setItem('token_type', data.token_type);
+
+    return data;
+  }
+
+  async register(userData) {
+    console.log('📝 Registering new user:', userData.email);
+
+    return this.request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async logout() {
+    console.log('🚪 Logging out user');
+
+    try {
+      await this.request('/auth/jwt/logout', {
+        method: 'POST',
+      });
+    } catch (error) {
+      console.warn('Logout request failed, clearing token anyway:', error);
+    }
+
+    // Always clear local storage
+    localStorage.removeItem('token');
+    localStorage.removeItem('token_type');
+
+    return { message: 'Logged out successfully' };
+  }
+
+  async googleLogin() {
+    console.log('🔍 Initiating Google OAuth');
+
+    // Redirect to Google OAuth
+    window.location.href = `${this.baseURL}/auth/google/authorize`;
+  }
+
+  // ==========================================
+  // USER PROFILE ENDPOINTS
+  // ==========================================
+
+  async getCurrentUser() {
+    return this.request('/auth/users/me');
+  }
+
+  async updateProfile(profileData) {
+    return this.request('/auth/users/me', {
+      method: 'PATCH',
+      body: JSON.stringify(profileData),
+    });
+  }
+
+  // ==========================================
+  // WORKOUT ENDPOINTS
+  // ==========================================
+
   async generateWorkout(requestData) {
     return this.request('/ai/workouts/generate', {
       method: 'POST',
@@ -45,22 +136,13 @@ class ApiService {
     });
   }
 
-  // Meal plan generation - UPDATED
-  async generateMealPlan(requestData) {
-    return this.request('/ai/meal-plans/generate', {
-      method: 'POST',
-      body: JSON.stringify(requestData),
-    });
-  }
-
-  // Get exercise details with videos and tips - ENHANCED
   async getExerciseDetails(exerciseName) {
     try {
       console.log(`🔍 Fetching exercise details for: ${exerciseName}`);
       const response = await this.request(`/ai/exercises/search?name=${encodeURIComponent(exerciseName)}`);
 
       if (Array.isArray(response) && response.length > 0) {
-        const exerciseData = response[0]; // Take the first result
+        const exerciseData = response[0];
         console.log(`✅ Exercise details fetched for ${exerciseName}:`, exerciseData);
         return {
           exercise: exerciseData.exercise || {},
@@ -77,7 +159,6 @@ class ApiService {
       }
     } catch (error) {
       console.error(`❌ Failed to fetch exercise details for ${exerciseName}:`, error);
-      // Return fallback data instead of throwing
       return {
         exercise: { 
           name: exerciseName, 
@@ -98,7 +179,43 @@ class ApiService {
     }
   }
 
-  // Submit exercise feedback - NEW
+  async saveWorkoutPlan(workoutPlan) {
+    return this.request('/workouts/plans', {
+      method: 'POST',
+      body: JSON.stringify(workoutPlan),
+    });
+  }
+
+  async getWorkoutPlans() {
+    return this.request('/workouts/plans');
+  }
+
+  async logWorkout(logData) {
+    return this.request('/workouts/logs', {
+      method: 'POST',
+      body: JSON.stringify(logData),
+    });
+  }
+
+  async getWorkoutLogs(limit = 20) {
+    return this.request(`/workouts/logs?limit=${limit}`);
+  }
+
+  // ==========================================
+  // MEAL PLAN ENDPOINTS
+  // ==========================================
+
+  async generateMealPlan(requestData) {
+    return this.request('/ai/meal-plans/generate', {
+      method: 'POST',
+      body: JSON.stringify(requestData),
+    });
+  }
+
+  // ==========================================
+  // EXERCISE FEEDBACK ENDPOINTS
+  // ==========================================
+
   async submitExerciseFeedback(exerciseName, feedbackType) {
     try {
       console.log(`📝 Submitting feedback: ${feedbackType} for ${exerciseName}`);
@@ -117,7 +234,6 @@ class ApiService {
     }
   }
 
-  // Interact with tips - ENHANCED
   async submitTipInteraction(tipId, interactionType) {
     try {
       console.log(`👍 Submitting tip interaction: ${interactionType} for tip ${tipId}`);
@@ -136,47 +252,29 @@ class ApiService {
     }
   }
 
-  // Workout management
-  async getWorkoutPlans() {
-    return this.request('/workouts/plans');
-  }
-
-  async saveWorkoutPlan(workoutPlan) {
-    return this.request('/workouts/plans', {
-      method: 'POST',
-      body: JSON.stringify(workoutPlan),
-    });
-  }
-
-  async getWorkoutLogs(limit = 20) {
-    return this.request(`/workouts/logs?limit=${limit}`);
-  }
-
-  async logWorkout(logData) {
-    return this.request('/workouts/logs', {
-      method: 'POST',
-      body: JSON.stringify(logData),
-    });
-  }
-
-  // User profile
-  async getCurrentUser() {
-    return this.request('/auth/users/me');
-  }
-
-  async updateProfile(profileData) {
-    return this.request('/auth/users/me', {
-      method: 'PATCH',
-      body: JSON.stringify(profileData),
-    });
-  }
-
-  // Plateau analysis
   async analyzePlateaus(data = {}) {
     return this.request('/ai/analyze-plateau', {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  }
+
+  // ==========================================
+  // UTILITY METHODS
+  // ==========================================
+
+  isAuthenticated() {
+    const token = localStorage.getItem('token');
+    return !!token;
+  }
+
+  getToken() {
+    return localStorage.getItem('token');
+  }
+
+  clearAuth() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('token_type');
   }
 }
 
