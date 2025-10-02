@@ -130,7 +130,7 @@ function Dashboard() {
   // Navigate to full meal plan generator
   const handleViewFullMealPlanner = () => {
     setMealPlanDialog(false);
-    navigate('/meal-plan-generator');
+    navigate('/meal-planner');
   };
 
   // Close meal plan dialog
