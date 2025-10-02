@@ -17,6 +17,7 @@ import {
   Slide,
   Badge,
   Chip,
+  Divider
 } from '@mui/material';
 import {
   FitnessCenter,
