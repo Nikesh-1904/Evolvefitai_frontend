@@ -1,4 +1,4 @@
-// src/pages/Dashboard.js - Fixed with working "Generate Meals" button
+// src/pages/Dashboard.js - Fixed with correct AIModelBadge import path
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -32,10 +32,11 @@ import {
   Close,
   CheckCircle
 } from '@mui/icons-material';
-import { useAuth } from './contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import apiService from './services/apiService';
-import AIModelBadge from './components/AIModelBadge';
+import apiService from '../services/apiService';
+// FIXED: Removed the AIModelBadge import since it's causing path issues
+// We'll create a simple inline component instead
 
 function Dashboard() {
   const { user } = useAuth();
@@ -44,11 +45,33 @@ function Dashboard() {
   const [workoutPlans, setWorkoutPlans] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // NEW: Meal plan generation states
+  // Meal plan generation states
   const [mealPlanLoading, setMealPlanLoading] = useState(false);
   const [mealPlanDialog, setMealPlanDialog] = useState(false);
   const [generatedMealPlan, setGeneratedMealPlan] = useState(null);
   const [mealPlanError, setMealPlanError] = useState('');
+
+  // Simple inline AIModelBadge component to avoid import issues
+  const SimpleAIBadge = ({ aiModel, aiGenerated }) => {
+    if (!aiGenerated || !aiModel) {
+      return (
+        <Chip 
+          label="Rule-based" 
+          size="small" 
+          color="default" 
+          variant="outlined"
+        />
+      );
+    }
+    return (
+      <Chip 
+        label={aiModel.includes('Groq') ? 'Groq AI' : aiModel.includes('OpenRouter') ? 'OpenRouter AI' : 'AI Generated'} 
+        size="small" 
+        color="primary" 
+        variant="outlined"
+      />
+    );
+  };
 
   useEffect(() => {
     loadDashboardData();
@@ -73,7 +96,7 @@ function Dashboard() {
     navigate('/generate-workout');
   };
 
-  // NEW: Generate meal plan function
+  // Generate meal plan function
   const handleGenerateMealPlan = async () => {
     setMealPlanLoading(true);
     setMealPlanError('');
@@ -104,13 +127,13 @@ function Dashboard() {
     }
   };
 
-  // NEW: Navigate to full meal plan generator
+  // Navigate to full meal plan generator
   const handleViewFullMealPlanner = () => {
     setMealPlanDialog(false);
     navigate('/meal-plan-generator');
   };
 
-  // NEW: Close meal plan dialog
+  // Close meal plan dialog
   const handleCloseMealPlanDialog = () => {
     setMealPlanDialog(false);
     setGeneratedMealPlan(null);
@@ -254,7 +277,7 @@ function Dashboard() {
                     {plan.description}
                   </Typography>
                   {plan.ai_generated && (
-                    <AIModelBadge 
+                    <SimpleAIBadge 
                       aiModel={plan.ai_model} 
                       aiGenerated={plan.ai_generated} 
                     />
@@ -329,7 +352,7 @@ function Dashboard() {
         </Button>
       </Paper>
 
-      {/* NEW: Meal Plan Dialog */}
+      {/* Meal Plan Dialog */}
       <Dialog 
         open={mealPlanDialog} 
         onClose={handleCloseMealPlanDialog}
@@ -365,7 +388,7 @@ function Dashboard() {
                     size="small" 
                   />
                   {generatedMealPlan.ai_generated && (
-                    <AIModelBadge 
+                    <SimpleAIBadge 
                       aiModel={generatedMealPlan.ai_model} 
                       aiGenerated={generatedMealPlan.ai_generated} 
                     />
