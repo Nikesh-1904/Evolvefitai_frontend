@@ -34,7 +34,7 @@ function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { login, register, loginWithGoogle } = useAuth();
+  const { login, register, googleLogin } = useAuth();
   const navigate = useNavigate();
 
   const handleTabChange = (event, newValue) => {
@@ -204,7 +204,7 @@ const handleSubmit = async (e) => {
             fullWidth
             variant="outlined"
             startIcon={<GoogleIcon />}
-            onClick={loginWithGoogle}
+            onClick={googleLogin}
             sx={{ mt: 1 }}
           >
             Continue with Google
