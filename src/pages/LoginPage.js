@@ -57,7 +57,12 @@ function LoginPage() {
     const result = tab === 0 
       ? await login(formData.email, formData.password)
       // *** FIX: Pass user data as an object { full_name: ... } as expected by the AuthContext ***
-      : await register(formData.email, formData.password, { full_name: formData.fullName });
+      // CORRECT
+      : await register({ 
+      email: formData.email, 
+      password: formData.password, 
+      full_name: formData.fullName 
+      });
 
     if (result.success) {
       navigate('/');
