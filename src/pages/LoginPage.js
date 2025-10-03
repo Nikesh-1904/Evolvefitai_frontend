@@ -49,29 +49,42 @@ function LoginPage() {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+// src/pages/LoginPage.js - CORRECTED
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError('');
 
-    const result = tab === 0 
-      ? await login(formData.email, formData.password)
-      // *** FIX: Pass user data as an object { full_name: ... } as expected by the AuthContext ***
-      // CORRECT
-      : await register({ 
-      email: formData.email, 
-      password: formData.password, 
-      full_name: formData.fullName 
-      });
-
-    if (result.success) {
-      navigate('/');
+  try {
+    if (tab === 0) {
+      // Handle Login
+      await login(formData.email, formData.password);
     } else {
-      setError(result.error);
+      // Handle Register
+      await register({
+        email: formData.email,
+        password: formData.password,
+        full_name: formData.fullName,
+      });
     }
-    
+    // If we get here, login/register was successful
+    navigate('/');
+  } catch (err) {
+    // The error is caught here
+    console.error("Authentication error:", err);
+    // Let's provide a more user-friendly message
+    if (err.message && err.message.includes('REGISTER_USER_ALREADY_EXISTS')) {
+      setError('An account with this email already exists. Please log in instead.');
+    } else if (err.message && err.message.includes('Invalid credentials')) {
+      setError('Invalid email or password. Please try again.');
+    } else {
+      setError(err.message || 'An unexpected error occurred.');
+    }
+  } finally {
+    // This will run whether the try succeeds or fails
     setLoading(false);
-  };
+  }
+};
 
   return (
     <Container component="main" maxWidth="sm">
