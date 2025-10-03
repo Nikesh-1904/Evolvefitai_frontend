@@ -11,46 +11,48 @@ function OAuthCallback() {
   const { handleOAuthCallback } = useAuth();
   const [error, setError] = useState('');
 
+// src/pages/OAuthCallback.js - CORRECTED
   useEffect(() => {
     const processCallback = async () => {
       try {
-        // Check for error parameters
-        const errorParam = searchParams.get('error');
-        if (errorParam) {
-          console.error('❌ OAuth error received:', errorParam);
-          setError(decodeURIComponent(errorParam));
-          setTimeout(() => navigate('/login'), 3000);
-          return;
+        // Get the fragment from the URL (e.g., '#access_token=...')
+        const hash = window.location.hash;
+
+        if (!hash) {
+          throw new Error('Authentication failed: No token found in URL.');
         }
 
-        // Get the access token from URL params
-        const accessToken = searchParams.get('access_token');
-        const tokenType = searchParams.get('token_type');
+        // Use URLSearchParams to easily parse the fragment string
+        const params = new URLSearchParams(hash.substring(1)); // Remove the leading '#'
+        const accessToken = params.get('access_token');
 
         if (!accessToken) {
-          console.error('❌ No access token found in callback URL');
-          setError('No access token received from OAuth provider');
-          setTimeout(() => navigate('/login'), 3000);
-          return;
+          throw new Error('Authentication failed: Access token is missing.');
         }
-
+        
         console.log('✅ OAuth callback received, processing token...');
 
         // Handle the OAuth callback through AuthContext
         await handleOAuthCallback(accessToken);
 
         console.log('✅ OAuth login successful, redirecting to dashboard...');
-        navigate('/');
+        
+        // Use navigate with replace to prevent the user from going "back" to the callback page
+        navigate('/', { replace: true });
 
-      } catch (error) {
-        console.error('❌ OAuth callback processing failed:', error);
-        setError(error.message || 'OAuth authentication failed');
-        setTimeout(() => navigate('/login'), 3000);
+      } catch (err) {
+        console.error('❌ OAuth callback processing failed:', err);
+        setError(err.message || 'OAuth authentication failed.');
+        
+        // Redirect back to login after showing the error for a few seconds
+        setTimeout(() => navigate('/login', { replace: true }), 3000);
       }
     };
 
     processCallback();
-  }, [searchParams, handleOAuthCallback, navigate]);
+    // We only want this to run once, and the dependencies are stable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Box
