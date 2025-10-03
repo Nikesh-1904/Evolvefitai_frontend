@@ -103,11 +103,27 @@ class ApiService {
     return { message: 'Logged out successfully' };
   }
 
+  // src/services/apiService.js - CORRECTED
   async googleLogin() {
-    console.log('🔍 Initiating Google OAuth');
-
-    // Redirect to Google OAuth
-    window.location.href = `${this.baseURL}/auth/google/authorize`;
+    try {
+      console.log('🔍 Initiating Google OAuth: Fetching authorization URL...');
+      
+      // Step 1: FETCH the authorization URL from the backend
+      const response = await this.request('/auth/google/authorize');
+      
+      if (response && response.authorization_url) {
+        console.log('✅ Authorization URL received. Redirecting to Google...');
+        
+        // Step 2: REDIRECT the user to the URL we received from the backend
+        window.location.href = response.authorization_url;
+      } else {
+        throw new Error('Could not retrieve Google authorization URL.');
+      }
+    } catch (error) {
+      console.error('❌ Google login initiation failed:', error);
+      // Re-throw the error so it can be caught in the component if needed
+      throw new Error('Failed to start the Google login process. Please try again.');
+    }
   }
 
   // ==========================================
