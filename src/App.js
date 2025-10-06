@@ -126,7 +126,7 @@ function App() {
                   </PublicRoute>
                 } 
               />
-              <Route path="/oauth/callback" element={<OAuthCallback />} />
+              <Route path="/auth/callback" element={<OAuthCallback />} />
 
               {/* Protected Routes */}
               <Route path="/*" element={
