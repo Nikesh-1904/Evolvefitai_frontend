@@ -238,6 +238,12 @@ function Dashboard() {
     }
   };
 
+    const handleStartWorkoutPlan = (planToStart) => {
+    if (!planToStart) return;
+    // Navigate to the workout session page, passing the selected plan as state
+    navigate('/workout-session', { state: { workoutPlan: planToStart } });
+  };
+
   const handleViewFullMealPlanner = () => {
     setMealPlanDialog(false);
     navigate('/meal-plan-generator');
@@ -589,7 +595,10 @@ function Dashboard() {
                               <Chip label={`${plan.estimated_duration || 30} min`} size="small" />
                             </Box>
                           </Box>
-                          <IconButton sx={{ color: '#00D4FF' }}>
+                          <IconButton 
+                          sx={{ color: '#00D4FF' }}
+                          onClick={() => handleStartWorkoutPlan(plan)}
+                          >
                             <PlayArrow />
                           </IconButton>
                         </Box>
