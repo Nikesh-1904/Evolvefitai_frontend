@@ -1,5 +1,50 @@
 // src/pages/OAuthCallback.js - Definitive Version
 import React, { useEffect, useState } from 'react';
+
+function OAuthCallback() {
+  const [status, setStatus] = useState('Component is rendering...');
+
+  useEffect(() => {
+    setStatus('useEffect is running. Reading URL...');
+    try {
+      const url = window.location.href;
+      setStatus(`useEffect is running. URL is: ${url}`);
+
+      const hash = window.location.hash;
+      if (!hash) {
+        setStatus('ERROR: URL has no #hash fragment.');
+        return;
+      }
+
+      const params = new URLSearchParams(hash.substring(1));
+      const accessToken = params.get('access_token');
+
+      if (!accessToken) {
+        setStatus(`ERROR: access_token not found in hash. Hash is: ${hash}`);
+        return;
+      }
+
+      setStatus(`SUCCESS: Token found! Token starts with: ${accessToken.substring(0, 15)}...`);
+      // The original login logic is disabled for this test.
+
+    } catch (e) {
+      setStatus(`CRITICAL ERROR in useEffect: ${e.message}`);
+    }
+  }, []);
+
+  return (
+    <div style={{ padding: '40px', fontFamily: 'monospace', fontSize: '18px', color: 'white', background: '#121212', minHeight: '100vh' }}>
+      <h1>OAuth Callback Debug Page</h1>
+      <p><strong>Current Status:</strong></p>
+      <p style={{ color: status.startsWith('SUCCESS') ? 'lime' : 'red', wordBreak: 'break-all' }}>
+        {status}
+      </p>
+    </div>
+  );
+}
+
+export default OAuthCallback;
+/*import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Box, Typography, CircularProgress, Alert } from '@mui/material';
