@@ -142,6 +142,7 @@ function Navbar() {
                 onClick={() => navigate('/')}
               >
                 EvolveFit
+              </Typography>
                 <Chip 
                   label="AI" 
                   size="small" 
@@ -153,7 +154,7 @@ function Navbar() {
                     fontWeight: 700
                   }} 
                 />
-              </Typography>
+              
             </Box>
 
             {/* Mobile Menu Icon */}
