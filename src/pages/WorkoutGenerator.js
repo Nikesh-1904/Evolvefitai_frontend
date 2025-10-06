@@ -192,7 +192,19 @@ function WorkoutGenerator() {
         <Typography variant="h6" color="text.secondary" paragraph>Get personalized workouts powered by advanced AI models</Typography>
       </Box>
 
-      <Card sx={{ mb: 3, background: 'linear-gradient(45deg, #f5f5f5 30%, #e3f2fd 90%)' }}>
+      <Card sx={{ mb: 3, background: 'linear-gradient(45deg, #f5f5f5 30%, #e3f2fd 90%)', 
+
+          color: 'rgba(0, 0, 0, 0.87)',
+
+  // 2. Specifically fix the style for the outlined chips on this light background.
+  '& .MuiChip-outlined': {
+    borderColor: 'rgba(0, 0, 0, 0.23)',
+    color: 'rgba(0, 0, 0, 0.87)',
+    '& .MuiChip-icon': {
+      color: 'rgba(0, 0, 0, 0.6)',
+    },
+  },
+      }}>
         <CardContent>
           <Typography variant="h5" gutterBottom>🎯 Workout Preferences</Typography>
           <Grid container spacing={3} alignItems="center">
