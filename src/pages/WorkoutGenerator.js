@@ -360,7 +360,7 @@ function WorkoutGenerator() {
         </Card>
       )}
 
-      <Paper elevation={0} sx={{ p: 2, textAlign: 'center', backgroundColor: 'grey.50', borderRadius: 2 }}>
+      <Paper elevation={0} sx={{ p: 2, textAlign: 'center'}}>
         <Typography variant="body2" color="text.secondary">
           🤖 Powered by advanced AI models including Groq Llama3, Ollama, and rule-based systems<br />
           💪 Every workout is personalized based on your fitness profile and goals
