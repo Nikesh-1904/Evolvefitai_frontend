@@ -50,7 +50,7 @@ function HideOnScroll({ children }) {
 const modernPages = [
   { name: 'Dashboard', path: '/', icon: <Dashboard /> },
   { name: 'Generate Workout', path: '/generate-workout', icon: <AutoAwesome /> },
-  { name: 'Meal Planner', path: '/meal-planner', icon: <Restaurant /> },
+  { name: 'Meal Planner', path: '/meal-plan-generator', icon: <Restaurant /> },
   { name: 'Log Workout', path: '/log-workout', icon: <Create /> },
   { name: 'History', path: '/workout-history', icon: <History /> },
 ];
