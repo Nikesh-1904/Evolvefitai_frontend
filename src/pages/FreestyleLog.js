@@ -38,6 +38,8 @@ const FreestyleLog = () => {
   const [startTime] = useState(new Date());
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDurationModalOpen, setDurationModalOpen] = useState(false);
+  const [manualDuration, setManualDuration] = useState(45); // Default to 45 mins
 
   const [open, setOpen] = useState(false);
   const [options, setOptions] = useState([]);
@@ -101,30 +103,32 @@ const FreestyleLog = () => {
     setLoggedExercises(updatedExercises);
   };
 
-  const handleFinishWorkout = async () => {
+  const handleFinishWorkout = () => {
+    // Basic check before opening the modal
+    if (loggedExercises.length === 0) {
+      setError('Please add at least one exercise before finishing.');
+      return;
+    }
+    setError('');
+    setDurationModalOpen(true); // Just open the modal
+  };
+
+  const handleSaveWithDuration = async () => {
     setIsSubmitting(true);
     setError('');
 
-    const exercises_completed = loggedExercises
-      .map(ex => ({
-        name: ex.name,
-        sets: ex.sets.map(set => ({
-          reps: parseInt(set.reps, 10) || 0,
-          weight: parseFloat(set.weight) || 0,
-        })),
-      }))
-      .filter(ex => ex.sets.length > 0 && ex.sets.some(s => s.reps > 0));
+    const exercises_completed = loggedExercises.map(ex => ({
+      name: ex.name,
+      sets: ex.sets.map(set => ({
+        reps: parseInt(set.reps, 10) || 0,
+        weight: parseFloat(set.weight) || 0,
+      })),
+    })).filter(ex => ex.sets.length > 0 && ex.sets.some(s => s.reps > 0));
 
-    if (exercises_completed.length === 0) {
-      setError('Please add at least one exercise and log one set to finish.');
-      setIsSubmitting(false);
-      return;
-    }
+    // No need to check for empty exercises here, as it's done before opening the modal
 
-    const duration_minutes = Math.max(1, Math.round((new Date() - startTime) / (1000 * 60)));
-    
     const logPayload = {
-      duration_minutes,
+      duration_minutes: manualDuration, // Use the duration from the modal
       notes,
       exercises_completed,
       workout_date: new Date().toISOString(),
@@ -132,12 +136,47 @@ const FreestyleLog = () => {
 
     try {
       await apiService.logWorkout(logPayload);
+      setDurationModalOpen(false); // Close modal on success
       navigate('/workout-history');
     } catch (err) {
       setError(err.message || 'Failed to save workout log.');
-      setIsSubmitting(false);
+      setIsSubmitting(false); // Keep modal open to show the error
     }
   };
+  
+  // The JSX for the popup modal
+  const renderDurationModal = () => (
+    <Dialog open={isDurationModalOpen} onClose={() => setDurationModalOpen(false)}>
+      <DialogTitle>Confirm Workout Duration</DialogTitle>
+      <DialogContent>
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        <Typography variant="body2" sx={{ mb: 2 }}>
+          What was the total duration of your workout in minutes?
+        </Typography>
+        <TextField
+          autoFocus
+          margin="dense"
+          label="Duration (minutes)"
+          type="number"
+          fullWidth
+          variant="outlined"
+          value={manualDuration}
+          onChange={(e) => setManualDuration(parseInt(e.target.value, 10) || 0)}
+          inputProps={{ min: 1 }}
+        />
+      </DialogContent>
+      <DialogActions sx={{ p: 2 }}>
+        <Button onClick={() => setDurationModalOpen(false)}>Cancel</Button>
+        <Button 
+          onClick={handleSaveWithDuration} 
+          variant="contained"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? <CircularProgress size={24} /> : 'Save Workout'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -226,6 +265,8 @@ const FreestyleLog = () => {
           {isSubmitting ? 'Saving...' : 'Finish & Log Workout'}
         </Button>
       </Box>
+
+      {renderDurationModal()} {/* 👈 ADD THIS LINE */}
     </Container>
   );
 };
