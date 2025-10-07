@@ -25,6 +25,7 @@ import {
   LinearProgress,
   Avatar,
   Stack,
+  Skeleton,
 } from '@mui/material';
 import {
   FitnessCenter,
@@ -156,6 +157,7 @@ function Dashboard() {
   const [recentWorkouts, setRecentWorkouts] = useState([]);
   const [workoutPlans, setWorkoutPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState(null); // 👈 ADD THIS LINE
 
   // Meal plan generation states
   const [mealPlanLoading, setMealPlanLoading] = useState(false);
@@ -201,9 +203,11 @@ function Dashboard() {
       const [workoutLogsData, workoutPlansData] = await Promise.all([
         apiService.getWorkoutLogs(),
         apiService.getWorkoutPlans(),
+        apiService.getDashboardStats(), // 👈 ADD THIS
       ]);
       setRecentWorkouts(workoutLogsData.slice(0, 3));
       setWorkoutPlans(workoutPlansData.slice(0, 3));
+      setStats(statsData);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
@@ -349,14 +353,54 @@ function Dashboard() {
 
         {/* Stats Overview */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={6} sm={3}>
-            <StatCard
-              icon={<LocalFireDepartment sx={{ fontSize: 32 }} />}
-              value="1,247"
-              label="Calories Burned"
-              change="+12%"
-              color="#FF3366"
-            />
+            {(loading || !stats) ? (
+              // Show skeleton loaders while data is being fetched
+              [...Array(4)].map((_, index) => (
+                <Grid item xs={6} sm={3} key={index}>
+                  <Paper sx={{ p: 2.5, borderRadius: 2, background: 'rgba(37, 42, 61, 0.6)' }}>
+                    <Skeleton variant="circular" width={40} height={40} sx={{ mx: 'auto', mb: 1.5 }} />
+                    <Skeleton variant="text" sx={{ fontSize: '2rem', mx: 'auto' }} width="60%" />
+                    <Skeleton variant="text" sx={{ fontSize: '1rem', mx: 'auto' }} width="80%" />
+                  </Paper>
+                </Grid>
+              ))
+            ) : (
+              // Show real data once it's loaded
+              <>
+                <Grid item xs={6} sm={3}>
+                  <StatCard
+                    icon={<LocalFireDepartment sx={{ fontSize: 32 }} />}
+                    value={stats.total_calories_burned.toLocaleString()}
+                    label="Calories Burned"
+                    color="#FF3366"
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <StatCard
+                    icon={<Timer sx={{ fontSize: 32 }} />}
+                    value={`${stats.total_workout_time_hours}h`}
+                    label="Total Workout Time"
+                    color="#00D4FF"
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <StatCard
+                    icon={<EmojiEvents sx={{ fontSize: 32 }} />}
+                    value={stats.workouts_completed}
+                    label="Workouts Completed"
+                    color="#10B981"
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <StatCard
+                    icon={<TrendingUp sx={{ fontSize: 32 }} />}
+                    value={stats.fitness_level}
+                    label="Fitness Level"
+                    color="#7C3AED"
+                  />
+                </Grid>
+              </>
+            )}
           </Grid>
           <Grid item xs={6} sm={3}>
             <StatCard
