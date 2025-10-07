@@ -21,7 +21,9 @@ import Profile from './pages/Profile';
 import WorkoutSession from './pages/WorkoutSession';
 import FreestyleLog from './pages/FreestyleLog';
 import MealPlanGenerator from './pages/MealPlanGenerator';
+import WorkoutPlanDetail from './pages/WorkoutPlanDetail'; // 👈 ADD THIS IMPORT
 import OAuthCallback from './pages/OAuthCallback';
+
 
 // Protected Route component
 function ProtectedRoute({ children }) {
@@ -140,7 +142,8 @@ function App() {
                       <Route path="/log-workout" element={<FreestyleLog />} />
                       <Route path="/workout-history" element={<WorkoutHistory />} />
                       <Route path="/profile" element={<Profile />} />
-                      <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />
+                      <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />                        <Route path="/workout-plan/:planId" element={<WorkoutPlanDetail />} /> // 👈 ADD THIS LINE
+
 
                       {/* Fallback route */}
                       <Route path="*" element={<Navigate to="/" replace />} />

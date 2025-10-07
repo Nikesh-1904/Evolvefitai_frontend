@@ -202,6 +202,10 @@ class ApiService {
     });
   }
 
+  async getWorkoutPlanById(planId) {
+    return this.request(`/workouts/plans/${planId}`);
+  }
+
   async getWorkoutPlans() {
     return this.request('/workouts/plans');
   }

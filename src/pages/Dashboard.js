@@ -578,7 +578,19 @@ function Dashboard() {
                       }}>
                         <Box display="flex" alignItems="center" justifyContent="between" gap={2}>
                           <Box flex={1}>
-                            <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                            <Typography
+                              variant="h6"
+                              onClick={() => navigate(`/workout-plan/${plan.id}`)}
+                                  sx={{
+                                    mb: 1,
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    transition: 'color 0.2s ease-in-out',
+                                    '&:hover': {
+                                    color: 'primary.main',
+                                  },
+                                }}
+                              >
                               {plan.name}
                             </Typography>
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
