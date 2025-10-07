@@ -35,6 +35,8 @@ function Profile() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [usernameError, setUsernameError] = useState(''); // 👈 ADD THIS LINE
+
 
   useEffect(() => {
     if (user) {
@@ -72,6 +74,13 @@ function Profile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+     if (!formData.username || formData.username.trim() === '') {
+      setUsernameError('Username cannot be empty');
+      return; // Stop the function here
+    }
+    setUsernameError(''); // Clear any previous error if validation passes
+
     setLoading(true);
     setError('');
     setMessage('');
@@ -177,6 +186,8 @@ function Profile() {
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
+                  error={!!usernameError}
+                  helperText={usernameError}
                 />
               </Grid>
               
