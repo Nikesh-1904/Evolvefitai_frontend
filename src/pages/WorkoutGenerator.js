@@ -321,7 +321,7 @@ function WorkoutGenerator() {
                   </Grid>
 
                   {exerciseDetails[exercise.name] && (
-                    <Box mt={3} p={2} bgcolor="grey.50" borderRadius={2}>
+                    <Box mt={3} p={2} borderRadius={2}>
                       {exerciseDetails[exercise.name].videos && (
                         <Box mb={2}>
                           <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>🎬 Video Demonstrations:</Typography>
