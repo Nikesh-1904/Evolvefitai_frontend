@@ -132,11 +132,59 @@ function WorkoutPlanDetail() {
                  </Grid>
 
                  {exerciseDetails[exercise.name] && (
-                    <Box mt={2} p={2} borderRadius={2} sx={{backgroundColor: 'action.hover'}}>
-                       {/* Video and Tip rendering logic */}
-                       <Typography variant="subtitle2">Video/Tips for {exercise.name} appear here.</Typography>
+  <Box mt={3} p={2} borderRadius={2} sx={{ backgroundColor: 'action.hover' }}>
+    {/* Videos Section */}
+                    {exerciseDetails[exercise.name].videos?.length > 0 && (
+                    <Box mb={2}>
+                        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
+                        🎬 Video Demonstrations
+                        </Typography>
+                        <List dense>
+                        {exerciseDetails[exercise.name].videos.slice(0, 2).map((video) => (
+                            <ListItem 
+                            key={video.youtube_url} 
+                            secondaryAction={
+                                <Button 
+                                size="small" 
+                                href={video.youtube_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                variant="contained"
+                                >
+                                Watch
+                                </Button>
+                            }
+                            >
+                            <ListItemText 
+                                primary={video.title} 
+                                secondary={`Duration: ${video.duration || 'N/A'}s`} 
+                            />
+                            </ListItem>
+                        ))}
+                        </List>
                     </Box>
-                 )}
+                    )}
+
+                    {/* Tips Section */}
+                    {exerciseDetails[exercise.name].tips?.length > 0 && (
+                    <Box>
+                        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
+                        💡 Exercise Tips
+                        </Typography>
+                        <List dense>
+                        {exerciseDetails[exercise.name].tips.slice(0, 3).map((tip) => (
+                            <ListItem key={tip.id}>
+                            <ListItemText 
+                                primary={tip.title} 
+                                secondary={tip.content} 
+                            />
+                            </ListItem>
+                        ))}
+                        </List>
+                    </Box>
+                    )}
+                </Box>
+                )}
               </AccordionDetails>
             </Accordion>
           ))}
