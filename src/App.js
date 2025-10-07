@@ -143,6 +143,7 @@ function App() {
                       <Route path="/workout-history" element={<WorkoutHistory />} />
                       <Route path="/profile" element={<Profile />} />
                       <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />                        <Route path="/workout-plan/:planId" element={<WorkoutPlanDetail />} /> // 👈 ADD THIS LINE
+                      <Route path="/workout-plan/:planId" element={<WorkoutPlanDetail />} /> // 👈 ADD THIS LINE
 
 
                       {/* Fallback route */}

@@ -33,7 +33,7 @@ import {
   ThumbDown
 } from '@mui/icons-material';
 import apiService from '../services/apiService';
-import { AIModelBadge } from './WorkoutGenerator'; // Assuming AIModelBadge is exported
+import AIModelBadge from '../components/AIModelBadge';
 
 function WorkoutPlanDetail() {
   const { planId } = useParams();
