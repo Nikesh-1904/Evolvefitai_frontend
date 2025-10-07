@@ -200,7 +200,7 @@ function Dashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const [workoutLogsData, workoutPlansData] = await Promise.all([
+      const [workoutLogsData, workoutPlansData, statsData] = await Promise.all([
         apiService.getWorkoutLogs(),
         apiService.getWorkoutPlans(),
         apiService.getDashboardStats(), // 👈 ADD THIS
