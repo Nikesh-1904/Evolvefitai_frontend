@@ -288,6 +288,14 @@ class ApiService {
     return this.request(`/stats/analytics?aggregate_by=${aggregation}`);
   }
 
+  async getLoggedExercises() {
+    return this.request('/stats/logged-exercises');
+  }
+
+  async getExerciseProgression(exerciseName) {
+    return this.request(`/stats/exercise-progression?exercise_name=${encodeURIComponent(exerciseName)}`);
+  }
+
   // ==========================================
   // UTILITY METHODS
   // ==========================================
