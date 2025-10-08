@@ -203,7 +203,7 @@ function Dashboard() {
       const [workoutLogsData, workoutPlansData, statsData] = await Promise.all([
         apiService.getWorkoutLogs(),
         apiService.getWorkoutPlans(),
-        apiService.getDashboardStats(), // 👈 ADD THIS
+        apiService.getDashboardOverview(), // 👈 ADD THIS
       ]);
       setRecentWorkouts(workoutLogsData.slice(0, 3));
       setWorkoutPlans(workoutPlansData.slice(0, 3));
