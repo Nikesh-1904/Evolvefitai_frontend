@@ -82,63 +82,66 @@ const modernFitnessTheme = createTheme({
   },
 
   typography: {
-    fontFamily: '"Inter", sans-serif',
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
     h1: {
-      fontFamily: '"Ultra", serif',
-      fontWeight: 400, // Ultra only comes in one weight
+      fontFamily: '"Montserrat", "Inter", sans-serif',
+      fontWeight: 800,
       fontSize: '2.5rem',
       lineHeight: 1.2,
-      letterSpacing: '0.05em', // Add spacing for this bold font
+      letterSpacing: '-0.02em',
     },
     h2: {
-      fontFamily: '"Ultra", serif',
-      fontWeight: 400,
+      fontFamily: '"Montserrat", "Inter", sans-serif',
+      fontWeight: 700,
       fontSize: '2rem',
       lineHeight: 1.3,
+      letterSpacing: '-0.01em',
     },
     h3: {
-      fontFamily: '"Ultra", serif',
-      fontWeight: 400,
-      fontSize: '1.75rem',
-      lineHeight: 1.4,
-    },
-    h4: {
-      fontFamily: '"Gravitas One", serif',
-      fontWeight: 400,
+      fontFamily: '"Montserrat", "Inter", sans-serif',
+      fontWeight: 600,
       fontSize: '1.5rem',
       lineHeight: 1.4,
     },
-    h5: {
-      fontFamily: '"Gravitas One", serif',
-      fontWeight: 400,
+    h4: {
+      fontFamily: '"Montserrat", "Inter", sans-serif',
+      fontWeight: 600,
       fontSize: '1.25rem',
+      lineHeight: 1.4,
+    },
+    h5: {
+      fontFamily: '"Montserrat", "Inter", sans-serif',
+      fontWeight: 600,
+      fontSize: '1.125rem',
       lineHeight: 1.5,
     },
     h6: {
-      fontFamily: '"Gravitas One", serif',
-      fontWeight: 400,
-      fontSize: '1.1rem',
+      fontFamily: '"Montserrat", "Inter", sans-serif',
+      fontWeight: 600,
+      fontSize: '1rem',
       lineHeight: 1.5,
     },
     body1: {
       fontFamily: '"Inter", sans-serif',
       fontSize: '1rem',
-      lineHeight: 1.7,
+      lineHeight: 1.6,
+      letterSpacing: '0.01em',
     },
     body2: {
       fontFamily: '"Inter", sans-serif',
       fontSize: '0.875rem',
       lineHeight: 1.6,
+      letterSpacing: '0.01em',
     },
     button: {
-      fontFamily: '"Montserrat", sans-serif', // Using Montserrat for buttons
-      fontWeight: 700,
-      fontSize: '0.9rem',
-      letterSpacing: '0.05em',
+      fontFamily: '"Inter", sans-serif',
+      fontWeight: 600,
+      fontSize: '0.875rem',
+      letterSpacing: '0.02em',
       textTransform: 'none',
     },
   },
-  
+
   shape: {
     borderRadius: 12,
   },
