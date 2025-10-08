@@ -278,20 +278,29 @@ function WorkoutHistory() {
                   <Typography variant="h6" gutterBottom>
                     Exercises
                   </Typography>
-                  <List>
-                    {selectedWorkout.exercises_completed.map((exercise, index) => (
-                      <ListItem key={index}>
+                  <List dense>
+                  {selectedWorkout.exercises_completed.map((exercise, index) => (
+                    <React.Fragment key={index}>
+                      <ListItem>
                         <ListItemText
-                          primary={exercise.exercise_name || exercise.name || `Exercise ${index + 1}`}
-                          secondary={
-                            exercise.sets && exercise.reps 
-                              ? `${exercise.sets} sets × ${Array.isArray(exercise.reps) ? exercise.reps.join(', ') : exercise.reps} reps`
-                              : 'Details not recorded'
+                          primary={
+                            <Typography variant="h6" component="div">
+                              {exercise.name || `Exercise ${index + 1}`}
+                            </Typography>
                           }
+                          disableTypography
                         />
                       </ListItem>
-                    ))}
-                  </List>
+                      {exercise.sets.map((set, setIndex) => (
+                        <ListItem key={setIndex} sx={{ pl: 4 }}>
+                          <ListItemText
+                            primary={`Set ${setIndex + 1}: ${set.reps} reps at ${set.weight} kg`}
+                          />
+                        </ListItem>
+                      ))}
+                    </React.Fragment>
+                  ))}
+                </List>
                 </>
               )}
               
