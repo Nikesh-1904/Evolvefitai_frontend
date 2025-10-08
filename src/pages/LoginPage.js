@@ -204,7 +204,8 @@ const handleSubmit = async (e) => {
             fullWidth
             variant="outlined"
             startIcon={<GoogleIcon />}
-            onClick={googleLogin}
+            component="a" 
+            href={`${process.env.REACT_APP_API_URL}/auth/google/authorize`}
             sx={{ mt: 1 }}
           >
             Continue with Google
