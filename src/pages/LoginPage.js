@@ -204,6 +204,7 @@ const handleSubmit = async (e) => {
             fullWidth
             variant="outlined"
             startIcon={<GoogleIcon />}
+            // This is now a simple link (<a> tag) that navigates directly.
             component="a" 
             href={`${process.env.REACT_APP_API_URL}/auth/google/authorize`}
             sx={{ mt: 1 }}
