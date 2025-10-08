@@ -134,6 +134,10 @@ class ApiService {
     return this.request('/auth/users/me');
   }
 
+  async getDashboardOverview() {
+    return this.request('/stats/overview');
+  }
+  
   async updateProfile(profileData) {
     return this.request('/auth/users/me', {
       method: 'PATCH',

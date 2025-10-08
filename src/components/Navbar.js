@@ -17,7 +17,8 @@ import {
   Slide,
   Badge,
   Chip,
-  Divider
+  Divider,
+  LinearProgress 
 } from '@mui/material';
 import {
   FitnessCenter,
@@ -56,11 +57,12 @@ const modernPages = [
 ];
 
 function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, logout, stats } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [anchorElNav, setAnchorElNav] = useState(null);
   const [anchorElUser, setAnchorElUser] = useState(null);
+
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -341,6 +343,29 @@ function Navbar() {
                       fontSize: '0.7rem'
                     }}
                   />
+                  {stats && stats.level_progress && (
+                    <Box sx={{ mt: 1.5 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                          Level {stats.level_progress.current_level}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                          Next Level
+                        </Typography>
+                      </Box>
+                      <LinearProgress
+                        variant="determinate"
+                        value={
+                          ((stats.level_progress.current_points - stats.level_progress.points_for_current_level) /
+                          (stats.level_progress.points_for_next_level - stats.level_progress.points_for_current_level)) * 100
+                        }
+                        sx={{ height: 6, borderRadius: 3 }}
+                      />
+                      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', textAlign: 'center', mt: 0.5 }}>
+                        {stats.level_progress.current_points.toLocaleString()} / {stats.level_progress.points_for_next_level.toLocaleString()} Points
+                      </Typography>
+                    </Box>
+                  )}
                 </Box>
 
                 <MenuItem 

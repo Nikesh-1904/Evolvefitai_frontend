@@ -15,7 +15,18 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [stats, setStats] = useState(null); // 👈 1. ADD NEW STATE
   const [loading, setLoading] = useState(true);
+
+  // 2. ADD HELPER FUNCTION TO FETCH STATS
+  const fetchUserStats = async () => {
+    try {
+      const statsData = await apiService.getDashboardOverview();
+      setStats(statsData);
+    } catch (error) {
+      console.error("Failed to fetch user stats:", error);
+    }
+  };
 
   // Check for existing authentication on mount
   useEffect(() => {
@@ -27,6 +38,7 @@ export const AuthProvider = ({ children }) => {
           console.log('🔍 Found token, fetching user profile...');
           const userProfile = await apiService.getCurrentUser();
           setUser(userProfile);
+          await fetchUserStats(); // 👈 3. FETCH STATS ON INITIAL LOAD
           console.log('✅ User authenticated:', userProfile.email);
         } catch (error) {
           console.error('❌ Token invalid, clearing auth:', error);
@@ -51,6 +63,7 @@ export const AuthProvider = ({ children }) => {
       // Get the user profile after successful login
       const userProfile = await apiService.getCurrentUser();
       setUser(userProfile);
+      await fetchUserStats(); // 👈 3. FETCH STATS ON LOGIN
 
       console.log('✅ AuthContext: Login successful for', userProfile.email);
       return loginResponse;
@@ -109,6 +122,7 @@ export const AuthProvider = ({ children }) => {
       // Still clear user state even if API call fails
       apiService.clearAuth();
       setUser(null);
+      setStats(null); // 👈 4. CLEAR STATS ON LOGOUT
     }
   };
 
@@ -140,6 +154,7 @@ export const AuthProvider = ({ children }) => {
       // Get user profile
       const userProfile = await apiService.getCurrentUser();
       setUser(userProfile);
+      await fetchUserStats(); // 👈 3. FETCH STATS ON OAUTH LOGIN
 
       console.log('✅ AuthContext: OAuth callback processed for', userProfile.email);
       return userProfile;
@@ -152,6 +167,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    stats, // 👈 5. EXPOSE STATS
     loading,
     login,
     register,
