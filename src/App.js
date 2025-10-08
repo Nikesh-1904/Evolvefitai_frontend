@@ -18,6 +18,7 @@ import Dashboard from './pages/Dashboard';
 import WorkoutGenerator from './pages/WorkoutGenerator';
 import WorkoutHistory from './pages/WorkoutHistory';
 import Profile from './pages/Profile';
+import Analytics from './pages/Analytics'; // 👈 ADD THIS IMPORT
 import WorkoutSession from './pages/WorkoutSession';
 import FreestyleLog from './pages/FreestyleLog';
 import MealPlanGenerator from './pages/MealPlanGenerator';
@@ -142,9 +143,9 @@ function App() {
                       <Route path="/log-workout" element={<FreestyleLog />} />
                       <Route path="/workout-history" element={<WorkoutHistory />} />
                       <Route path="/profile" element={<Profile />} />
-                      <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />                        <Route path="/workout-plan/:planId" element={<WorkoutPlanDetail />} /> // 👈 ADD THIS LINE
+                      <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />
                       <Route path="/workout-plan/:planId" element={<WorkoutPlanDetail />} /> // 👈 ADD THIS LINE
-
+                      <Route path="/analytics" element={<Analytics />} /> {/* 👈 ADD THIS LINE */}
 
                       {/* Fallback route */}
                       <Route path="*" element={<Navigate to="/" replace />} />

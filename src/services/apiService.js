@@ -137,7 +137,7 @@ class ApiService {
   async getDashboardOverview() {
     return this.request('/stats/overview');
   }
-  
+
   async updateProfile(profileData) {
     return this.request('/auth/users/me', {
       method: 'PATCH',
@@ -285,6 +285,10 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  }
+
+  async getAnalyticsData(aggregation = 'day') {
+    return this.request(`/stats/analytics?aggregate_by=${aggregation}`);
   }
 
   // ==========================================
