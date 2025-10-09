@@ -1,7 +1,7 @@
-// src/App.js - Complete Modern App with Theme Provider
+// src/App.js
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -18,145 +18,74 @@ import Dashboard from './pages/Dashboard';
 import WorkoutGenerator from './pages/WorkoutGenerator';
 import WorkoutHistory from './pages/WorkoutHistory';
 import Profile from './pages/Profile';
-import Analytics from './pages/Analytics'; // 👈 ADD THIS IMPORT
 import WorkoutSession from './pages/WorkoutSession';
 import FreestyleLog from './pages/FreestyleLog';
 import MealPlanGenerator from './pages/MealPlanGenerator';
-import WorkoutPlanDetail from './pages/WorkoutPlanDetail'; // 👈 ADD THIS IMPORT
 import OAuthCallback from './pages/OAuthCallback';
+import OnboardingPage from './pages/OnboardingPage'; // 👈 1. IMPORT THE NEW PAGE
 
-
-// Protected Route component
-function ProtectedRoute({ children }) {
+// This component handles the core logic for redirecting users
+function AppRoutes() {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0A0E1A 0%, #1A1F2E 50%, #252A3D 100%)',
-        color: 'white'
-      }}>
-        <div style={{
-          textAlign: 'center',
-          padding: '2rem'
-        }}>
-          <div style={{
-            width: '50px',
-            height: '50px',
-            border: '3px solid rgba(0, 212, 255, 0.3)',
-            borderTop: '3px solid #00D4FF',
-            borderRadius: '50%',
-            margin: '0 auto 1rem',
-            animation: 'spin 1s linear infinite'
-          }}></div>
-          <p style={{ fontSize: '1.1rem' }}>Loading EvolveFitAI...</p>
-        </div>
-        <style>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#0A0E1A' }}>
+        <p style={{ color: 'white' }}>Loading Application...</p>
       </div>
     );
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
+  // If user is logged in but HAS NOT completed onboarding
+  if (user && !user.has_completed_onboarding && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />;
   }
 
-  return children;
-}
-
-// Public Route component (for login page)
-function PublicRoute({ children }) {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0A0E1A 0%, #1A1F2E 50%, #252A3D 100%)',
-        color: 'white'
-      }}>
-        <div style={{
-          textAlign: 'center',
-          padding: '2rem'
-        }}>
-          <div style={{
-            width: '50px',
-            height: '50px',
-            border: '3px solid rgba(0, 212, 255, 0.3)',
-            borderTop: '3px solid #00D4FF',
-            borderRadius: '50%',
-            margin: '0 auto 1rem',
-            animation: 'spin 1s linear infinite'
-          }}></div>
-          <p style={{ fontSize: '1.1rem' }}>Initializing...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // If user is logged in AND HAS completed onboarding
   if (user) {
-    return <Navigate to="/" replace />;
+    return (
+      <>
+        <Navbar />
+        <div style={{ paddingTop: '80px' }}>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/generate-workout" element={<WorkoutGenerator />} />
+            <Route path="/workout-session" element={<WorkoutSession />} />
+            <Route path="/log-workout" element={<FreestyleLog />} />
+            <Route path="/workout-history" element={<WorkoutHistory />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />
+            <Route path="/onboarding" element={<OnboardingPage />} /> {/* 👈 2. ADD THE ONBOARDING ROUTE */}
+            {/* Add other protected routes here */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </>
+    );
   }
 
-  return children;
+  // If user is not logged in
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/auth/callback" element={<OAuthCallback />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
+  );
 }
 
 function App() {
   return (
     <ThemeProvider theme={modernFitnessTheme}>
       <CssBaseline />
-      <AuthProvider>
-        <Router>
+      <Router>
+        <AuthProvider>
           <div className="App">
-            <Routes>
-              {/* Public Routes */}
-              <Route 
-                path="/login" 
-                element={
-                  <PublicRoute>
-                    <LoginPage />
-                  </PublicRoute>
-                } 
-              />
-              <Route path="/auth/callback" element={<OAuthCallback />} />
-
-              {/* Protected Routes */}
-              <Route path="/*" element={
-                <ProtectedRoute>
-                  <Navbar />
-                  <div style={{ paddingTop: '80px' }}> {/* Account for fixed navbar */}
-                    <Routes>
-                      <Route path="/" element={<Dashboard />} />
-                      <Route path="/generate-workout" element={<WorkoutGenerator />} />
-                      <Route path="/workout-session" element={<WorkoutSession />} />
-                      <Route path="/log-workout" element={<FreestyleLog />} />
-                      <Route path="/workout-history" element={<WorkoutHistory />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />
-                      <Route path="/workout-plan/:planId" element={<WorkoutPlanDetail />} /> // 👈 ADD THIS LINE
-                      <Route path="/analytics" element={<Analytics />} /> {/* 👈 ADD THIS LINE */}
-
-                      {/* Fallback route */}
-                      <Route path="*" element={<Navigate to="/" replace />} />
-                    </Routes>
-                  </div>
-                </ProtectedRoute>
-              } />
-            </Routes>
+            <AppRoutes /> {/* 👈 3. USE THE NEW ROUTING COMPONENT */}
           </div>
-        </Router>
-      </AuthProvider>
+        </AuthProvider>
+      </Router>
     </ThemeProvider>
   );
 }
