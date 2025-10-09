@@ -18,11 +18,13 @@ import Dashboard from './pages/Dashboard';
 import WorkoutGenerator from './pages/WorkoutGenerator';
 import WorkoutHistory from './pages/WorkoutHistory';
 import Profile from './pages/Profile';
+import Analytics from './pages/Analytics';
 import WorkoutSession from './pages/WorkoutSession';
 import FreestyleLog from './pages/FreestyleLog';
 import MealPlanGenerator from './pages/MealPlanGenerator';
+import WorkoutPlanDetail from './pages/WorkoutPlanDetail';
 import OAuthCallback from './pages/OAuthCallback';
-import OnboardingPage from './pages/OnboardingPage'; // 👈 1. IMPORT THE NEW PAGE
+import OnboardingPage from './pages/OnboardingPage';
 
 // This component handles the core logic for redirecting users
 function AppRoutes() {
@@ -32,17 +34,18 @@ function AppRoutes() {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#0A0E1A' }}>
+        {/* You can replace this with a more sophisticated spinner component if you like */}
         <p style={{ color: 'white' }}>Loading Application...</p>
       </div>
     );
   }
 
-  // If user is logged in but HAS NOT completed onboarding
+  // If user is logged in but HAS NOT completed onboarding, force them to the onboarding page
   if (user && !user.has_completed_onboarding && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }
 
-  // If user is logged in AND HAS completed onboarding
+  // If user is logged in AND HAS completed onboarding, show the main app
   if (user) {
     return (
       <>
@@ -56,8 +59,11 @@ function AppRoutes() {
             <Route path="/workout-history" element={<WorkoutHistory />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />
-            <Route path="/onboarding" element={<OnboardingPage />} /> {/* 👈 2. ADD THE ONBOARDING ROUTE */}
-            {/* Add other protected routes here */}
+            <Route path="/workout-plan/:planId" element={<WorkoutPlanDetail />} />
+            <Route path="/analytics" element={<Analytics />} /> {/* <-- THIS ROUTE WAS MISSING */}
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            
+            {/* Fallback route for any other logged-in paths */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
@@ -65,11 +71,14 @@ function AppRoutes() {
     );
   }
 
-  // If user is not logged in
+  // If user is not logged in, only show public pages
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/auth/callback" element={<OAuthCallback />} />
+      {/* Any other public pages would go here */}
+
+      {/* Fallback for any other logged-out paths, redirect to login */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
@@ -82,7 +91,7 @@ function App() {
       <Router>
         <AuthProvider>
           <div className="App">
-            <AppRoutes /> {/* 👈 3. USE THE NEW ROUTING COMPONENT */}
+            <AppRoutes />
           </div>
         </AuthProvider>
       </Router>
