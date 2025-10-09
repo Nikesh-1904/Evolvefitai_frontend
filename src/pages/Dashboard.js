@@ -394,7 +394,7 @@ function Dashboard() {
               <Grid item xs={6} sm={3}>
                 <StatCard
                   icon={<TrendingUp sx={{ fontSize: 32 }} />}
-                  value={stats.fitness_level}
+                  value={`Level ${stats.level_progress.current_level}`}
                   label="Fitness Level"
                   color="#7C3AED"
                 />
