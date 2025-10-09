@@ -54,6 +54,7 @@ import apiService from '../services/apiService';
 import AIModelBadge from '../components/AIModelBadge';
 
 const muscleGroups = ['Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core', 'Full Body'];
+const workoutTypes = ['Gym', 'Home Workout', 'Yoga', 'Cardio', 'HIIT']; // 👈 ADD THIS LINE
 
 function WorkoutGenerator() {
   const { user } = useAuth();
