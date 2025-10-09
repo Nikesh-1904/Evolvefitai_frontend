@@ -62,6 +62,8 @@ function WorkoutGenerator() {
   const [exerciseDetails, setExerciseDetails] = useState({});
   const [generationTime, setGenerationTime] = useState(null);
   const [selectedMuscles, setSelectedMuscles] = useState([]);
+  const [numExercises, setNumExercises] = useState(''); // Default to empty (AI decides)
+  const [workoutType, setWorkoutType] = useState(''); // Default to empty (any)
 
   const handleMuscleToggle = (muscle) => {
     setSelectedMuscles((prev) =>
@@ -85,6 +87,8 @@ function WorkoutGenerator() {
         user_preferences: {
           fitness_goal: user?.fitness_goal || 'general_fitness',
           experience_level: user?.experience_level || 'intermediate',
+          num_exercises: numExercises ? parseInt(numExercises, 10) : null,
+          workout_type: workoutType || null,
         },
         duration_minutes: duration,
         target_muscle_groups: selectedMuscles,
@@ -162,6 +166,38 @@ function WorkoutGenerator() {
                 inputProps={{ min: 15, max: 120 }}
                 helperText="15-120 minutes"
               />
+            </Grid>
+            {/* --- START: NEW FILTER UI --- */}
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth>
+                <InputLabel>Number of Exercises</InputLabel>
+                <Select
+                  value={numExercises}
+                  label="Number of Exercises"
+                  onChange={(e) => setNumExercises(e.target.value)}
+                >
+                  <MenuItem value=""><em>AI Decides</em></MenuItem>
+                  {[...Array(8)].map((_, i) => (
+                    <MenuItem key={i + 3} value={i + 3}>{i + 3}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth>
+                <InputLabel>Workout Type</InputLabel>
+                <Select
+                  value={workoutType}
+                  label="Workout Type"
+                  onChange={(e) => setWorkoutType(e.target.value)}
+                >
+                  <MenuItem value=""><em>Any</em></MenuItem>
+                  {workoutTypes.map((type) => (
+                    <MenuItem key={type} value={type}>{type}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
             <Grid item xs={12} sm={8}>
               <Button
