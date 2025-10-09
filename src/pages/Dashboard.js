@@ -352,7 +352,6 @@ function Dashboard() {
         </Box>
 
 {/* Stats Overview */}
-// In Dashboard.js
           <Grid container spacing={3} sx={{ mb: 4 }}>
             {(loading || !stats) ? (
               // Skeleton loaders remain the same
