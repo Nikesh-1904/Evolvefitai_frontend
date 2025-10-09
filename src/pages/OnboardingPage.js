@@ -16,7 +16,9 @@ import {
   FormControl,
   InputLabel,
   Chip,
-  Grid
+  Grid,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -40,10 +42,12 @@ function OnboardingPage() {
     age: user?.age || '',
     weight: user?.weight || '',
     height: user?.height || '',
-    fitness_goal: user?.fitness_goal || '',
+    fitness_goal: user?.fitness_goal || 'general_fitness',
     dietary_restrictions: user?.dietary_restrictions || [],
   });
-  const [errors, setErrors] = useState({});
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleNext = () => {
     if (validateStep()) {
@@ -82,16 +86,25 @@ function OnboardingPage() {
     if (activeStep === 2 && !formData.fitness_goal) {
       newErrors.fitness_goal = 'Please select a fitness goal.';
     }
-    setErrors(newErrors);
+    setFieldErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
   
   const handleFinish = async () => {
     if (validateStep()) {
-      console.log("Submitting onboarding data:", formData);
-      // In the next step, we will replace this console.log with the API call
-      // await updateProfile({ ...formData, has_completed_onboarding: true });
-      // navigate('/'); 
+      setIsSubmitting(true);
+      setSubmitError('');
+      try {
+        // This is the API call to update the profile and set the onboarding flag
+        await updateProfile({ ...formData, has_completed_onboarding: true });
+        
+        // On success, navigate to the dashboard
+        navigate('/');
+      } catch (err) {
+        setSubmitError(err.message || "Failed to save profile. Please try again.");
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -109,8 +122,8 @@ function OnboardingPage() {
               name="username"
               value={formData.username}
               onChange={handleChange}
-              error={!!errors.username}
-              helperText={errors.username || "This is your unique name on the platform."}
+              error={!!fieldErrors.username}
+              helperText={fieldErrors.username || "This is your unique name on the platform."}
             />
           </>
         );
@@ -121,13 +134,13 @@ function OnboardingPage() {
             <Typography color="text.secondary" sx={{ mb: 3 }}>This data helps us personalize your workouts and calorie estimates.</Typography>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={4}>
-                <TextField required fullWidth label="Age" name="age" type="number" value={formData.age} onChange={handleChange} error={!!errors.age} helperText={errors.age || "Your age helps tailor plans."} />
+                <TextField required fullWidth label="Age" name="age" type="number" value={formData.age} onChange={handleChange} error={!!fieldErrors.age} helperText={fieldErrors.age || "Your age helps tailor plans."} />
               </Grid>
               <Grid item xs={12} sm={4}>
-                <TextField required fullWidth label="Weight (kg)" name="weight" type="number" value={formData.weight} onChange={handleChange} error={!!errors.weight} helperText={errors.weight || "For accurate calorie tracking."} />
+                <TextField required fullWidth label="Weight (kg)" name="weight" type="number" value={formData.weight} onChange={handleChange} error={!!fieldErrors.weight} helperText={fieldErrors.weight || "For accurate calorie tracking."} />
               </Grid>
               <Grid item xs={12} sm={4}>
-                <TextField required fullWidth label="Height (cm)" name="height" type="number" value={formData.height} onChange={handleChange} error={!!errors.height} helperText={errors.height || "Helps in exercise personalization."} />
+                <TextField required fullWidth label="Height (cm)" name="height" type="number" value={formData.height} onChange={handleChange} error={!!fieldErrors.height} helperText={fieldErrors.height || "Helps in exercise personalization."} />
               </Grid>
             </Grid>
           </>
@@ -137,21 +150,21 @@ function OnboardingPage() {
           <>
             <Typography variant="h5" gutterBottom>Fitness Goals & Preferences</Typography>
             <Typography color="text.secondary" sx={{ mb: 3 }}>Tell us what you want to achieve.</Typography>
-            <FormControl fullWidth required error={!!errors.fitness_goal}>
+            <FormControl fullWidth required error={!!fieldErrors.fitness_goal}>
               <InputLabel>Primary Fitness Goal</InputLabel>
               <Select name="fitness_goal" value={formData.fitness_goal} onChange={handleChange} label="Primary Fitness Goal">
                 {fitnessGoals.map(goal => (
-                  <MenuItem key={goal} value={goal}>{goal.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</MenuItem>
+                  <MenuItem key={goal} value={goal}>{goal.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</MenuItem>
                 ))}
               </Select>
-              {errors.fitness_goal && <Typography color="error" variant="caption" sx={{ mt: 1 }}>{errors.fitness_goal}</Typography>}
+              {fieldErrors.fitness_goal && <Typography color="error" variant="caption" sx={{ mt: 1, ml: 2 }}>{fieldErrors.fitness_goal}</Typography>}
             </FormControl>
             <Typography color="text.secondary" sx={{ mt: 3, mb: 1 }}>Dietary Restrictions (Optional)</Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {commonDietaryRestrictions.map(restriction => (
                 <Chip
                   key={restriction}
-                  label={restriction.replace('_', ' ')}
+                  label={restriction.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                   clickable
                   color={formData.dietary_restrictions.includes(restriction) ? 'primary' : 'default'}
                   onClick={() => handleDietaryRestrictionToggle(restriction)}
@@ -176,12 +189,16 @@ function OnboardingPage() {
           ))}
         </Stepper>
         
+        {submitError && <Alert severity="error" sx={{ mb: 3 }}>{submitError}</Alert>}
+
         <Box>
           {getStepContent(activeStep)}
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
             <Button disabled={activeStep === 0} onClick={handleBack} sx={{ mr: 1 }}>Back</Button>
             {activeStep === steps.length - 1 ? (
-              <Button variant="contained" onClick={handleFinish}>Finish Setup</Button>
+              <Button variant="contained" onClick={handleFinish} disabled={isSubmitting}>
+                {isSubmitting ? <CircularProgress size={24} /> : 'Finish Setup'}
+              </Button>
             ) : (
               <Button variant="contained" onClick={handleNext}>Next</Button>
             )}
