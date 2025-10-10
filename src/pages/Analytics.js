@@ -104,18 +104,43 @@ const progressionChartData = {
 };
   
   const progressionChartOptions = {
+    scales: {
+      y: {
+        beginAtZero: false,
+        grace: '10%' // Adds 10% padding to the top and bottom of the scale
+      }
+    },
     plugins: {
-      tooltip: {
-        callbacks: {
-          footer: function(tooltipItems) {
-            const dataIndex = tooltipItems[0].dataIndex;
-            const sets = progressionData[dataIndex].sets;
-            return sets.map(set => `  - ${set.reps} reps @ ${set.weight} kg`);
+        tooltip: {
+          callbacks: {
+            footer: function(tooltipItems) {
+              const dataIndex = tooltipItems[0].dataIndex;
+              if (!progressionData || !progressionData[dataIndex]) return '';
+              
+              const sets = progressionData[dataIndex].sets;
+              const metricType = progressionData[dataIndex].metric_type;
+
+              // Dynamically format the tooltip based on the exercise type
+              return sets.map(set => {
+                if (metricType === 'Volume (kg)') {
+                  return `  - ${set.reps || 0} reps @ ${set.weight || 0} kg`;
+                }
+                if (metricType === 'Total Reps') {
+                  return `  - ${set.reps || 0} reps`;
+                }
+                if (metricType === 'Total Duration (sec)') {
+                  return `  - ${set.duration_seconds || 0} seconds`;
+                }
+                if (metricType === 'Total Distance (km)') {
+                  return `  - ${set.distance_km || 0} km`;
+                }
+                return ''; // Fallback for other types
+              });
+            }
           }
         }
       }
-    }
-  };
+    };
 
   if (loading) { 
     return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>;
