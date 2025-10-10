@@ -92,11 +92,11 @@ function WorkoutGenerator() {
         user_preferences: {
           fitness_goal: user?.fitness_goal || 'general_fitness',
           experience_level: user?.experience_level || 'intermediate',
-          num_exercises: numExercises ? parseInt(numExercises, 10) : null,
-          workout_type: workoutType || null,
         },
         duration_minutes: duration,
         target_muscle_groups: selectedMuscles,
+        num_exercises: numExercises ? parseInt(numExercises, 10) : null,
+        workout_type: workoutType || null,
       };
 
       const response = await apiService.generateWorkout(requestData);
