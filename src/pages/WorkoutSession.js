@@ -23,7 +23,8 @@ import {
   ListItemText,
   ListItemIcon,
   TextField,
-  InputAdornment
+  InputAdornment,
+  Timer
 } from '@mui/material';
 import {
   SkipNext,
@@ -53,13 +54,31 @@ const WorkoutSession = () => {
 
   useEffect(() => {
     if (!workoutPlan) {
-      navigate('/generate-workout');
+      navigate('/workout-generator');
     } else {
-      // Pre-populate one set for each exercise to start
+      // Pre-populate one set for each exercise based on its type
       const initialData = {};
       workoutPlan.exercises.forEach((exercise, index) => {
+        let initialSet = {};
         const reps = parseInt(String(exercise.reps).split('-')[0]) || 8;
-        initialData[index] = [{ reps: reps, weight: 0 }];
+
+        switch (exercise.exercise_type) {
+            case 'REPS_ONLY':
+                initialSet = { reps };
+                break;
+            case 'DURATION':
+            case 'QUALITATIVE':
+                initialSet = { duration_seconds: 60 };
+                break;
+            case 'DISTANCE_DURATION':
+                initialSet = { distance_km: 1, duration_seconds: 300 };
+                break;
+            case 'WEIGHT_BASED':
+            default:
+                initialSet = { reps: reps, weight: 0 };
+                break;
+        }
+        initialData[index] = [initialSet];
       });
       setLoggedData(initialData);
     }
@@ -110,12 +129,38 @@ const WorkoutSession = () => {
     const exercises_completed = workoutPlan.exercises
       .map((exercise, index) => ({
         name: exercise.name,
-        sets: (loggedData[index] || []).map(set => ({
-          reps: parseInt(set.reps, 10) || 0,
-          weight: parseFloat(set.weight) || 0,
-        })),
+        exercise_type: exercise.exercise_type || 'WEIGHT_BASED', // Pass the type
+        sets: (loggedData[index] || []).map(set => {
+          // This cleaning logic can be copied from FreestyleLog.js
+          const cleanSet = {};
+          switch (exercise.exercise_type) {
+            case 'WEIGHT_BASED':
+              cleanSet.reps = parseInt(set.reps, 10) || 0;
+              cleanSet.weight = parseFloat(set.weight) || 0;
+              break;
+            case 'REPS_ONLY':
+              cleanSet.reps = parseInt(set.reps, 10) || 0;
+              break;
+            case 'DURATION':
+              cleanSet.duration_seconds = parseInt(set.duration_seconds, 10) || 0;
+              break;
+            case 'DISTANCE_DURATION':
+              cleanSet.duration_seconds = parseInt(set.duration_seconds, 10) || 0;
+              cleanSet.distance_km = parseFloat(set.distance_km) || 0;
+              break;
+            case 'QUALITATIVE':
+              cleanSet.duration_seconds = parseInt(set.duration_seconds, 10) || 0;
+              cleanSet.notes = set.notes || '';
+              break;
+            default:
+              cleanSet.reps = parseInt(set.reps, 10) || 0;
+              cleanSet.weight = parseFloat(set.weight) || 0;
+              break;
+          }
+          return cleanSet;
+        }),
       }))
-      .filter(exercise => exercise.sets.length > 0 && exercise.sets.some(s => s.reps > 0)); // Only include exercises with at least one logged set
+      .filter(exercise => exercise.sets.length > 0);  // Only include exercises with at least one logged set
 
     if (exercises_completed.length === 0) {
       setError('Please log at least one set with reps to finish the workout.');
@@ -148,6 +193,44 @@ const WorkoutSession = () => {
 
   const currentExercise = workoutPlan.exercises[currentExerciseIndex];
   const currentLoggedSets = loggedData[currentExerciseIndex] || [];
+
+  const renderSetInputs = (exercise, exIndex, set, setIndex) => {
+    switch (exercise.exercise_type) {
+      case 'REPS_ONLY':
+        return (
+          <Grid item xs={9}>
+            <TextField label="Reps" type="number" value={set.reps || ''} onChange={(e) => handleSetChange(exIndex, setIndex, 'reps', e.target.value)} fullWidth />
+          </Grid>
+        );
+      case 'DURATION':
+        return (
+          <Grid item xs={9}>
+            <TextField label="Duration" type="number" value={set.duration_seconds || ''} onChange={(e) => handleSetChange(exIndex, setIndex, 'duration_seconds', e.target.value)} fullWidth InputProps={{ endAdornment: <InputAdornment position="end">sec</InputAdornment> }} />
+          </Grid>
+        );
+      case 'DISTANCE_DURATION':
+        return (
+          <>
+            <Grid item xs={4.5}><TextField label="Distance" type="number" value={set.distance_km || ''} onChange={(e) => handleSetChange(exIndex, setIndex, 'distance_km', e.target.value)} fullWidth InputProps={{ endAdornment: <InputAdornment position="end">km</InputAdornment> }} /></Grid>
+            <Grid item xs={4.5}><TextField label="Duration" type="number" value={set.duration_seconds || ''} onChange={(e) => handleSetChange(exIndex, setIndex, 'duration_seconds', e.target.value)} fullWidth InputProps={{ endAdornment: <InputAdornment position="end">sec</InputAdornment> }} /></Grid>
+          </>
+        );
+      case 'QUALITATIVE':
+         return (
+          <Grid item xs={9}>
+            <TextField label="Notes for this activity" type="text" value={set.notes || ''} onChange={(e) => handleSetChange(exIndex, setIndex, 'notes', e.target.value)} fullWidth placeholder="e.g., Vinyasa flow, focused on hips"/>
+          </Grid>
+        );
+      case 'WEIGHT_BASED':
+      default:
+        return (
+          <>
+            <Grid item xs={4.5}><TextField label="Weight" type="number" value={set.weight || ''} onChange={(e) => handleSetChange(exIndex, setIndex, 'weight', e.target.value)} fullWidth InputProps={{ endAdornment: <InputAdornment position="end">kg</InputAdornment> }} /></Grid>
+            <Grid item xs={4.5}><TextField label="Reps" type="number" value={set.reps || ''} onChange={(e) => handleSetChange(exIndex, setIndex, 'reps', e.target.value)} fullWidth /></Grid>
+          </>
+        );
+    }
+  };
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -183,25 +266,8 @@ const WorkoutSession = () => {
               <Grid item xs={1}>
                 <Chip label={setIndex + 1} color="primary" />
               </Grid>
-              <Grid item xs={5}>
-                <TextField
-                  label="Weight"
-                  type="number"
-                  value={set.weight}
-                  onChange={(e) => handleSetChange(currentExerciseIndex, setIndex, 'weight', e.target.value)}
-                  fullWidth
-                  InputProps={{ endAdornment: <InputAdornment position="end">kg</InputAdornment> }}
-                />
-              </Grid>
-              <Grid item xs={4}>
-                <TextField
-                  label="Reps"
-                  type="number"
-                  value={set.reps}
-                  onChange={(e) => handleSetChange(currentExerciseIndex, setIndex, 'reps', e.target.value)}
-                  fullWidth
-                />
-              </Grid>
+              {renderSetInputs(currentExercise, currentExerciseIndex, set, setIndex)}
+              
               <Grid item xs={2}>
                 <IconButton onClick={() => handleRemoveSet(currentExerciseIndex, setIndex)} color="error" aria-label="Remove Set">
                   <Delete />
