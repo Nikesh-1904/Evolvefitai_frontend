@@ -88,17 +88,20 @@ const Analytics = () => {
 		],
   };
   
-  const progressionChartData = {
-    labels: progressionData?.map(d => new Date(d.workout_date).toLocaleDateString()) || [],
-    datasets: [{
-      label: 'Total Volume (kg)',
-      data: progressionData?.map(d => d.total_volume) || [],
-      borderColor: '#7C3AED',
-      backgroundColor: 'rgba(124, 58, 237, 0.2)',
-      fill: true,
-      tension: 0.4,
-    }],
-  };
+// Dynamically create the progression chart data and label
+const progressionChartLabel = progressionData?.[0]?.metric_type || 'Progression';
+
+const progressionChartData = {
+  labels: progressionData?.map(d => new Date(d.workout_date).toLocaleDateString()) || [],
+  datasets: [{
+    label: progressionChartLabel, // Dynamic Label
+    data: progressionData?.map(d => d.primary_metric_value) || [], // Dynamic Data
+    borderColor: '#7C3AED',
+    backgroundColor: 'rgba(124, 58, 237, 0.2)',
+    fill: true,
+    tension: 0.4,
+  }],
+};
   
   const progressionChartOptions = {
     plugins: {

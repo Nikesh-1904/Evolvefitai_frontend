@@ -51,6 +51,8 @@ const WorkoutSession = () => {
   const [error, setError] = useState('');
   const [showQuitDialog, setShowQuitDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDurationModalOpen, setDurationModalOpen] = useState(false); // 👈 ADD THIS
+  const [manualDuration, setManualDuration] = useState(45); // 👈 ADD THIS
 
   useEffect(() => {
     if (!workoutPlan) {
@@ -122,11 +124,27 @@ const WorkoutSession = () => {
     }
   };
 
-  const handleFinishWorkout = async () => {
+const handleFinishWorkout = () => {
+    const exercises_completed = workoutPlan.exercises
+      .map((exercise, index) => ({
+        name: exercise.name,
+        sets: loggedData[index] || [],
+      }))
+      .filter(exercise => exercise.sets.length > 0);
+
+    if (exercises_completed.length === 0) {
+      setError('Please log at least one set to finish the workout.');
+      return;
+    }
+    setError('');
+    setDurationModalOpen(true); // Just open the modal
+};
+
+  const handleSaveWithDuration = async () => {
     setIsSubmitting(true);
     setError('');
 
-    const exercises_completed = workoutPlan.exercises
+  const exercises_completed = workoutPlan.exercises
       .map((exercise, index) => ({
         name: exercise.name,
         exercise_type: exercise.exercise_type || 'WEIGHT_BASED', // Pass the type
@@ -160,19 +178,11 @@ const WorkoutSession = () => {
           return cleanSet;
         }),
       }))
-      .filter(exercise => exercise.sets.length > 0);  // Only include exercises with at least one logged set
-
-    if (exercises_completed.length === 0) {
-      setError('Please log at least one set with reps to finish the workout.');
-      setIsSubmitting(false);
-      return;
-    }
-    
-    const duration_minutes = Math.round((new Date() - startTime) / (1000 * 60));
+      .filter(exercise => exercise.sets.length > 0);
 
     const logPayload = {
       workout_plan_id: workoutPlan.id,
-      duration_minutes,
+      duration_minutes: manualDuration, // Use the duration from the modal
       notes,
       exercises_completed,
       workout_date: new Date().toISOString(),
@@ -180,12 +190,14 @@ const WorkoutSession = () => {
 
     try {
       await apiService.logWorkout(logPayload);
+      setDurationModalOpen(false);
       navigate('/workout-history');
     } catch (err) {
-      setError(err.message || 'Failed to save workout log. Please try again.');
+      setError(err.message || 'Failed to save workout log.');
+    } finally {
       setIsSubmitting(false);
     }
-  };
+};
 
   if (!workoutPlan) {
     return null; // Redirecting in useEffect
@@ -231,6 +243,33 @@ const WorkoutSession = () => {
         );
     }
   };
+
+const renderDurationModal = () => (
+    <Dialog open={isDurationModalOpen} onClose={() => setDurationModalOpen(false)}>
+      <DialogTitle>Confirm Workout Duration</DialogTitle>
+      <DialogContent>
+        <Typography variant="body2" sx={{ mb: 2 }}>
+          What was the total duration of your workout in minutes?
+        </Typography>
+        <TextField
+          autoFocus
+          margin="dense"
+          label="Duration (minutes)"
+          type="number"
+          fullWidth
+          variant="outlined"
+          value={manualDuration}
+          onChange={(e) => setManualDuration(parseInt(e.target.value, 10) || 0)}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setDurationModalOpen(false)}>Cancel</Button>
+        <Button onClick={handleSaveWithDuration} variant="contained" disabled={isSubmitting}>
+          {isSubmitting ? <CircularProgress size={24} /> : 'Save Workout'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+);
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -365,6 +404,7 @@ const WorkoutSession = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      {renderDurationModal()}
     </Container>
   );
 };
