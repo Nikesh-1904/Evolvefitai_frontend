@@ -44,7 +44,7 @@ const WorkoutSession = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const workoutPlan = location.state?.workoutPlan;
-
+  const [editablePlan, setEditablePlan] = useState(null); // 👈 ADD THIS
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [loggedData, setLoggedData] = useState({});
   const [notes, setNotes] = useState('');
@@ -53,13 +53,22 @@ const WorkoutSession = () => {
   const [showQuitDialog, setShowQuitDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDurationModalOpen, setDurationModalOpen] = useState(false); // 👈 ADD THIS
-  const [manualDuration, setManualDuration] = useState(45); // 👈 ADD THIS
+  const [manualDuration, setManualDuration] = useState(45);
+  const [videoModalOpen, setVideoModalOpen] = useState(false); // 👈 ADD THIS
+  const [currentExerciseVideos, setCurrentExerciseVideos] = useState([]); // 👈 ADD THIS
+  const [videoLoading, setVideoLoading] = useState(false); // 👈 ADD THIS
+  const [isAddingExercise, setIsAddingExercise] = useState(false); // 👈 ADD
+  const [searchOptions, setSearchOptions] = useState([]); // 👈 ADD
+  const [searchLoading, setSearchLoading] = useState(false); // 👈 ADD
+  const [searchInputValue, setSearchInputValue] = useState(''); // 👈 ADD
+
 
   useEffect(() => {
     if (!workoutPlan) {
       navigate('/workout-generator');
     } else {
       // Pre-populate one set for each exercise based on its type
+      setEditablePlan(workoutPlan); // 👈 ADD THIS LINE
       const initialData = {};
       workoutPlan.exercises.forEach((exercise, index) => {
         let initialSet = {};
@@ -97,7 +106,7 @@ const WorkoutSession = () => {
   const handleAddSet = (exerciseIndex) => {
     const sets = loggedData[exerciseIndex] || [];
     const previousSet = sets.length > 0 ? sets[sets.length - 1] : null;
-    const planExercise = workoutPlan.exercises[exerciseIndex];
+    const planExercise = editablePlan.exercises[exerciseIndex];
     
     const newSet = {
       reps: previousSet ? previousSet.reps : (parseInt(String(planExercise.reps).split('-')[0]) || 8),
@@ -114,7 +123,7 @@ const WorkoutSession = () => {
   };
 
   const handleNextExercise = () => {
-    if (currentExerciseIndex < workoutPlan.exercises.length - 1) {
+    if (currentExerciseIndex < editablePlan.exercises.length - 1) {
       setCurrentExerciseIndex(currentExerciseIndex + 1);
     }
   };
@@ -126,7 +135,7 @@ const WorkoutSession = () => {
   };
 
 const handleFinishWorkout = () => {
-    const exercises_completed = workoutPlan.exercises
+    const exercises_completed = editablePlan.exercises
       .map((exercise, index) => ({
         name: exercise.name,
         sets: loggedData[index] || [],
@@ -145,7 +154,7 @@ const handleFinishWorkout = () => {
     setIsSubmitting(true);
     setError('');
 
-  const exercises_completed = workoutPlan.exercises
+  const exercises_completed = editablePlan.exercises
       .map((exercise, index) => ({
         name: exercise.name,
         exercise_type: exercise.exercise_type || 'WEIGHT_BASED', // Pass the type
@@ -182,7 +191,7 @@ const handleFinishWorkout = () => {
       .filter(exercise => exercise.sets.length > 0);
 
     const logPayload = {
-      workout_plan_id: workoutPlan.id,
+      workout_plan_id: editablePlan.id,
       duration_minutes: manualDuration, // Use the duration from the modal
       notes,
       exercises_completed,
@@ -200,11 +209,11 @@ const handleFinishWorkout = () => {
     }
 };
 
-  if (!workoutPlan) {
+  if (!editablePlan) {
     return null; // Redirecting in useEffect
   }
 
-  const currentExercise = workoutPlan.exercises[currentExerciseIndex];
+  const currentExercise = editablePlan.exercises[currentExerciseIndex];
   const currentLoggedSets = loggedData[currentExerciseIndex] || [];
 
   const renderSetInputs = (exercise, exIndex, set, setIndex) => {
@@ -272,10 +281,103 @@ const renderDurationModal = () => (
     </Dialog>
 );
 
+const handleRemoveExercise = (indexToRemove) => {
+    if (!editablePlan) return;
+    const newExercises = editablePlan.exercises.filter((_, index) => index !== indexToRemove);
+    
+    setEditablePlan(prev => ({ ...prev, exercises: newExercises }));
+
+    // Adjust current index if needed
+    if (currentExerciseIndex >= newExercises.length) {
+        setCurrentExerciseIndex(Math.max(0, newExercises.length - 1));
+    }
+};
+
+const handleWatchVideo = async (exerciseName) => {
+    setVideoModalOpen(true);
+    setVideoLoading(true);
+    try {
+        const details = await apiService.getExerciseDetails(exerciseName);
+        setCurrentExerciseVideos(details.videos || []);
+    } catch (error) {
+        console.error("Failed to fetch video details:", error);
+        setCurrentExerciseVideos([]); // Clear on error
+    } finally {
+        setVideoLoading(false);
+    }
+};
+
+const renderVideoModal = () => (
+    <Dialog open={videoModalOpen} onClose={() => setVideoModalOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Watch Demonstrations</DialogTitle>
+        <DialogContent>
+            {videoLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}><CircularProgress /></Box>
+            ) : currentExerciseVideos.length > 0 ? (
+                <List>
+                    {currentExerciseVideos.map((video, index) => (
+                        <ListItem button key={index} component="a" href={video.youtube_url} target="_blank">
+                            <ListItemText primary={video.title} secondary={video.channel || 'YouTube'} />
+                        </ListItem>
+                    ))}
+                </List>
+            ) : (
+                <Typography>No videos found for this exercise.</Typography>
+            )}
+        </DialogContent>
+        <DialogActions>
+            <Button onClick={() => setVideoModalOpen(false)}>Close</Button>
+        </DialogActions>
+    </Dialog>
+);
+
+const handleSearchChange = async (event, value) => {
+    setSearchInputValue(value);
+    if (value && value.length > 2) {
+        setSearchLoading(true);
+        try {
+            const results = await apiService.getExerciseDetails(value);
+            const formattedOptions = Array.isArray(results)
+                ? results.map(r => r.exercise).filter(Boolean)
+                : (results.exercise ? [results.exercise] : []);
+            setSearchOptions(formattedOptions);
+        } catch (err) {
+            console.error("Search failed:", err);
+            setSearchOptions([]);
+        }
+        setSearchLoading(false);
+    } else {
+        setSearchOptions([]);
+    }
+};
+
+const handleSelectNewExercise = (exercise) => {
+    if (exercise && exercise.name) {
+        const newExerciseObject = {
+            ...exercise,
+            sets: exercise.sets || 1, // Add defaults if missing
+            reps: exercise.reps || '8-12',
+        };
+
+        // Add exercise to plan
+        setEditablePlan(prev => ({ ...prev, exercises: [...prev.exercises, newExerciseObject] }));
+
+        // Add a default set to loggedData for the new exercise
+        const newIndex = editablePlan.exercises.length;
+        const initialSet = { reps: 8, weight: 0 }; // A sensible default
+        setLoggedData(prev => ({ ...prev, [newIndex]: [initialSet] }));
+        
+        // Reset search state
+        setIsAddingExercise(false);
+        setSearchInputValue('');
+        setSearchOptions([]);
+    }
+};
+
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Typography variant="h4" gutterBottom>
-        Log: {workoutPlan.name}
+        Log: {editablePlan.name}
       </Typography>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -289,11 +391,19 @@ const renderDurationModal = () => (
             <Box textAlign="center">
               <Typography variant="h5" sx={{ fontWeight: 'bold' }}>{currentExercise.name}</Typography>
               <Typography variant="body2" color="text.secondary">
-                Exercise {currentExerciseIndex + 1} of {workoutPlan.exercises.length}
+                Exercise {currentExerciseIndex + 1} of {editablePlan.exercises.length}
               </Typography>
               <Chip label={`AI Target: ${currentExercise.sets} sets of ${currentExercise.reps} reps`} sx={{ mt: 1 }} />
+                <Button
+                  size="small"
+                  variant="outlined"
+                  sx={{ mt: 1 }}
+                  onClick={() => handleWatchVideo(currentExercise.name)}
+                >
+                  Watch Video
+                </Button>
             </Box>
-            <IconButton onClick={handleNextExercise} disabled={currentExerciseIndex === workoutPlan.exercises.length - 1}>
+            <IconButton onClick={handleNextExercise} disabled={currentExerciseIndex === editablePlan.exercises.length - 1}>
               <SkipNext />
             </IconButton>
           </Box>
@@ -361,11 +471,42 @@ const renderDurationModal = () => (
       {/* Exercise List */}
       <Card sx={{ mt: 3 }}>
         <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Workout Plan
-          </Typography>
+          {/*-- START OF CHANGES --*/}
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+            <Typography variant="h6">Workout Plan</Typography>
+            <Button size="small" onClick={() => setIsAddingExercise(!isAddingExercise)}>
+              {isAddingExercise ? 'Cancel' : 'Add Exercise'}
+            </Button>
+          </Box>
+
+          {isAddingExercise && (
+            <Autocomplete
+              open
+              options={searchOptions}
+              loading={searchLoading}
+              getOptionLabel={(option) => option.name || ""}
+              onInputChange={handleSearchChange}
+              onChange={(event, newValue) => {
+                handleSelectNewExercise(newValue);
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Search for an exercise to add..."
+                  variant="outlined"
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>{searchLoading ? <CircularProgress color="inherit" size={20} /> : null}{params.InputProps.endAdornment}</>
+                    ),
+                  }}
+                />
+              )}
+              sx={{ my: 2 }}
+            />
+          )}      
           <List dense>
-            {workoutPlan.exercises.map((exercise, index) => (
+            {editablePlan.exercises.map((exercise, index) => (
               <ListItem
                 key={index}
                 button
@@ -375,6 +516,11 @@ const renderDurationModal = () => (
                   borderRadius: 1,
                   mb: 0.5
                 }}
+                secondaryAction={ // 👈 ADD THIS PROP
+                  <IconButton edge="end" aria-label="delete" onClick={() => handleRemoveExercise(index)}>
+                    <Delete color="error" />
+                  </IconButton>
+                }
               >
                 <ListItemIcon>
                   {loggedData[index] && loggedData[index].length > 0 ? (
@@ -405,6 +551,7 @@ const renderDurationModal = () => (
           </Button>
         </DialogActions>
       </Dialog>
+      {renderVideoModal()}
       {renderDurationModal()}
     </Container>
   );

@@ -46,10 +46,10 @@ function Profile() {
         age: user.age || '',
         weight: user.weight || '',
         height: user.height || '',
-        gender: user.gender || '',
-        fitness_goal: user.fitness_goal || '',
-        experience_level: user.experience_level || '',
-        activity_level: user.activity_level || '',
+        gender: user.gender?.toLowerCase() || '',
+        fitness_goal: user.fitness_goal?.toLowerCase() || '',
+        experience_level: user.experience_level?.toLowerCase() || '',
+        activity_level: user.activity_level?.toLowerCase() || '',
         dietary_restrictions: user.dietary_restrictions || [],
       });
     }
@@ -139,6 +139,12 @@ function Profile() {
     'halal',
     'kosher'
   ];
+
+  const toTitleCase = (str) => {
+  if (!str) return '';
+  // Replaces underscores with spaces and capitalizes the first letter of each word
+  return str.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+  };
 
   return (
     <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
@@ -271,7 +277,7 @@ function Profile() {
                   >
                     {fitnessGoals.map(goal => (
                       <MenuItem key={goal} value={goal}>
-                        {goal.replace('_', ' ').replace(/\\b\\w/g, l => l.toUpperCase())}
+                        {toTitleCase(goal)}
                       </MenuItem>
                     ))}
                   </Select>
@@ -307,7 +313,7 @@ function Profile() {
                   >
                     {activityLevels.map(level => (
                       <MenuItem key={level} value={level}>
-                        {level.replace('_', ' ').replace(/\\b\\w/g, l => l.toUpperCase())}
+                        {toTitleCase(level)}
                       </MenuItem>
                     ))}
                   </Select>
@@ -328,7 +334,7 @@ function Profile() {
                 {commonDietaryRestrictions.map(restriction => (
                   <Chip
                     key={restriction}
-                    label={restriction.replace('_', ' ').replace(/\\b\\w/g, l => l.toUpperCase())}
+                    label={toTitleCase(restriction)}
                     clickable
                     color={formData.dietary_restrictions.includes(restriction) ? 'primary' : 'default'}
                     onClick={() => handleDietaryRestrictionToggle(restriction)}
