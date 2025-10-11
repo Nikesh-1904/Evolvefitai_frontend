@@ -1,4 +1,4 @@
-// src/components/Navbar.js - Modern Redesigned Navbar
+// src/components/Navbar.js - Modern Redesigned Navbar with Gravitas One Brand Text
 
 import React, { useState } from 'react';
 import {
@@ -18,7 +18,7 @@ import {
   Badge,
   Chip,
   Divider,
-  LinearProgress 
+  LinearProgress
 } from '@mui/material';
 import {
   FitnessCenter,
@@ -40,7 +40,6 @@ import { useAuth } from '../contexts/AuthContext';
 // Hide on scroll component
 function HideOnScroll({ children }) {
   const trigger = useScrollTrigger();
-
   return (
     <Slide appear={false} direction="down" in={!trigger}>
       {children}
@@ -62,7 +61,6 @@ function Navbar() {
   const location = useLocation();
   const [anchorElNav, setAnchorElNav] = useState(null);
   const [anchorElUser, setAnchorElUser] = useState(null);
-
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -100,95 +98,75 @@ function Navbar() {
 
   return (
     <HideOnScroll>
-      <AppBar 
-        position="fixed" 
-        sx={{
-          background: 'rgba(10, 14, 26, 0.8)',
-          backdropFilter: 'blur(20px)',
-          boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
-          border: 'none',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        }}
-      >
+      <AppBar position="sticky">
         <Container maxWidth="xl">
-          <Toolbar disableGutters sx={{ py: 1 }}>
-            {/* Desktop Logo */}
-            <Box sx={{ 
-              display: { xs: 'none', md: 'flex' }, 
-              alignItems: 'center',
-              mr: 4
-            }}>
-              <Box sx={{
-                p: 1.5,
-                borderRadius: 2,
-                background: 'linear-gradient(45deg, #00D4FF, #7C3AED)',
-                mr: 2,
-                display: 'flex',
+          <Toolbar disableGutters>
+            {/* Desktop Logo with Gravitas One */}
+            <Box
+              sx={{
+                display: { xs: 'none', md: 'flex' },
                 alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <FitnessCenter sx={{ color: 'white', fontSize: 28 }} />
-              </Box>
+                cursor: 'pointer',
+                mr: 4
+              }}
+              onClick={() => navigate('/')}
+            >
+              <FitnessCenter sx={{ mr: 1, fontSize: 32, color: '#00D4FF' }} />
               <Typography
-                variant="h5"
-                noWrap
+                variant="h6"
                 sx={{
-                  fontFamily: 'Montserrat',
-                  fontWeight: 800,
-                  background: 'linear-gradient(45deg, #00D4FF, #FFFFFF)',
+                  fontFamily: '"Gravitas One", "Montserrat", sans-serif', // Gravitas One for brand
+                  fontWeight: 400,
+                  fontSize: '1.5rem',
+                  letterSpacing: '-0.01em',
+                  background: 'linear-gradient(45deg, #00D4FF 0%, #7C3AED 100%)',
+                  backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   textDecoration: 'none',
-                  cursor: 'pointer'
                 }}
-                onClick={() => navigate('/')}
               >
                 EvolveFit
               </Typography>
-                <Chip 
-                  label="AI" 
-                  size="small" 
-                  sx={{ 
-                    ml: 1,
-                    background: 'linear-gradient(45deg, #7C3AED, #00D4FF)',
-                    color: 'white',
-                    fontSize: '0.7rem',
-                    fontWeight: 700
-                  }} 
-                />
-              
             </Box>
 
             {/* Mobile Menu Icon */}
             <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
               <IconButton
                 size="large"
+                aria-controls="menu-appbar"
+                aria-haspopup="true"
                 onClick={handleOpenNavMenu}
-                sx={{ color: 'white' }}
+                color="inherit"
               >
                 <MenuIcon />
               </IconButton>
               <Menu
+                id="menu-appbar"
                 anchorEl={anchorElNav}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'left',
+                }}
                 keepMounted
-                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'left',
+                }}
                 open={Boolean(anchorElNav)}
                 onClose={handleCloseNavMenu}
                 sx={{
                   display: { xs: 'block', md: 'none' },
-                  '& .MuiMenu-paper': {
+                  '& .MuiPaper-root': {
                     background: 'rgba(26, 31, 46, 0.95)',
                     backdropFilter: 'blur(20px)',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: 2,
-                    mt: 1
                   }
                 }}
               >
                 {modernPages.map((page) => (
-                  <MenuItem 
-                    key={page.name} 
+                  <MenuItem
+                    key={page.name}
                     onClick={() => handleNavigate(page.path)}
                     sx={{
                       py: 1.5,
@@ -199,46 +177,36 @@ function Navbar() {
                       }
                     }}
                   >
-                    <Box sx={{ mr: 2, color: isActivePage(page.path) ? '#00D4FF' : '#94A3B8' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                       {page.icon}
+                      <Typography>{page.name}</Typography>
                     </Box>
-                    <Typography 
-                      textAlign="center"
-                      sx={{ 
-                        color: isActivePage(page.path) ? '#00D4FF' : 'white',
-                        fontWeight: isActivePage(page.path) ? 600 : 400
-                      }}
-                    >
-                      {page.name}
-                    </Typography>
                   </MenuItem>
                 ))}
               </Menu>
             </Box>
 
-            {/* Mobile Logo */}
-            <Box sx={{ 
-              display: { xs: 'flex', md: 'none' }, 
-              alignItems: 'center',
-              flexGrow: 1
-            }}>
-              <Box sx={{
-                p: 1,
-                borderRadius: 1.5,
-                background: 'linear-gradient(45deg, #00D4FF, #7C3AED)',
-                mr: 1.5
-              }}>
-                <FitnessCenter sx={{ color: 'white', fontSize: 24 }} />
-              </Box>
+            {/* Mobile Logo with Gravitas One */}
+            <Box
+              sx={{
+                display: { xs: 'flex', md: 'none' },
+                alignItems: 'center',
+                flexGrow: 1,
+                justifyContent: 'center'
+              }}
+            >
               <Typography
                 variant="h6"
-                noWrap
                 sx={{
-                  fontFamily: 'Montserrat',
-                  fontWeight: 700,
-                  background: 'linear-gradient(45deg, #00D4FF, #FFFFFF)',
+                  fontFamily: '"Gravitas One", "Montserrat", sans-serif', // Gravitas One for brand
+                  fontWeight: 400,
+                  fontSize: '1.3rem',
+                  letterSpacing: '-0.01em',
+                  background: 'linear-gradient(45deg, #00D4FF 0%, #7C3AED 100%)',
+                  backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
+                  textDecoration: 'none',
                 }}
               >
                 EvolveFitAI
@@ -246,12 +214,7 @@ function Navbar() {
             </Box>
 
             {/* Desktop Navigation */}
-            <Box sx={{ 
-              flexGrow: 1, 
-              display: { xs: 'none', md: 'flex' },
-              justifyContent: 'center',
-              gap: 1
-            }}>
+            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 1 }}>
               {modernPages.map((page) => (
                 <Button
                   key={page.name}
@@ -284,25 +247,20 @@ function Navbar() {
             <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center', gap: 2 }}>
               {/* Notifications */}
               <Tooltip title="Notifications">
-                <IconButton sx={{ color: '#94A3B8' }}>
-                  <Badge badgeContent={3} color="error" variant="dot">
+                <IconButton sx={{ color: 'white' }}>
+                  <Badge badgeContent={0} color="error">
                     <Notifications />
                   </Badge>
                 </IconButton>
               </Tooltip>
 
               {/* User Avatar Menu */}
-              <Tooltip title="Account settings">
+              <Tooltip title="Open settings">
                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                  <Avatar 
-                    sx={{ 
-                      width: 40, 
-                      height: 40,
-                      background: 'linear-gradient(45deg, #00D4FF, #7C3AED)',
-                      fontWeight: 700,
-                      fontSize: '1.1rem'
-                    }}
-                  >
+                  <Avatar sx={{ 
+                    background: 'linear-gradient(45deg, #00D4FF 0%, #7C3AED 100%)',
+                    fontWeight: 600
+                  }}>
                     {userName.charAt(0).toUpperCase()}
                   </Avatar>
                 </IconButton>
@@ -310,96 +268,103 @@ function Navbar() {
               <Menu
                 sx={{ 
                   mt: '45px',
-                  '& .MuiMenu-paper': {
+                  '& .MuiPaper-root': {
                     background: 'rgba(26, 31, 46, 0.95)',
                     backdropFilter: 'blur(20px)',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: 2,
-                    minWidth: 220
+                    minWidth: 280,
                   }
                 }}
+                id="menu-appbar"
                 anchorEl={anchorElUser}
-                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                anchorOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
                 keepMounted
-                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
                 open={Boolean(anchorElUser)}
                 onClose={handleCloseUserMenu}
               >
                 {/* User Info Header */}
                 <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'white' }}>
+                  <Typography variant="h6" sx={{ 
+                    fontFamily: '"Gravitas One", "Montserrat", sans-serif', // Gravitas One for user name
+                    fontWeight: 400,
+                    fontSize: '1.1rem'
+                  }}>
                     {userName}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#94A3B8' }}>
+                  <Typography variant="body2" color="text.secondary">
                     {user?.email}
                   </Typography>
-                  <Chip 
-                    label="Pro User" 
-                    size="small" 
-                    sx={{ 
-                      mt: 1,
-                      background: 'linear-gradient(45deg, #7C3AED, #00D4FF)',
-                      color: 'white',
-                      fontSize: '0.7rem'
-                    }}
-                  />
+                  
+                  {/* Level Progress */}
                   {stats && stats.level_progress && (
-                    <Box sx={{ mt: 1.5 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                          Level {stats.level_progress.current_level}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    <Box sx={{ mt: 1 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                        <Chip
+                          label={`Level ${stats.level_progress.current_level}`}
+                          size="small"
+                          sx={{
+                            background: 'linear-gradient(45deg, #00D4FF 0%, #7C3AED 100%)',
+                            color: 'white',
+                            fontWeight: 600
+                          }}
+                        />
+                        <Typography variant="caption" color="text.secondary">
                           Next Level
                         </Typography>
                       </Box>
                       <LinearProgress
                         variant="determinate"
-                        value={
-                          ((stats.level_progress.current_points - stats.level_progress.points_for_current_level) /
-                          (stats.level_progress.points_for_next_level - stats.level_progress.points_for_current_level)) * 100
-                        }
+                        value={(stats.level_progress.current_points / stats.level_progress.points_for_next_level) * 100}
                         sx={{ height: 6, borderRadius: 3 }}
                       />
-                      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', textAlign: 'center', mt: 0.5 }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
                         {stats.level_progress.current_points.toLocaleString()} / {stats.level_progress.points_for_next_level.toLocaleString()} Points
                       </Typography>
                     </Box>
                   )}
                 </Box>
 
-                <MenuItem 
+                <MenuItem
                   onClick={() => { handleCloseUserMenu(); navigate('/profile'); }}
                   sx={{ py: 1.5, '&:hover': { background: 'rgba(0, 212, 255, 0.05)' } }}
                 >
-                  <AccountCircle sx={{ mr: 2, color: '#00D4FF' }} />
+                  <AccountCircle sx={{ mr: 2 }} />
                   <Typography>Profile</Typography>
                 </MenuItem>
 
-                <MenuItem 
+                <MenuItem
                   onClick={() => { handleCloseUserMenu(); navigate('/settings'); }}
                   sx={{ py: 1.5, '&:hover': { background: 'rgba(0, 212, 255, 0.05)' } }}
                 >
-                  <Settings sx={{ mr: 2, color: '#94A3B8' }} />
+                  <Settings sx={{ mr: 2 }} />
                   <Typography>Settings</Typography>
                 </MenuItem>
 
-                <MenuItem 
+                <MenuItem
                   onClick={() => { handleCloseUserMenu(); navigate('/analytics'); }}
                   sx={{ py: 1.5, '&:hover': { background: 'rgba(0, 212, 255, 0.05)' } }}
                 >
-                  <TrendingUp sx={{ mr: 2, color: '#10B981' }} />
+                  <TrendingUp sx={{ mr: 2 }} />
                   <Typography>Analytics</Typography>
                 </MenuItem>
 
-                <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.08)' }} />
+                <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
 
-                <MenuItem 
+                <MenuItem
                   onClick={handleLogout}
                   sx={{ 
                     py: 1.5, 
                     color: '#EF4444',
-                    '&:hover': { background: 'rgba(239, 68, 68, 0.05)' } 
+                    '&:hover': { 
+                      background: 'rgba(239, 68, 68, 0.1)' 
+                    } 
                   }}
                 >
                   <Logout sx={{ mr: 2 }} />
