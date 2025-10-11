@@ -1,4 +1,4 @@
-// src/pages/WorkoutGenerator.js - Modern AI Workout Generator with Categorized Sections
+// src/pages/WorkoutGenerator.js - Modern AI Workout Generator with Fixed Video/Tips Functionality
 
 import React, { useState } from 'react';
 import {
@@ -109,6 +109,38 @@ function WorkoutGenerator() {
       setExerciseDetails(prev => ({ ...prev, [exerciseName]: details }));
     } catch (error) {
       console.error('Failed to fetch exercise details:', error);
+    }
+  };
+
+  // FIXED: Handle video watching - open first available video
+  const handleWatchVideo = async (exerciseName) => {
+    try {
+      // First fetch details if not already loaded
+      if (!exerciseDetails[exerciseName]) {
+        await fetchExerciseDetails(exerciseName);
+      }
+      
+      // Get the details after fetching
+      const details = exerciseDetails[exerciseName];
+      if (details && details.videos && details.videos.length > 0) {
+        // Open the first video in a new tab
+        window.open(details.videos[0].url, '_blank');
+      } else {
+        setError('No video available for this exercise');
+      }
+    } catch (error) {
+      console.error('Failed to open video:', error);
+      setError('Failed to load video');
+    }
+  };
+
+  // FIXED: Handle tips - fetch and display tips
+  const handleGetTips = async (exerciseName) => {
+    try {
+      await fetchExerciseDetails(exerciseName);
+    } catch (error) {
+      console.error('Failed to fetch tips:', error);
+      setError('Failed to load exercise tips');
     }
   };
 
@@ -529,11 +561,11 @@ function WorkoutGenerator() {
                           </Box>
                         )}
 
-                        {/* Action Buttons */}
+                        {/* Action Buttons - FIXED */}
                         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
                           <SecondaryButton
                             size="small"
-                            onClick={() => fetchExerciseDetails(exercise.name)}
+                            onClick={() => handleWatchVideo(exercise.name)}
                             startIcon={<VideoLibrary />}
                           >
                             Watch Video
@@ -541,7 +573,7 @@ function WorkoutGenerator() {
                           
                           <SecondaryButton
                             size="small"
-                            onClick={() => fetchExerciseDetails(exercise.name)}
+                            onClick={() => handleGetTips(exercise.name)}
                             startIcon={<Lightbulb />}
                           >
                             Get Tips
@@ -569,23 +601,23 @@ function WorkoutGenerator() {
                           </Box>
                         </Box>
 
-                        {/* Exercise Details (when loaded) */}
+                        {/* Exercise Details (when loaded) - FIXED */}
                         {exerciseDetails[exercise.name] && (
                           <Box sx={{ mt: 2, p: 2, borderRadius: '12px', background: 'rgba(0, 212, 255, 0.05)' }}>
                             {exerciseDetails[exercise.name].videos && (
                               <Box sx={{ mb: 2 }}>
                                 <Typography variant="body2" sx={{ color: '#00D4FF', fontWeight: 600, mb: 1 }}>
-                                  🎬 Video Demonstrations:
+                                  🎬 Available Videos:
                                 </Typography>
                                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                  {exerciseDetails[exercise.name].videos.slice(0, 2).map((video, idx) => (
+                                  {exerciseDetails[exercise.name].videos.slice(0, 3).map((video, idx) => (
                                     <SecondaryButton
                                       key={idx}
                                       size="small"
                                       onClick={() => window.open(video.url, '_blank')}
                                       startIcon={<VideoLibrary />}
                                     >
-                                      Watch
+                                      Video {idx + 1}
                                     </SecondaryButton>
                                   ))}
                                 </Box>
