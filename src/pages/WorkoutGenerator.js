@@ -1,36 +1,22 @@
-// src/pages/WorkoutGenerator.js - Definitive version with all features merged
+// src/pages/WorkoutGenerator.js - Modern AI Workout Generator with Categorized Sections
 
 import React, { useState } from 'react';
 import {
   Container,
   Typography,
-  Card,
-  CardContent,
-  Button,
   Box,
   CircularProgress,
   Alert,
   Grid,
-  TextField,
   Chip,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   List,
   ListItem,
   ListItemText,
   IconButton,
-  Tooltip,
-  LinearProgress,
   Divider,
-  Paper,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel
+  Stack,
 } from '@mui/material';
 import {
-  ExpandMore,
   PlayArrow,
   AutoAwesome,
   Timer,
@@ -40,25 +26,28 @@ import {
   ThumbUp,
   ThumbDown,
   Save,
-  Refresh,
-  Computer,
-  Psychology,
-  Settings,
-  SmartToy,
   LocalFireDepartment,
-  TrendingUp
+  TrendingUp,
+  Psychology,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService';
+
+// Import our modern components
+import ModernCard, { StatCard } from '../components/ModernCard';
+import ModernInput, { ModernSelect } from '../components/ModernInput';
+import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
 import AIModelBadge from '../components/AIModelBadge';
 
 const muscleGroups = ['Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core', 'Full Body'];
-const workoutTypes = ['Gym', 'Home Workout', 'Yoga', 'Cardio', 'HIIT']; // 👈 ADD THIS LINE
+const workoutTypes = ['Gym', 'Home Workout', 'Yoga', 'Cardio', 'HIIT'];
 
 function WorkoutGenerator() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  
+  // State management (preserved from original)
   const [generating, setGenerating] = useState(false);
   const [workoutPlan, setWorkoutPlan] = useState(null);
   const [duration, setDuration] = useState(45);
@@ -67,9 +56,10 @@ function WorkoutGenerator() {
   const [exerciseDetails, setExerciseDetails] = useState({});
   const [generationTime, setGenerationTime] = useState(null);
   const [selectedMuscles, setSelectedMuscles] = useState([]);
-  const [numExercises, setNumExercises] = useState(''); // Default to empty (AI decides)
-  const [workoutType, setWorkoutType] = useState(''); // Default to empty (any)
+  const [numExercises, setNumExercises] = useState('');
+  const [workoutType, setWorkoutType] = useState('');
 
+  // All functions preserved exactly as original
   const handleMuscleToggle = (muscle) => {
     setSelectedMuscles((prev) =>
       prev.includes(muscle)
@@ -84,7 +74,6 @@ function WorkoutGenerator() {
     setSuccess('');
     setWorkoutPlan(null);
     setGenerationTime(null);
-
     const startTime = Date.now();
 
     try {
@@ -100,15 +89,12 @@ function WorkoutGenerator() {
       };
 
       const response = await apiService.generateWorkout(requestData);
-      
       const endTime = Date.now();
       const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
+
       setGenerationTime(timeTaken);
-      
       setWorkoutPlan(response);
-      
       setSuccess(`Workout generated in ${timeTaken}s by ${response.ai_model || 'AI'}!`);
-      
     } catch (err) {
       setError('Failed to generate workout. Please try again.');
     } finally {
@@ -150,219 +136,541 @@ function WorkoutGenerator() {
     }
   };
 
+  // Options for select fields
+  const numExerciseOptions = [
+    { value: '', label: 'AI Decides' },
+    ...Array.from({ length: 8 }, (_, i) => ({ value: i + 3, label: `${i + 3}` }))
+  ];
+
+  const workoutTypeOptions = [
+    { value: '', label: 'Any' },
+    ...workoutTypes.map(type => ({ value: type, label: type }))
+  ];
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box textAlign="center" mb={4}>
-        <Typography variant="h3" component="h1" gutterBottom>🤖 AI Workout Generator</Typography>
-        <Typography variant="h6" color="text.secondary" paragraph>Get personalized workouts powered by advanced AI models</Typography>
-      </Box>
-
-      <Card>
-        <CardContent>
-          <Typography variant="h5" gutterBottom>🎯 Workout Preferences</Typography>
-          <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12} sm={4}>
-              <TextField
-                type="number"
-                label="Duration (minutes)"
-                value={duration}
-                onChange={(e) => setDuration(Math.max(15, Math.min(120, parseInt(e.target.value) || 45)))}
-                fullWidth
-                inputProps={{ min: 15, max: 120 }}
-                helperText="15-120 minutes"
-              />
-            </Grid>
-            {/* --- START: NEW FILTER UI --- */}
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>Number of Exercises</InputLabel>
-                <Select
-                  value={numExercises}
-                  label="Number of Exercises"
-                  onChange={(e) => setNumExercises(e.target.value)}
-                >
-                  <MenuItem value=""><em>AI Decides</em></MenuItem>
-                  {[...Array(8)].map((_, i) => (
-                    <MenuItem key={i + 3} value={i + 3}>{i + 3}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>Workout Type</InputLabel>
-                <Select
-                  value={workoutType}
-                  label="Workout Type"
-                  onChange={(e) => setWorkoutType(e.target.value)}
-                >
-                  <MenuItem value=""><em>Any</em></MenuItem>
-                  {workoutTypes.map((type) => (
-                    <MenuItem key={type} value={type}>{type}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={8}>
-              <Button
-                variant="contained"
-                size="large"
-                onClick={handleGenerateWorkout}
-                disabled={generating}
-                startIcon={generating ? <CircularProgress size={20} /> : <AutoAwesome />}
-                sx={{ height: 56, background: 'linear-gradient(45deg, #FF6B6B 30%, #4ECDC4 90%)' }}
-              >
-                {generating ? 'Generating AI Workout...' : '🚀 Generate AI Workout'}
-              </Button>
-            </Grid>
-          </Grid>
-          
-          <Box mt={3}>
-            <Typography variant="subtitle1" gutterBottom>Target Muscle Groups (Optional)</Typography>
-            <Box display="flex" gap={1} flexWrap="wrap">
-              {muscleGroups.map((muscle) => (
-                <Chip
-                  key={muscle}
-                  label={muscle}
-                  clickable
-                  onClick={() => handleMuscleToggle(muscle)}
-                  color={selectedMuscles.includes(muscle) ? 'primary' : 'default'}
-                  variant={selectedMuscles.includes(muscle) ? 'filled' : 'outlined'}
-                />
-              ))}
-            </Box>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 6 }}>
+      {/* Modern Hero Section */}
+      <ModernCard 
+        variant="feature" 
+        elevation="high"
+        sx={{ mb: 4, position: 'relative', overflow: 'hidden' }}
+      >
+        <Box sx={{ textAlign: 'center' }}>
+          <Box
+            sx={{
+              width: 80,
+              height: 80,
+              borderRadius: '20px',
+              background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#FFFFFF',
+              fontSize: '2.5rem',
+              mx: 'auto',
+              mb: 3,
+            }}
+          >
+            🤖
           </Box>
+          
+          <Typography
+            variant="h3"
+            sx={{
+              fontFamily: '"Gravitas One", "Montserrat", sans-serif',
+              fontWeight: 400,
+              fontSize: { xs: '1.8rem', sm: '2.5rem' },
+              color: '#FFFFFF',
+              lineHeight: 1.2,
+              mb: 1,
+            }}
+          >
+            AI Workout Generator
+          </Typography>
+          
+          <Typography
+            variant="h6"
+            sx={{
+              color: '#CBD5E1',
+              fontWeight: 500,
+              fontSize: '1.125rem',
+              maxWidth: '600px',
+              mx: 'auto',
+            }}
+          >
+            Get personalized workouts powered by advanced AI models, tailored to your goals and preferences
+          </Typography>
+        </Box>
+      </ModernCard>
 
-          {user && (
-            <Box mt={3}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>💪 Based on your profile:</Typography>
-              <Box display="flex" gap={1} flexWrap="wrap">
-                {user.fitness_goal && <Chip icon={<TrendingUp />} label={`Goal: ${user.fitness_goal.replace('_', ' ')}`} size="small" variant="outlined" />}
-                {user.experience_level && <Chip icon={<FitnessCenter />} label={`Level: ${user.experience_level}`} size="small" variant="outlined" />}
-              </Box>
-            </Box>
-          )}
-
-          {generating && (
-            <Box mt={3}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>🧠 AI is analyzing your profile...</Typography>
-              <LinearProgress sx={{ height: 8, borderRadius: 4, '& .MuiLinearProgress-bar': { background: 'linear-gradient(45deg, #FF6B6B 30%, #4ECDC4 90%)'}}} />
-            </Box>
-          )}
-        </CardContent>
-      </Card>
-
-      {success && <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess('')}>{success}</Alert>}
-      {error && <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>{error}</Alert>}
-
-      {workoutPlan && (
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={3}>
-              <Box flex={1}>
-                <Typography variant="h4" gutterBottom>🏋️ {workoutPlan.name || 'Your Personalized Workout'}</Typography>
-                <Box display="flex" gap={1} mb={2} flexWrap="wrap">
-                  <Chip icon={<Timer />} label={`${workoutPlan.estimated_duration || duration} min`} color="primary" />
-                  <Chip icon={<FitnessCenter />} label={workoutPlan.difficulty_level || 'Moderate'} color="secondary" />
-                  {workoutPlan.estimated_calories && <Chip icon={<LocalFireDepartment />} label={`~${workoutPlan.estimated_calories} cal`} color="error" variant="outlined" />}
-                  <AIModelBadge aiModel={workoutPlan.ai_model} aiGenerated={workoutPlan.ai_generated} size="medium" />
-                  {generationTime && <Chip label={`Generated in ${generationTime}s`} size="small" variant="outlined" color="info" />}
-                </Box>
-              </Box>
-              <Box display="flex" flexDirection="column" gap={1} ml={2}>
-                <Button variant="outlined" onClick={handleSaveWorkout} startIcon={<Save />} size="small">Save Plan</Button>
-                <Button variant="contained" size="large" onClick={handleStartWorkout} startIcon={<PlayArrow />} sx={{ background: 'linear-gradient(45deg, #FF6B6B 30%, #4ECDC4 90%)' }}>Start Workout</Button>
-              </Box>
-            </Box>
-
-            {workoutPlan.description && <Typography variant="body1" color="text.secondary" paragraph>{workoutPlan.description}</Typography>}
-            <Divider sx={{ my: 2 }} />
-
-            <Typography variant="h5" gutterBottom>📋 Exercises ({workoutPlan.exercises?.length || 0})</Typography>
-            {workoutPlan.exercises?.map((exercise, index) => (
-              <Accordion key={index} sx={{ mb: 1, '&:before': { display: 'none' }, boxShadow: '0 2px 8px rgba(0,0,0,0.1)', borderRadius: '8px !important' }}>
-                <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Box display="flex" alignItems="center" width="100%">
-                    <Typography variant="h6" sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', mr: 2 }}>{index + 1}</Typography>
-                    <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>{exercise.name}</Typography>
-                    <Box display="flex" gap={1} mr={2}>
-                      <Chip label={`${exercise.sets} sets`} size="small" />
-                      <Chip label={`${exercise.reps} reps`} size="small" />
-                    </Box>
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={8}>
-                      {exercise.instructions && (
-                        <Box mb={2}><Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>📝 Instructions:</Typography><Typography variant="body2" color="text.secondary">{exercise.instructions}</Typography></Box>
-                      )}
-                      {exercise.muscle_groups && exercise.muscle_groups.length > 0 && (
-                        <Box mb={2}><Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>🎯 Target Muscles:</Typography><Box display="flex" gap={1} flexWrap="wrap">{exercise.muscle_groups.map((muscle, idx) => (<Chip key={idx} label={muscle} size="small" variant="outlined" color="primary" />))}</Box></Box>
-                      )}
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                      <Box display="flex" flexDirection="column" gap={1} mb={2}>
-                        <Button size="small" startIcon={<VideoLibrary />} onClick={() => fetchExerciseDetails(exercise.name)} variant="outlined">Watch Video</Button>
-                        <Button size="small" startIcon={<Lightbulb />} onClick={() => fetchExerciseDetails(exercise.name)} variant="outlined">Get Tips</Button>
-                      </Box>
-                      <Box>
-                        <Typography variant="caption" color="text.secondary" display="block" mb={1}>Help improve AI:</Typography>
-                        <Box display="flex" justifyContent="center" gap={1}>
-                          <Tooltip title="Good exercise suggestion"><IconButton size="small" color="success" onClick={() => handleExerciseFeedback(exercise.name, 'like')}><ThumbUp /></IconButton></Tooltip>
-                          <Tooltip title="Poor exercise suggestion"><IconButton size="small" color="error" onClick={() => handleExerciseFeedback(exercise.name, 'dislike')}><ThumbDown /></IconButton></Tooltip>
-                        </Box>
-                      </Box>
-                    </Grid>
-                  </Grid>
-
-                  {exerciseDetails[exercise.name] && (
-                    <Box mt={3} p={2} borderRadius={2}>
-                      {exerciseDetails[exercise.name].videos && (
-                        <Box mb={2}>
-                          <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>🎬 Video Demonstrations:</Typography>
-                          <List dense>
-                            {exerciseDetails[exercise.name].videos.slice(0, 2).map((video, idx) => (
-                              <ListItem key={idx} divider>
-                                <ListItemText primary={video.title} secondary={`Duration: ${video.duration || 'N/A'}s`} />
-                                <Button size="small" href={video.youtube_url} target="_blank" startIcon={<VideoLibrary />} variant="contained" color="error">Watch</Button>
-                              </ListItem>
-                            ))}
-                          </List>
-                        </Box>
-                      )}
-                      {exerciseDetails[exercise.name].tips && (
-                        <Box><Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>💡 Exercise Tips:</Typography><List dense>{exerciseDetails[exercise.name].tips.slice(0, 3).map((tip, idx) => (<ListItem key={idx}><ListItemText primary={tip.title} secondary={tip.content} /></ListItem>))}</List></Box>
-                      )}
-                    </Box>
-                  )}
-                </AccordionDetails>
-              </Accordion>
-            ))}
-            
-            <Paper elevation={0} sx={{ mt: 3, p: 3, background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)', color: 'white', borderRadius: 2 }}>
-              <Typography variant="h6" gutterBottom>💡 Workout Summary</Typography>
-              <Typography variant="body2">
-                This {workoutPlan.estimated_duration || duration}-minute {workoutPlan.difficulty_level || 'moderate'} workout targets {workoutPlan.exercises?.length || 0} different exercises.
-                {workoutPlan.estimated_calories && ` You'll burn approximately ${workoutPlan.estimated_calories} calories.`}
-                <br /><br />
-                💪 Remember to warm up before starting, stay hydrated throughout, and listen to your body!
-              </Typography>
-              <Box mt={2}>
-                <Button variant="contained" size="large" onClick={handleStartWorkout} startIcon={<PlayArrow />} sx={{ backgroundColor: 'rgba(255,255,255,0.2)', '&:hover': { backgroundColor: 'rgba(255,255,255,0.3)' } }}>🚀 Start This Workout Now</Button>
-              </Box>
-            </Paper>
-          </CardContent>
-        </Card>
+      {/* Success/Error Messages */}
+      {success && (
+        <Alert 
+          severity="success" 
+          onClose={() => setSuccess('')}
+          sx={{ 
+            mb: 3,
+            background: 'rgba(16, 185, 129, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.2)',
+            '& .MuiAlert-message': { color: '#FFFFFF' },
+          }}
+        >
+          {success}
+        </Alert>
+      )}
+      
+      {error && (
+        <Alert 
+          severity="error" 
+          onClose={() => setError('')}
+          sx={{ 
+            mb: 3,
+            background: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            '& .MuiAlert-message': { color: '#FFFFFF' },
+          }}
+        >
+          {error}
+        </Alert>
       )}
 
-      <Paper elevation={0} sx={{ p: 2, textAlign: 'center'}}>
-        <Typography variant="body2" color="text.secondary">
-          🤖 Powered by advanced AI models including Groq Llama3, Ollama, and rule-based systems<br />
-          💪 Every workout is personalized based on your fitness profile and goals
-        </Typography>
-      </Paper>
+      <Grid container spacing={4}>
+        {/* Workout Preferences Section */}
+        <Grid item xs={12} md={6}>
+          <ModernCard
+            title="Workout Preferences"
+            subtitle="Customize your AI-generated workout"
+            variant="glass"
+            headerAction={<FitnessCenter sx={{ color: '#00D4FF' }} />}
+          >
+            <Stack spacing={3}>
+              <ModernInput
+                label="Duration (minutes)"
+                type="number"
+                value={duration}
+                onChange={(e) => setDuration(Math.max(15, Math.min(120, parseInt(e.target.value) || 45)))}
+                variant="outlined"
+                helperText="15-120 minutes"
+                startIcon={<Timer />}
+              />
+
+              <ModernSelect
+                label="Number of Exercises"
+                value={numExercises}
+                onChange={(e) => setNumExercises(e.target.value)}
+                options={numExerciseOptions}
+                variant="outlined"
+                helperText="Let AI decide or set a specific number"
+              />
+
+              <ModernSelect
+                label="Workout Type"
+                value={workoutType}
+                onChange={(e) => setWorkoutType(e.target.value)}
+                options={workoutTypeOptions}
+                variant="outlined"
+                helperText="Choose your preferred workout environment"
+              />
+            </Stack>
+          </ModernCard>
+        </Grid>
+
+        {/* Muscle Groups Section */}
+        <Grid item xs={12} md={6}>
+          <ModernCard
+            title="Target Muscle Groups"
+            subtitle="Select specific areas to focus on (optional)"
+            variant="glass"
+            headerAction={<Psychology sx={{ color: '#7C3AED' }} />}
+          >
+            <Stack spacing={2}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {muscleGroups.map((muscle) => (
+                  <Chip
+                    key={muscle}
+                    label={muscle}
+                    onClick={() => handleMuscleToggle(muscle)}
+                    color={selectedMuscles.includes(muscle) ? 'primary' : 'default'}
+                    variant={selectedMuscles.includes(muscle) ? 'filled' : 'outlined'}
+                    sx={{
+                      borderRadius: '12px',
+                      fontWeight: 600,
+                      ...(selectedMuscles.includes(muscle) && {
+                        background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
+                        color: '#FFFFFF',
+                      }),
+                      '&:hover': {
+                        transform: 'translateY(-1px)',
+                        boxShadow: '0 4px 12px rgba(0, 212, 255, 0.3)',
+                      }
+                    }}
+                  />
+                ))}
+              </Box>
+
+              {/* User Profile Info */}
+              {user && (
+                <Box sx={{ mt: 2, p: 2, borderRadius: '12px', background: 'rgba(0, 212, 255, 0.05)' }}>
+                  <Typography variant="body2" sx={{ color: '#CBD5E1', mb: 1, fontWeight: 600 }}>
+                    💪 Based on your profile:
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    {user.fitness_goal && (
+                      <Chip 
+                        label={`Goal: ${user.fitness_goal.replace('_', ' ')}`} 
+                        size="small" 
+                        variant="outlined"
+                        sx={{ color: '#00D4FF', borderColor: '#00D4FF' }}
+                      />
+                    )}
+                    {user.experience_level && (
+                      <Chip 
+                        label={`Level: ${user.experience_level}`} 
+                        size="small" 
+                        variant="outlined"
+                        sx={{ color: '#7C3AED', borderColor: '#7C3AED' }}
+                      />
+                    )}
+                  </Box>
+                </Box>
+              )}
+            </Stack>
+          </ModernCard>
+        </Grid>
+
+        {/* Generate Button Section */}
+        <Grid item xs={12}>
+          <Box sx={{ textAlign: 'center' }}>
+            <PrimaryButton
+              onClick={handleGenerateWorkout}
+              disabled={generating}
+              loading={generating}
+              size="large"
+              startIcon={generating ? undefined : <AutoAwesome />}
+              sx={{ 
+                minWidth: '280px',
+                height: '60px',
+                fontSize: '1.125rem',
+                fontWeight: 700,
+              }}
+            >
+              {generating ? 'Generating AI Workout...' : '🚀 Generate AI Workout'}
+            </PrimaryButton>
+
+            {generating && (
+              <Typography variant="body2" sx={{ color: '#CBD5E1', mt: 2 }}>
+                🧠 AI is analyzing your profile and preferences...
+              </Typography>
+            )}
+          </Box>
+        </Grid>
+
+        {/* Generated Workout Results */}
+        {workoutPlan && (
+          <>
+            {/* Workout Summary */}
+            <Grid item xs={12}>
+              <ModernCard
+                title={workoutPlan.name || 'Your Personalized Workout'}
+                subtitle={workoutPlan.description}
+                variant="feature"
+                headerAction={
+                  workoutPlan.ai_generated && (
+                    <AIModelBadge
+                      aiModel={workoutPlan.ai_model}
+                      aiGenerated={workoutPlan.ai_generated}
+                    />
+                  )
+                }
+              >
+                <Grid container spacing={2} sx={{ mb: 3 }}>
+                  <Grid item xs={6} sm={3}>
+                    <StatCard
+                      icon={<Timer />}
+                      value={`${workoutPlan.estimated_duration || duration} min`}
+                      label="Duration"
+                      variant="stat"
+                    />
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <StatCard
+                      icon={<FitnessCenter />}
+                      value={workoutPlan.exercises?.length || 0}
+                      label="Exercises"
+                      variant="stat"
+                    />
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <StatCard
+                      icon={<TrendingUp />}
+                      value={workoutPlan.difficulty_level || 'Moderate'}
+                      label="Difficulty"
+                      variant="stat"
+                    />
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <StatCard
+                      icon={<LocalFireDepartment />}
+                      value={workoutPlan.estimated_calories ? `~${workoutPlan.estimated_calories}` : 'N/A'}
+                      label="Calories"
+                      variant="stat"
+                    />
+                  </Grid>
+                </Grid>
+
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+                  <SecondaryButton
+                    onClick={handleSaveWorkout}
+                    startIcon={<Save />}
+                  >
+                    Save Plan
+                  </SecondaryButton>
+                  
+                  <PrimaryButton
+                    onClick={handleStartWorkout}
+                    startIcon={<PlayArrow />}
+                    size="large"
+                  >
+                    Start Workout
+                  </PrimaryButton>
+                </Box>
+
+                {generationTime && (
+                  <Typography variant="caption" sx={{ 
+                    color: '#10B981', 
+                    fontWeight: 600,
+                    textAlign: 'center',
+                    display: 'block',
+                    mt: 2 
+                  }}>
+                    ⚡ Generated in {generationTime}s
+                  </Typography>
+                )}
+              </ModernCard>
+            </Grid>
+
+            {/* Exercise List */}
+            <Grid item xs={12}>
+              <ModernCard
+                title={`Exercises (${workoutPlan.exercises?.length || 0})`}
+                subtitle="Your personalized workout routine"
+                variant="glass"
+              >
+                <List sx={{ p: 0 }}>
+                  {workoutPlan.exercises?.map((exercise, index) => (
+                    <React.Fragment key={index}>
+                      <ListItem
+                        sx={{
+                          px: 0,
+                          py: 3,
+                          flexDirection: 'column',
+                          alignItems: 'stretch',
+                        }}
+                      >
+                        {/* Exercise Header */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, width: '100%' }}>
+                          <Box
+                            sx={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: '10px',
+                              background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#FFFFFF',
+                              fontWeight: 700,
+                              fontSize: '1.125rem',
+                            }}
+                          >
+                            {index + 1}
+                          </Box>
+                          
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontFamily: '"Gravitas One", "Montserrat", sans-serif',
+                              fontWeight: 400,
+                              color: '#FFFFFF',
+                              flex: 1,
+                            }}
+                          >
+                            {exercise.name}
+                          </Typography>
+                        </Box>
+
+                        {/* Exercise Details */}
+                        {exercise.instructions && (
+                          <Typography variant="body2" sx={{ color: '#CBD5E1', mb: 2, lineHeight: 1.6 }}>
+                            📝 {exercise.instructions}
+                          </Typography>
+                        )}
+
+                        {/* Muscle Groups */}
+                        {exercise.muscle_groups && exercise.muscle_groups.length > 0 && (
+                          <Box sx={{ mb: 2 }}>
+                            <Typography variant="body2" sx={{ color: '#94A3B8', mb: 1 }}>
+                              🎯 Target Muscles:
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                              {exercise.muscle_groups.map((muscle, idx) => (
+                                <Chip
+                                  key={idx}
+                                  label={muscle}
+                                  size="small"
+                                  sx={{
+                                    background: 'rgba(0, 212, 255, 0.1)',
+                                    color: '#00D4FF',
+                                    fontSize: '0.75rem',
+                                  }}
+                                />
+                              ))}
+                            </Box>
+                          </Box>
+                        )}
+
+                        {/* Action Buttons */}
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+                          <SecondaryButton
+                            size="small"
+                            onClick={() => fetchExerciseDetails(exercise.name)}
+                            startIcon={<VideoLibrary />}
+                          >
+                            Watch Video
+                          </SecondaryButton>
+                          
+                          <SecondaryButton
+                            size="small"
+                            onClick={() => fetchExerciseDetails(exercise.name)}
+                            startIcon={<Lightbulb />}
+                          >
+                            Get Tips
+                          </SecondaryButton>
+
+                          {/* Feedback Buttons */}
+                          <Box sx={{ ml: 'auto', display: 'flex', gap: 0.5 }}>
+                            <Typography variant="caption" sx={{ color: '#94A3B8', mr: 1 }}>
+                              Help improve AI:
+                            </Typography>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleExerciseFeedback(exercise.name, 'like')}
+                              sx={{ color: '#10B981' }}
+                            >
+                              <ThumbUp fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleExerciseFeedback(exercise.name, 'dislike')}
+                              sx={{ color: '#EF4444' }}
+                            >
+                              <ThumbDown fontSize="small" />
+                            </IconButton>
+                          </Box>
+                        </Box>
+
+                        {/* Exercise Details (when loaded) */}
+                        {exerciseDetails[exercise.name] && (
+                          <Box sx={{ mt: 2, p: 2, borderRadius: '12px', background: 'rgba(0, 212, 255, 0.05)' }}>
+                            {exerciseDetails[exercise.name].videos && (
+                              <Box sx={{ mb: 2 }}>
+                                <Typography variant="body2" sx={{ color: '#00D4FF', fontWeight: 600, mb: 1 }}>
+                                  🎬 Video Demonstrations:
+                                </Typography>
+                                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                  {exerciseDetails[exercise.name].videos.slice(0, 2).map((video, idx) => (
+                                    <SecondaryButton
+                                      key={idx}
+                                      size="small"
+                                      onClick={() => window.open(video.url, '_blank')}
+                                      startIcon={<VideoLibrary />}
+                                    >
+                                      Watch
+                                    </SecondaryButton>
+                                  ))}
+                                </Box>
+                              </Box>
+                            )}
+
+                            {exerciseDetails[exercise.name].tips && (
+                              <Box>
+                                <Typography variant="body2" sx={{ color: '#7C3AED', fontWeight: 600, mb: 1 }}>
+                                  💡 Exercise Tips:
+                                </Typography>
+                                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                                  {exerciseDetails[exercise.name].tips.slice(0, 3).map((tip, idx) => (
+                                    <Chip
+                                      key={idx}
+                                      label={tip}
+                                      size="small"
+                                      sx={{
+                                        background: 'rgba(124, 58, 237, 0.1)',
+                                        color: '#7C3AED',
+                                        fontSize: '0.75rem',
+                                      }}
+                                    />
+                                  ))}
+                                </Box>
+                              </Box>
+                            )}
+                          </Box>
+                        )}
+                      </ListItem>
+                      
+                      {index < (workoutPlan.exercises?.length || 0) - 1 && (
+                        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </List>
+              </ModernCard>
+            </Grid>
+
+            {/* Workout Tips */}
+            <Grid item xs={12}>
+              <ModernCard
+                title="Workout Summary & Tips"
+                variant="default"
+              >
+                <Typography variant="body1" sx={{ color: '#CBD5E1', mb: 2, lineHeight: 1.6 }}>
+                  This {workoutPlan.estimated_duration || duration}-minute {workoutPlan.difficulty_level || 'moderate'} workout 
+                  targets {workoutPlan.exercises?.length || 0} different exercises.
+                  {workoutPlan.estimated_calories && ` You'll burn approximately ${workoutPlan.estimated_calories} calories.`}
+                </Typography>
+                
+                <Typography variant="body2" sx={{ color: '#94A3B8', lineHeight: 1.6 }}>
+                  💪 Remember to warm up before starting, stay hydrated throughout, and listen to your body!
+                </Typography>
+
+                <Box sx={{ textAlign: 'center', mt: 3 }}>
+                  <PrimaryButton
+                    onClick={handleStartWorkout}
+                    startIcon={<PlayArrow />}
+                    size="large"
+                    sx={{ minWidth: '240px' }}
+                  >
+                    🚀 Start This Workout Now
+                  </PrimaryButton>
+                </Box>
+              </ModernCard>
+            </Grid>
+          </>
+        )}
+
+        {/* AI Info Footer */}
+        <Grid item xs={12}>
+          <ModernCard variant="glass">
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="body2" sx={{ color: '#CBD5E1', mb: 1 }}>
+                🤖 Powered by advanced AI models including Groq Llama3, Ollama, and rule-based systems
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#94A3B8' }}>
+                💪 Every workout is personalized based on your fitness profile and goals
+              </Typography>
+            </Box>
+          </ModernCard>
+        </Grid>
+      </Grid>
     </Container>
   );
 }
