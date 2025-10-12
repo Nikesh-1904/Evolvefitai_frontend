@@ -102,45 +102,24 @@ function WorkoutGenerator() {
     }
   };
 
-  const fetchExerciseDetails = async (exerciseName) => {
-    if (exerciseDetails[exerciseName]) return exerciseDetails[exerciseName];
-    try {
-      const details = await apiService.getExerciseDetails(exerciseName);
-      setExerciseDetails(prev => ({ ...prev, [exerciseName]: details }));
-      return details;
-    } catch (error) {
-      console.error('Failed to fetch exercise details:', error);
-      throw error; // Re-throw the error so the calling function can catch it
-    }
-  };
+const fetchExerciseDetails = async (exerciseName) => {
+  // If details already exist in state, return them immediately.
+  if (exerciseDetails[exerciseName]) {
+    return ;
+  }
+  try {
+    // Fetch the new details from the API.
+    const details = await apiService.getExerciseDetails(exerciseName);
+    // Set the state for future use.
+    setExerciseDetails(prev => ({ ...prev, [exerciseName]: details }));
+    // *** RETURN the newly fetched details for immediate use. ***
+  } catch (error) {
+    console.error('Failed to fetch exercise details:', error);
+    // Throw the error so the calling function knows something went wrong.
+    setError('Could not load exercise details.');
+  }
+};
 
-  // FIXED: Handle video watching - open first available video
-  const handleWatchVideo = async (exerciseName) => {
-    try {
-      // 'details' will now be populated either from cache or the fresh API call
-      const details = await fetchExerciseDetails(exerciseName);
-      
-      if (details && details.videos && details.videos.length > 0) {
-        // Open the first video in a new tab
-        window.open(details.videos[0].url, '_blank');
-      } else {
-        setError('No video available for this exercise');
-      }
-    } catch (error) {
-      console.error('Failed to open video:', error);
-      setError('Failed to load video');
-    }
-  };
-
-  // FIXED: Handle tips - fetch and display tips
-  const handleGetTips = async (exerciseName) => {
-    try {
-      await fetchExerciseDetails(exerciseName);
-    } catch (error) {
-      console.error('Failed to fetch tips:', error);
-      setError('Failed to load exercise tips');
-    }
-  };
 
   const handleStartWorkout = () => {
     if (!workoutPlan) return;
@@ -563,7 +542,7 @@ function WorkoutGenerator() {
                         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
                           <SecondaryButton
                             size="small"
-                            onClick={() => handleWatchVideo(exercise.name)}
+                            onClick={() => fetchExerciseDetails(exercise.name)}
                             startIcon={<VideoLibrary />}
                           >
                             Watch Video
@@ -571,7 +550,7 @@ function WorkoutGenerator() {
                           
                           <SecondaryButton
                             size="small"
-                            onClick={() => handleGetTips(exercise.name)}
+                            onClick={() => fetchExerciseDetails(exercise.name)}
                             startIcon={<Lightbulb />}
                           >
                             Get Tips
