@@ -183,7 +183,7 @@ function OnboardingPage() {
                     mb: 2,
                   }}
                 >
-                  Welcome to EvolveAI!
+                  Welcome to EvolveFit AI!
                 </Typography>
                 
                 <Typography
@@ -742,7 +742,7 @@ function OnboardingPage() {
         {/* Footer */}
         <Box sx={{ textAlign: 'center', mt: 6 }}>
           <Typography variant="body2" sx={{ color: '#94A3B8', mb: 1 }}>
-            🤖 Powered by EvolveAI - Your Personal Fitness Assistant
+            🤖 Powered by EvolveFit AI - Your Personal Fitness Assistant
           </Typography>
           <Typography variant="caption" sx={{ color: '#6B7280' }}>
             All information is securely encrypted and used only to personalize your experience
