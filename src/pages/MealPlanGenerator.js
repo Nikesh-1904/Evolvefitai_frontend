@@ -97,7 +97,19 @@ const MealPlanGenerator = () => {
   // Check if profile is complete
   const isProfileIncomplete = !user?.weight || !user?.height || !user?.age || 
                              !user?.gender || !user?.activity_level || !user?.fitness_goal;
+  
+  let totalProtein = 0;
+  let totalCarbs = 0;
 
+  if (mealPlan && mealPlan.meals) {
+    Object.values(mealPlan.meals).forEach(meal => {
+      if (typeof meal.protein === 'number') totalProtein += meal.protein;
+      if (typeof meal.carbs === 'number') totalCarbs += meal.carbs;
+      // Add fallback keys if your protein/carbs use a different name:
+      if (typeof meal.protein_grams === 'number') totalProtein += meal.protein_grams;
+      if (typeof meal.carbs_grams === 'number') totalCarbs += meal.carbs_grams;
+    });
+  }
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 6 }}>
       {/* Modern Hero Section */}
@@ -313,19 +325,25 @@ const MealPlanGenerator = () => {
               <Grid item xs={6} sm={3}>
                 <StatCard
                   icon={<TrendingUp />}
-                  value={mealPlan.macros && typeof mealPlan.macros.protein !== 'undefined'
-                    ? `${mealPlan.macros.protein}g`
-                    : 'N/A'}
+                  value={
+                    (mealPlan.macros && typeof mealPlan.macros.protein === 'number' && mealPlan.macros.protein !== 0)
+                      ? `${mealPlan.macros.protein}g`
+                      : totalProtein > 0
+                        ? `${totalProtein}g`
+                        : 'N/A'
+                  }
                   label="Protein"
                   variant="stat"
                 />
-              </Grid>
-              <Grid item xs={6} sm={3}>
                 <StatCard
                   icon={<Fastfood />}
-                  value={mealPlan.macros && typeof mealPlan.macros.carbs !== 'undefined'
-                    ? `${mealPlan.macros.carbs}g`
-                    : 'N/A'}
+                  value={
+                    (mealPlan.macros && typeof mealPlan.macros.carbs === 'number' && mealPlan.macros.carbs !== 0)
+                      ? `${mealPlan.macros.carbs}g`
+                      : totalCarbs > 0
+                        ? `${totalCarbs}g`
+                        : 'N/A'
+                  }
                   label="Carbs"
                   variant="stat"
                 />
