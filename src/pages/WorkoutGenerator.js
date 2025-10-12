@@ -1,4 +1,4 @@
-// src/pages/WorkoutGenerator.js - Modern AI Workout Generator with Fixed Video/Tips Functionality
+// src/pages/WorkoutGenerator.js - Fixed Exercise Details Display
 
 import React, { useState } from 'react';
 import {
@@ -15,6 +15,11 @@ import {
   IconButton,
   Divider,
   Stack,
+  Collapse,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import {
   PlayArrow,
@@ -29,6 +34,10 @@ import {
   LocalFireDepartment,
   TrendingUp,
   Psychology,
+  Close,
+  ExpandMore,
+  ExpandLess,
+  OpenInNew,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -58,6 +67,11 @@ function WorkoutGenerator() {
   const [selectedMuscles, setSelectedMuscles] = useState([]);
   const [numExercises, setNumExercises] = useState('');
   const [workoutType, setWorkoutType] = useState('');
+  
+  // New state for exercise details display
+  const [expandedExercise, setExpandedExercise] = useState(null);
+  const [loadingExerciseDetails, setLoadingExerciseDetails] = useState({});
+  const [exerciseDetailsDialog, setExerciseDetailsDialog] = useState(null);
 
   // All functions preserved exactly as original
   const handleMuscleToggle = (muscle) => {
@@ -102,24 +116,27 @@ function WorkoutGenerator() {
     }
   };
 
-const fetchExerciseDetails = async (exerciseName) => {
-  // If details already exist in state, return them immediately.
-  if (exerciseDetails[exerciseName]) {
-    return ;
-  }
-  try {
-    // Fetch the new details from the API.
-    const details = await apiService.getExerciseDetails(exerciseName);
-    // Set the state for future use.
-    setExerciseDetails(prev => ({ ...prev, [exerciseName]: details }));
-    // *** RETURN the newly fetched details for immediate use. ***
-  } catch (error) {
-    console.error('Failed to fetch exercise details:', error);
-    // Throw the error so the calling function knows something went wrong.
-    setError('Could not load exercise details.');
-  }
-};
-
+  // Enhanced fetchExerciseDetails function
+  const fetchExerciseDetails = async (exerciseName) => {
+    if (exerciseDetails[exerciseName]) {
+      // If already loaded, just toggle display
+      setExerciseDetailsDialog(exerciseName);
+      return;
+    }
+    
+    setLoadingExerciseDetails(prev => ({ ...prev, [exerciseName]: true }));
+    
+    try {
+      const details = await apiService.getExerciseDetails(exerciseName);
+      setExerciseDetails(prev => ({ ...prev, [exerciseName]: details }));
+      setExerciseDetailsDialog(exerciseName);
+    } catch (error) {
+      console.error('Failed to fetch exercise details:', error);
+      setError(`Failed to load details for ${exerciseName}`);
+    } finally {
+      setLoadingExerciseDetails(prev => ({ ...prev, [exerciseName]: false }));
+    }
+  };
 
   const handleStartWorkout = () => {
     if (!workoutPlan) return;
@@ -538,22 +555,15 @@ const fetchExerciseDetails = async (exerciseName) => {
                           </Box>
                         )}
 
-                        {/* Action Buttons - FIXED */}
+                        {/* Action Buttons */}
                         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
                           <SecondaryButton
                             size="small"
                             onClick={() => fetchExerciseDetails(exercise.name)}
-                            startIcon={<VideoLibrary />}
+                            startIcon={loadingExerciseDetails[exercise.name] ? <CircularProgress size={16} /> : <VideoLibrary />}
+                            disabled={loadingExerciseDetails[exercise.name]}
                           >
-                            Watch Video
-                          </SecondaryButton>
-                          
-                          <SecondaryButton
-                            size="small"
-                            onClick={() => fetchExerciseDetails(exercise.name)}
-                            startIcon={<Lightbulb />}
-                          >
-                            Get Tips
+                            {loadingExerciseDetails[exercise.name] ? 'Loading...' : 'Watch Videos'}
                           </SecondaryButton>
 
                           {/* Feedback Buttons */}
@@ -577,53 +587,6 @@ const fetchExerciseDetails = async (exerciseName) => {
                             </IconButton>
                           </Box>
                         </Box>
-
-                        {/* Exercise Details (when loaded) - FIXED */}
-                        {exerciseDetails[exercise.name] && (
-                          <Box sx={{ mt: 2, p: 2, borderRadius: '12px', background: 'rgba(0, 212, 255, 0.05)' }}>
-                            {exerciseDetails[exercise.name].videos && (
-                              <Box sx={{ mb: 2 }}>
-                                <Typography variant="body2" sx={{ color: '#00D4FF', fontWeight: 600, mb: 1 }}>
-                                  🎬 Available Videos:
-                                </Typography>
-                                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                  {exerciseDetails[exercise.name].videos.slice(0, 3).map((video, idx) => (
-                                    <SecondaryButton
-                                      key={idx}
-                                      size="small"
-                                      onClick={() => window.open(video.url, '_blank')}
-                                      startIcon={<VideoLibrary />}
-                                    >
-                                      Video {idx + 1}
-                                    </SecondaryButton>
-                                  ))}
-                                </Box>
-                              </Box>
-                            )}
-
-                            {exerciseDetails[exercise.name].tips && (
-                              <Box>
-                                <Typography variant="body2" sx={{ color: '#7C3AED', fontWeight: 600, mb: 1 }}>
-                                  💡 Exercise Tips:
-                                </Typography>
-                                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                                  {exerciseDetails[exercise.name].tips.slice(0, 3).map((tip, idx) => (
-                                    <Chip
-                                      key={idx}
-                                      label={tip}
-                                      size="small"
-                                      sx={{
-                                        background: 'rgba(124, 58, 237, 0.1)',
-                                        color: '#7C3AED',
-                                        fontSize: '0.75rem',
-                                      }}
-                                    />
-                                  ))}
-                                </Box>
-                              </Box>
-                            )}
-                          </Box>
-                        )}
                       </ListItem>
                       
                       {index < (workoutPlan.exercises?.length || 0) - 1 && (
@@ -680,6 +643,216 @@ const fetchExerciseDetails = async (exerciseName) => {
           </ModernCard>
         </Grid>
       </Grid>
+
+      {/* Exercise Details Dialog */}
+      <Dialog
+        open={!!exerciseDetailsDialog}
+        onClose={() => setExerciseDetailsDialog(null)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            background: 'rgba(26, 31, 46, 0.95)',
+            backdropFilter: 'blur(40px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '24px',
+            maxHeight: '80vh',
+          }
+        }}
+      >
+        {exerciseDetailsDialog && exerciseDetails[exerciseDetailsDialog] && (
+          <>
+            <DialogTitle
+              sx={{
+                fontFamily: '"Gravitas One", "Montserrat", sans-serif',
+                fontWeight: 400,
+                color: '#FFFFFF',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <Box>
+                <Typography variant="h5" sx={{ fontFamily: 'inherit', fontWeight: 'inherit' }}>
+                  {exerciseDetailsDialog}
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#CBD5E1', mt: 0.5 }}>
+                  Exercise details, videos, and tips
+                </Typography>
+              </Box>
+              <IconButton
+                onClick={() => setExerciseDetailsDialog(null)}
+                sx={{ color: '#94A3B8' }}
+              >
+                <Close />
+              </IconButton>
+            </DialogTitle>
+            
+            <DialogContent sx={{ pt: 3 }}>
+              <Stack spacing={3}>
+                {/* Exercise Videos */}
+                {exerciseDetails[exerciseDetailsDialog]?.videos?.length > 0 && (
+                  <Box>
+                    <Typography variant="h6" sx={{ 
+                      color: '#00D4FF', 
+                      fontWeight: 600, 
+                      mb: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                    }}>
+                      <VideoLibrary /> Video Demonstrations
+                    </Typography>
+                    <Grid container spacing={2}>
+                      {exerciseDetails[exerciseDetailsDialog].videos.map((video, idx) => (
+                        <Grid item xs={12} sm={6} key={idx}>
+                          <ModernCard variant="glass" sx={{ cursor: 'pointer' }}>
+                            <Box 
+                              onClick={() => window.open(video.url, '_blank')}
+                              sx={{ 
+                                textAlign: 'center',
+                                '&:hover': {
+                                  '& .video-overlay': {
+                                    opacity: 1,
+                                  }
+                                }
+                              }}
+                            >
+                              {video.thumbnail && (
+                                <Box sx={{ position: 'relative', mb: 2 }}>
+                                  <img 
+                                    src={video.thumbnail} 
+                                    alt={video.title}
+                                    style={{ 
+                                      width: '100%', 
+                                      height: '120px', 
+                                      objectFit: 'cover',
+                                      borderRadius: '8px',
+                                    }}
+                                  />
+                                  <Box
+                                    className="video-overlay"
+                                    sx={{
+                                      position: 'absolute',
+                                      top: 0,
+                                      left: 0,
+                                      right: 0,
+                                      bottom: 0,
+                                      background: 'rgba(0, 0, 0, 0.7)',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      borderRadius: '8px',
+                                      opacity: 0,
+                                      transition: 'opacity 0.3s ease',
+                                    }}
+                                  >
+                                    <PlayArrow sx={{ fontSize: '3rem', color: '#00D4FF' }} />
+                                  </Box>
+                                </Box>
+                              )}
+                              
+                              <Typography variant="body1" sx={{ 
+                                color: '#FFFFFF', 
+                                fontWeight: 600,
+                                mb: 1,
+                              }}>
+                                {video.title || `Video ${idx + 1}`}
+                              </Typography>
+                              
+                              {video.duration && (
+                                <Typography variant="caption" sx={{ color: '#94A3B8' }}>
+                                  Duration: {video.duration}
+                                </Typography>
+                              )}
+                              
+                              <Box sx={{ mt: 2 }}>
+                                <SecondaryButton
+                                  size="small"
+                                  endIcon={<OpenInNew />}
+                                  fullWidth
+                                >
+                                  Watch Video
+                                </SecondaryButton>
+                              </Box>
+                            </Box>
+                          </ModernCard>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Box>
+                )}
+
+                {/* Exercise Tips */}
+                {exerciseDetails[exerciseDetailsDialog]?.tips?.length > 0 && (
+                  <Box>
+                    <Typography variant="h6" sx={{ 
+                      color: '#7C3AED', 
+                      fontWeight: 600, 
+                      mb: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                    }}>
+                      <Lightbulb /> Exercise Tips
+                    </Typography>
+                    <Grid container spacing={1}>
+                      {exerciseDetails[exerciseDetailsDialog].tips.map((tip, idx) => (
+                        <Grid item xs={12} sm={6} md={4} key={idx}>
+                          <Box sx={{
+                            p: 2,
+                            borderRadius: '12px',
+                            background: 'rgba(124, 58, 237, 0.1)',
+                            border: '1px solid rgba(124, 58, 237, 0.2)',
+                          }}>
+                            <Typography variant="body2" sx={{ 
+                              color: '#FFFFFF',
+                              fontWeight: 500,
+                              lineHeight: 1.5,
+                            }}>
+                              💡 {tip}
+                            </Typography>
+                          </Box>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Box>
+                )}
+
+                {/* Additional Exercise Info */}
+                {exerciseDetails[exerciseDetailsDialog]?.equipment && (
+                  <Box>
+                    <Typography variant="body2" sx={{ color: '#CBD5E1', mb: 1, fontWeight: 600 }}>
+                      🏋️ Equipment Needed:
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {exerciseDetails[exerciseDetailsDialog].equipment.map((item, idx) => (
+                        <Chip
+                          key={idx}
+                          label={item}
+                          size="small"
+                          sx={{
+                            background: 'rgba(0, 212, 255, 0.1)',
+                            color: '#00D4FF',
+                            fontSize: '0.75rem',
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+              </Stack>
+            </DialogContent>
+            
+            <DialogActions sx={{ p: 3, gap: 1 }}>
+              <SecondaryButton onClick={() => setExerciseDetailsDialog(null)}>
+                Close
+              </SecondaryButton>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
     </Container>
   );
 }
