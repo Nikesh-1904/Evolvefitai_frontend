@@ -191,7 +191,7 @@ function LoginPage() {
                       lineHeight: 1.2,
                     }}
                   >
-                    EvolveAI Fitness
+                    EvolveFit AI
                   </Typography>
                   <Typography variant="body1" sx={{ color: '#CBD5E1', fontWeight: 500 }}>
                     Your AI-Powered Fitness Journey
@@ -339,7 +339,7 @@ function LoginPage() {
                     mb: 1,
                   }}
                 >
-                  {tabValue === 0 ? 'Welcome Back' : 'Join EvolveAI'}
+                  {tabValue === 0 ? 'Welcome Back' : 'Join EvolveFit AI'}
                 </Typography>
                 <Typography variant="body1" sx={{ color: '#CBD5E1' }}>
                   {tabValue === 0 
@@ -568,7 +568,7 @@ function LoginPage() {
                   mb: 1,
                 }}
               >
-                EvolveAI Fitness
+                EvolveFit AI
               </Typography>
               <Typography variant="body2" sx={{ color: '#94A3B8' }}>
                 Your AI-Powered Fitness Journey
