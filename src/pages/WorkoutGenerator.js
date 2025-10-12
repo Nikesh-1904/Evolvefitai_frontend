@@ -660,7 +660,11 @@ function WorkoutGenerator() {
           }
         }}
       >
-        {exerciseDetailsDialog && exerciseDetails[exerciseDetailsDialog] && (
+        {loadingExerciseDetails[exerciseDetailsDialog] || !exerciseDetails[exerciseDetailsDialog] ? (
+          <DialogContent sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+            <CircularProgress />
+          </DialogContent>
+        ) : (
           <>
             <DialogTitle
               sx={{
