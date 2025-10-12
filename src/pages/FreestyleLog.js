@@ -1,28 +1,26 @@
-// src/pages/FreestyleLog.js
+// src/pages/FreestyleLog.js - Modern AI Fitness Workout Logger
 
 import React, { useState } from 'react';
 import {
   Container,
   Typography,
-  Card,
-  CardContent,
-  Button,
   Box,
   Grid,
   Chip,
   IconButton,
   Alert,
-  TextField,
-  InputAdornment,
   Autocomplete,
-  CircularProgress,
-  Divider,
-  Paper,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Timer
+  Stack,
+  Avatar,
+  Divider,
+  Fade,
+  Slide,
+  Zoom,
+  LinearProgress,
 } from '@mui/material';
 import {
   AddCircle,
@@ -30,36 +28,49 @@ import {
   Notes,
   CheckCircle,
   Search,
-  FitnessCenter
+  FitnessCenter,
+  Timer,
+  Speed,
+  MonitorWeight,
+  DirectionsRun,
+  SelfImprovement,
+  PlayArrow,
+  Add,
+  Remove,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService';
 
+// Import our modern components
+import ModernCard from '../components/ModernCard';
+import ModernInput from '../components/ModernInput';
+import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
+
 const FreestyleLog = () => {
   const navigate = useNavigate();
-
+  
+  // State management (preserving all original functionality)
   const [loggedExercises, setLoggedExercises] = useState([]);
   const [notes, setNotes] = useState('');
   const [startTime] = useState(new Date());
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDurationModalOpen, setDurationModalOpen] = useState(false);
-  const [manualDuration, setManualDuration] = useState(45); // Default to 45 mins
-
+  const [manualDuration, setManualDuration] = useState(45);
   const [open, setOpen] = useState(false);
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
 
+  // All original handlers preserved exactly
   const handleSearchChange = async (event, value) => {
     setInputValue(value);
     if (value && value.length > 2) {
       setLoading(true);
       try {
         const results = await apiService.getExerciseDetails(value);
-        // Now, we expect results to be objects with exercise details
         const formattedOptions = Array.isArray(results)
-          ? results.map(r => r.exercise).filter(Boolean) // Keep the whole exercise object
+          ? results.map(r => r.exercise).filter(Boolean)
           : (results.exercise ? [results.exercise] : []);
         setOptions(formattedOptions);
       } catch (err) {
@@ -74,7 +85,6 @@ const FreestyleLog = () => {
 
   const handleAddExercise = (exercise) => {
     if (exercise && exercise.name && !loggedExercises.some(ex => ex.name === exercise.name)) {
-      // Create the initial set based on exercise_type
       let initialSet = {};
       switch (exercise.exercise_type) {
         case 'REPS_ONLY':
@@ -92,7 +102,7 @@ const FreestyleLog = () => {
           initialSet = { reps: 8, weight: 0 };
           break;
       }
-
+      
       setLoggedExercises([
         ...loggedExercises,
         { ...exercise, sets: [initialSet] }
@@ -106,7 +116,7 @@ const FreestyleLog = () => {
     const updatedExercises = [...loggedExercises];
     const exercise = updatedExercises[exerciseIndex];
     const sets = exercise.sets;
-    const previousSet = sets.length > 0 ? sets[sets.length - 1] : sets[0]; // Use first set as template if last is gone
+    const previousSet = sets.length > 0 ? sets[sets.length - 1] : sets[0];
     updatedExercises[exerciseIndex].sets.push({ ...previousSet });
     setLoggedExercises(updatedExercises);
   };
@@ -130,93 +140,51 @@ const FreestyleLog = () => {
   };
 
   const handleFinishWorkout = () => {
-    // Basic check before opening the modal
     if (loggedExercises.length === 0) {
       setError('Please add at least one exercise before finishing.');
       return;
     }
     setError('');
-    setDurationModalOpen(true); // Just open the modal
-  };
-
-  const renderSetInputs = (exercise, exIndex, set, setIndex) => {
-    switch (exercise.exercise_type) {
-      case 'REPS_ONLY':
-        return (
-          <Grid item xs={9}>
-            <TextField label="Reps" type="number" value={set.reps || ''} onChange={(e) => handleSetChange(exIndex, setIndex, 'reps', e.target.value)} fullWidth />
-          </Grid>
-        );
-      case 'DURATION':
-        return (
-          <Grid item xs={9}>
-            <TextField label="Duration" type="number" value={set.duration_seconds || ''} onChange={(e) => handleSetChange(exIndex, setIndex, 'duration_seconds', e.target.value)} fullWidth InputProps={{ endAdornment: <InputAdornment position="end">sec</InputAdornment> }} />
-          </Grid>
-        );
-      case 'DISTANCE_DURATION':
-        return (
-          <>
-            <Grid item xs={4.5}><TextField label="Distance" type="number" value={set.distance_km || ''} onChange={(e) => handleSetChange(exIndex, setIndex, 'distance_km', e.target.value)} fullWidth InputProps={{ endAdornment: <InputAdornment position="end">km</InputAdornment> }} /></Grid>
-            <Grid item xs={4.5}><TextField label="Duration" type="number" value={set.duration_seconds || ''} onChange={(e) => handleSetChange(exIndex, setIndex, 'duration_seconds', e.target.value)} fullWidth InputProps={{ endAdornment: <InputAdornment position="end">sec</InputAdornment> }} /></Grid>
-          </>
-        );
-      case 'QUALITATIVE':
-         return (
-          <Grid item xs={9}>
-            <TextField label="Notes for this activity" type="text" value={set.notes || ''} onChange={(e) => handleSetChange(exIndex, setIndex, 'notes', e.target.value)} fullWidth placeholder="e.g., Vinyasa flow, focused on hips"/>
-          </Grid>
-        );
-      case 'WEIGHT_BASED':
-      default:
-        return (
-          <>
-            <Grid item xs={4.5}><TextField label="Weight" type="number" value={set.weight || ''} onChange={(e) => handleSetChange(exIndex, setIndex, 'weight', e.target.value)} fullWidth InputProps={{ endAdornment: <InputAdornment position="end">kg</InputAdornment> }} /></Grid>
-            <Grid item xs={4.5}><TextField label="Reps" type="number" value={set.reps || ''} onChange={(e) => handleSetChange(exIndex, setIndex, 'reps', e.target.value)} fullWidth /></Grid>
-          </>
-        );
-    }
+    setDurationModalOpen(true);
   };
 
   const handleSaveWithDuration = async () => {
     setIsSubmitting(true);
     setError('');
-
+    
     const exercises_completed = loggedExercises.map(ex => ({
       name: ex.name,
-      exercise_type: ex.exercise_type, // 👈 Add the type
+      exercise_type: ex.exercise_type,
       sets: ex.sets.map(set => {
         const cleanSet = {};
-        // Clean the set to only include relevant data for its type
         switch (ex.exercise_type) {
-            case 'WEIGHT_BASED':
-                cleanSet.reps = parseInt(set.reps, 10) || 0;
-                cleanSet.weight = parseFloat(set.weight) || 0;
-                break;
-            case 'REPS_ONLY':
-                cleanSet.reps = parseInt(set.reps, 10) || 0;
-                break;
-            case 'DURATION':
-                cleanSet.duration_seconds = parseInt(set.duration_seconds, 10) || 0;
-                break;
-            case 'DISTANCE_DURATION':
-                cleanSet.duration_seconds = parseInt(set.duration_seconds, 10) || 0;
-                cleanSet.distance_km = parseFloat(set.distance_km) || 0;
-                break;
-            case 'QUALITATIVE':
-                cleanSet.duration_seconds = parseInt(set.duration_seconds, 10) || 0;
-                cleanSet.notes = set.notes || '';
-                break;
-            default:
-                break;
+          case 'WEIGHT_BASED':
+            cleanSet.reps = parseInt(set.reps, 10) || 0;
+            cleanSet.weight = parseFloat(set.weight) || 0;
+            break;
+          case 'REPS_ONLY':
+            cleanSet.reps = parseInt(set.reps, 10) || 0;
+            break;
+          case 'DURATION':
+            cleanSet.duration_seconds = parseInt(set.duration_seconds, 10) || 0;
+            break;
+          case 'DISTANCE_DURATION':
+            cleanSet.duration_seconds = parseInt(set.duration_seconds, 10) || 0;
+            cleanSet.distance_km = parseFloat(set.distance_km) || 0;
+            break;
+          case 'QUALITATIVE':
+            cleanSet.duration_seconds = parseInt(set.duration_seconds, 10) || 0;
+            cleanSet.notes = set.notes || '';
+            break;
+          default:
+            break;
         }
         return cleanSet;
       }),
     })).filter(ex => ex.sets.length > 0);
 
-    // No need to check for empty exercises here, as it's done before opening the modal
-
     const logPayload = {
-      duration_minutes: manualDuration, // Use the duration from the modal
+      duration_minutes: manualDuration,
       notes,
       exercises_completed,
       workout_date: new Date().toISOString(),
@@ -224,138 +192,606 @@ const FreestyleLog = () => {
 
     try {
       await apiService.logWorkout(logPayload);
-      setDurationModalOpen(false); // Close modal on success
+      setDurationModalOpen(false);
       navigate('/workout-history');
     } catch (err) {
       setError(err.message || 'Failed to save workout log.');
-      setIsSubmitting(false); // Keep modal open to show the error
+      setIsSubmitting(false);
     }
   };
-  
-  // The JSX for the popup modal
+
+  // Get exercise type icon and color
+  const getExerciseTypeInfo = (exerciseType) => {
+    switch (exerciseType) {
+      case 'WEIGHT_BASED':
+        return { icon: <MonitorWeight />, color: '#00D4FF', label: 'Weight Based' };
+      case 'REPS_ONLY':
+        return { icon: <FitnessCenter />, color: '#10B981', label: 'Reps Only' };
+      case 'DURATION':
+        return { icon: <Timer />, color: '#7C3AED', label: 'Duration' };
+      case 'DISTANCE_DURATION':
+        return { icon: <DirectionsRun />, color: '#FF3366', label: 'Distance + Time' };
+      case 'QUALITATIVE':
+        return { icon: <SelfImprovement />, color: '#F59E0B', label: 'Qualitative' };
+      default:
+        return { icon: <FitnessCenter />, color: '#94A3B8', label: 'Exercise' };
+    }
+  };
+
+  const renderSetInputs = (exercise, exIndex, set, setIndex) => {
+    const typeInfo = getExerciseTypeInfo(exercise.exercise_type);
+    
+    switch (exercise.exercise_type) {
+      case 'REPS_ONLY':
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <ModernInput
+              label="Reps"
+              type="number"
+              value={set.reps || ''}
+              onChange={(e) => handleSetChange(exIndex, setIndex, 'reps', e.target.value)}
+              fullWidth
+              size="small"
+              variant="outlined"
+            />
+          </Box>
+        );
+
+      case 'DURATION':
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <ModernInput
+              label="Duration (seconds)"
+              type="number"
+              value={set.duration_seconds || ''}
+              onChange={(e) => handleSetChange(exIndex, setIndex, 'duration_seconds', e.target.value)}
+              fullWidth
+              size="small"
+              variant="outlined"
+              endText="sec"
+            />
+          </Box>
+        );
+
+      case 'DISTANCE_DURATION':
+        return (
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <ModernInput
+              label="Distance (km)"
+              type="number"
+              value={set.distance_km || ''}
+              onChange={(e) => handleSetChange(exIndex, setIndex, 'distance_km', e.target.value)}
+              fullWidth
+              size="small"
+              variant="outlined"
+              endText="km"
+            />
+            <ModernInput
+              label="Duration (sec)"
+              type="number"
+              value={set.duration_seconds || ''}
+              onChange={(e) => handleSetChange(exIndex, setIndex, 'duration_seconds', e.target.value)}
+              fullWidth
+              size="small"
+              variant="outlined"
+              endText="sec"
+            />
+          </Box>
+        );
+
+      case 'QUALITATIVE':
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <ModernInput
+              label="Notes"
+              value={set.notes || ''}
+              onChange={(e) => handleSetChange(exIndex, setIndex, 'notes', e.target.value)}
+              fullWidth
+              size="small"
+              variant="outlined"
+              placeholder="e.g., Vinyasa flow, focused on hips"
+            />
+          </Box>
+        );
+
+      case 'WEIGHT_BASED':
+      default:
+        return (
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <ModernInput
+              label="Weight (kg)"
+              type="number"
+              value={set.weight || ''}
+              onChange={(e) => handleSetChange(exIndex, setIndex, 'weight', e.target.value)}
+              fullWidth
+              size="small"
+              variant="outlined"
+              endText="kg"
+            />
+            <ModernInput
+              label="Reps"
+              type="number"
+              value={set.reps || ''}
+              onChange={(e) => handleSetChange(exIndex, setIndex, 'reps', e.target.value)}
+              fullWidth
+              size="small"
+              variant="outlined"
+            />
+          </Box>
+        );
+    }
+  };
+
+  // Duration modal
   const renderDurationModal = () => (
-    <Dialog open={isDurationModalOpen} onClose={() => setDurationModalOpen(false)}>
-      <DialogTitle>Confirm Workout Duration</DialogTitle>
-      <DialogContent>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        <Typography variant="body2" sx={{ mb: 2 }}>
+    <Dialog
+      open={isDurationModalOpen}
+      onClose={() => setDurationModalOpen(false)}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          background: 'rgba(26, 31, 46, 0.95)',
+          backdropFilter: 'blur(40px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '24px',
+        }
+      }}
+    >
+      <DialogTitle sx={{ 
+        fontFamily: '"Gravitas One", "Montserrat", sans-serif',
+        fontWeight: 400,
+        color: '#FFFFFF',
+        textAlign: 'center',
+      }}>
+        <Avatar sx={{ 
+          width: 60, 
+          height: 60,
+          mx: 'auto',
+          mb: 2,
+          background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
+        }}>
+          <Timer />
+        </Avatar>
+        Confirm Workout Duration
+      </DialogTitle>
+      
+      <DialogContent sx={{ textAlign: 'center' }}>
+        {error && (
+          <Alert 
+            severity="error" 
+            sx={{ 
+              mb: 3,
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+              '& .MuiAlert-message': { color: '#FFFFFF' },
+            }}
+          >
+            {error}
+          </Alert>
+        )}
+        
+        <Typography variant="body1" sx={{ color: '#CBD5E1', mb: 3 }}>
           What was the total duration of your workout in minutes?
         </Typography>
-        <TextField
-          autoFocus
-          margin="dense"
+        
+        <ModernInput
           label="Duration (minutes)"
           type="number"
-          fullWidth
-          variant="outlined"
           value={manualDuration}
           onChange={(e) => setManualDuration(parseInt(e.target.value, 10) || 0)}
+          fullWidth
+          variant="outlined"
           inputProps={{ min: 1 }}
         />
       </DialogContent>
-      <DialogActions sx={{ p: 2 }}>
-        <Button onClick={() => setDurationModalOpen(false)}>Cancel</Button>
-        <Button 
-          onClick={handleSaveWithDuration} 
-          variant="contained"
+      
+      <DialogActions sx={{ p: 3, gap: 2, justifyContent: 'center' }}>
+        <SecondaryButton onClick={() => setDurationModalOpen(false)}>
+          Cancel
+        </SecondaryButton>
+        <PrimaryButton 
+          onClick={handleSaveWithDuration}
+          loading={isSubmitting}
           disabled={isSubmitting}
         >
-          {isSubmitting ? <CircularProgress size={24} /> : 'Save Workout'}
-        </Button>
+          {isSubmitting ? 'Saving...' : 'Save Workout'}
+        </PrimaryButton>
       </DialogActions>
     </Dialog>
   );
 
+  // Calculate workout progress
+  const totalSets = loggedExercises.reduce((sum, ex) => sum + ex.sets.length, 0);
+
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Log a New Workout
-      </Typography>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #0F1419 0%, #1A202C 50%, #2D3748 100%)',
+        py: 4,
+      }}
+    >
+      <Container maxWidth="lg">
+        {/* Hero Section */}
+        <Fade in timeout={500}>
+          <Box>
+            <ModernCard
+              variant="feature"
+              elevation="high"
+              sx={{ mb: 4, position: 'relative', overflow: 'hidden' }}
+            >
+              <Box sx={{ textAlign: 'center' }}>
+                <Box
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: '20px',
+                    background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#FFFFFF',
+                    fontSize: '2.5rem',
+                    mx: 'auto',
+                    mb: 3,
+                  }}
+                >
+                  💪
+                </Box>
+                
+                <Typography
+                  variant="h3"
+                  sx={{
+                    fontFamily: '"Gravitas One", "Montserrat", sans-serif',
+                    fontWeight: 400,
+                    fontSize: { xs: '1.8rem', sm: '2.5rem' },
+                    color: '#FFFFFF',
+                    lineHeight: 1.2,
+                    mb: 1,
+                  }}
+                >
+                  Log Your Workout
+                </Typography>
+                
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: '#CBD5E1',
+                    fontWeight: 500,
+                    fontSize: '1.125rem',
+                    maxWidth: '600px',
+                    mx: 'auto',
+                    mb: 2,
+                  }}
+                >
+                  Track your exercises, sets, and reps with our smart logging system
+                </Typography>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>Add Exercise</Typography>
-        <Autocomplete
-          freeSolo
-          open={open}
-          onOpen={() => setOpen(true)}
-          onClose={() => setOpen(false)}
-          options={options}
-          loading={loading}
-          inputValue={inputValue}
-          onInputChange={handleSearchChange}
-          getOptionLabel={(option) => option.name || ""} // 👈 Tell Autocomplete how to display the object
-          onChange={(event, newValue) => {
-            handleAddExercise(newValue); // Pass the whole object
-          }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Search for an exercise to add..."
-              variant="outlined"
-              InputProps={{
-                ...params.InputProps,
-                startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />,
-                endAdornment: (
-                  <>{loading ? <CircularProgress color="inherit" size={20} /> : null}{params.InputProps.endAdornment}</>
-                ),
-              }}
-            />
-          )}
-        />
-      </Paper>
-
-      {loggedExercises.length === 0 && (
-          <Box textAlign="center" sx={{ color: 'text.secondary', my: 5 }}>
-              <FitnessCenter sx={{ fontSize: 40, mb: 1 }} />
-              <Typography>Your workout is empty.</Typography>
-              <Typography>Use the search bar above to add your first exercise.</Typography>
+                {/* Progress Indicator */}
+                {loggedExercises.length > 0 && (
+                  <Stack direction="row" spacing={2} sx={{ justifyContent: 'center' }}>
+                    <Chip
+                      icon={<FitnessCenter />}
+                      label={`${loggedExercises.length} exercise${loggedExercises.length !== 1 ? 's' : ''}`}
+                      sx={{ 
+                        background: 'rgba(0, 212, 255, 0.1)', 
+                        color: '#00D4FF',
+                        fontWeight: 600,
+                      }}
+                    />
+                    <Chip
+                      icon={<Speed />}
+                      label={`${totalSets} set${totalSets !== 1 ? 's' : ''}`}
+                      sx={{ 
+                        background: 'rgba(16, 185, 129, 0.1)', 
+                        color: '#10B981',
+                        fontWeight: 600,
+                      }}
+                    />
+                  </Stack>
+                )}
+              </Box>
+            </ModernCard>
           </Box>
-      )}
+        </Fade>
 
-      {loggedExercises.map((exercise, exIndex) => (
-        <Card key={exIndex} sx={{ mb: 2 }}>
-          <CardContent>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="h6">{exercise.name}</Typography>
-              <IconButton onClick={() => handleRemoveExercise(exIndex)} color="error" aria-label="Remove Exercise"><Delete /></IconButton>
+        {/* Error Alert */}
+        {error && !isDurationModalOpen && (
+          <Zoom in>
+            <Alert 
+              severity="error"
+              sx={{
+                mb: 3,
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.2)',
+                '& .MuiAlert-message': { color: '#FFFFFF' },
+              }}
+            >
+              {error}
+            </Alert>
+          </Zoom>
+        )}
+
+        {/* Exercise Search */}
+        <Fade in timeout={700}>
+          <Box>
+            <ModernCard
+              title="Add Exercise"
+              subtitle="Search from our comprehensive exercise database"
+              variant="glass"
+              sx={{ mb: 4 }}
+            >
+              <Autocomplete
+                open={open}
+                onOpen={() => setOpen(true)}
+                onClose={() => setOpen(false)}
+                options={options}
+                loading={loading}
+                inputValue={inputValue}
+                onInputChange={handleSearchChange}
+                getOptionLabel={(option) => option.name || ""}
+                onChange={(event, newValue) => {
+                  handleAddExercise(newValue);
+                }}
+                renderOption={(props, option) => (
+                  <Box component="li" {...props} sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 2,
+                    py: 1.5,
+                    '&:hover': {
+                      background: 'rgba(0, 212, 255, 0.1)',
+                    }
+                  }}>
+                    <Avatar sx={{ 
+                      width: 32, 
+                      height: 32,
+                      background: `linear-gradient(135deg, ${getExerciseTypeInfo(option.exercise_type).color} 0%, ${getExerciseTypeInfo(option.exercise_type).color}80 100%)`,
+                    }}>
+                      {getExerciseTypeInfo(option.exercise_type).icon}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="body1" sx={{ color: '#FFFFFF', fontWeight: 600 }}>
+                        {option.name}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#94A3B8' }}>
+                        {getExerciseTypeInfo(option.exercise_type).label}
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
+                renderInput={(params) => (
+                  <ModernInput
+                    {...params}
+                    label="Search exercises"
+                    placeholder="Type an exercise name..."
+                    variant="outlined"
+                    startIcon={<Search />}
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loading && <LinearProgress sx={{ position: 'absolute', bottom: 0, left: 0, right: 0 }} />}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+              />
+            </ModernCard>
+          </Box>
+        </Fade>
+
+        {/* Empty State */}
+        {loggedExercises.length === 0 && (
+          <Slide direction="up" in timeout={900}>
+            <Box>
+              <ModernCard
+                variant="glass"
+                sx={{ textAlign: 'center', py: 6 }}
+              >
+                <Box
+                  sx={{
+                    width: 120,
+                    height: 120,
+                    borderRadius: '30px',
+                    background: 'linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#00D4FF',
+                    fontSize: '3rem',
+                    mx: 'auto',
+                    mb: 3,
+                  }}
+                >
+                  <FitnessCenter sx={{ fontSize: '3rem' }} />
+                </Box>
+                
+                <Typography variant="h5" sx={{ color: '#FFFFFF', fontWeight: 600, mb: 1 }}>
+                  Your workout is empty
+                </Typography>
+                
+                <Typography variant="body1" sx={{ color: '#94A3B8' }}>
+                  Use the search bar above to add your first exercise
+                </Typography>
+              </ModernCard>
             </Box>
-            <Divider sx={{ my: 1 }} />
-            {exercise.sets.map((set, setIndex) => (
-              <Grid container spacing={2} key={setIndex} alignItems="center" sx={{ mb: 1.5 }}>
-                <Grid item xs={1}><Chip label={setIndex + 1} /></Grid>
-                {renderSetInputs(exercise, exIndex, set, setIndex)}
-                <Grid item xs={2}><IconButton onClick={() => handleRemoveSet(exIndex, setIndex)} color="error" aria-label="Remove Set"><Delete /></IconButton></Grid>                
-              </Grid>
-            ))}
-            <Button onClick={() => handleAddSet(exIndex)} startIcon={<AddCircle />} variant="text" fullWidth sx={{ mt: 1 }}>Add Set</Button>
-          </CardContent>
-        </Card>
-      ))}
+          </Slide>
+        )}
 
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <TextField
-            label="Workout Notes"
-            multiline
-            rows={3}
-            fullWidth
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            InputProps={{ startAdornment: <Notes sx={{ mr: 1, color: 'text.secondary' }} /> }}
-          />
-        </CardContent>
-      </Card>
+        {/* Exercise Cards */}
+        <Stack spacing={3}>
+          {loggedExercises.map((exercise, exIndex) => {
+            const typeInfo = getExerciseTypeInfo(exercise.exercise_type);
+            
+            return (
+              <Fade key={exIndex} in timeout={500 + exIndex * 100}>
+                <Box>
+                  <ModernCard variant="glass">
+                    {/* Exercise Header */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar sx={{ 
+                          width: 48, 
+                          height: 48,
+                          background: `linear-gradient(135deg, ${typeInfo.color} 0%, ${typeInfo.color}80 100%)`,
+                        }}>
+                          {typeInfo.icon}
+                        </Avatar>
+                        <Box>
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontFamily: '"Gravitas One", "Montserrat", sans-serif',
+                              fontWeight: 400,
+                              color: '#FFFFFF',
+                            }}
+                          >
+                            {exercise.name}
+                          </Typography>
+                          <Chip
+                            label={typeInfo.label}
+                            size="small"
+                            sx={{ 
+                              background: `${typeInfo.color}20`,
+                              color: typeInfo.color,
+                              fontWeight: 500,
+                            }}
+                          />
+                        </Box>
+                      </Box>
+                      
+                      <IconButton 
+                        onClick={() => handleRemoveExercise(exIndex)} 
+                        sx={{ 
+                          color: '#FF3366',
+                          '&:hover': {
+                            background: 'rgba(255, 51, 102, 0.1)',
+                          }
+                        }}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </Box>
 
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button onClick={handleFinishWorkout} color="primary" variant="contained" size="large" startIcon={<CheckCircle />} disabled={isSubmitting || loggedExercises.length === 0}>
-          {isSubmitting ? 'Saving...' : 'Finish & Log Workout'}
-        </Button>
-      </Box>
+                    {/* Sets */}
+                    <Stack spacing={2}>
+                      {exercise.sets.map((set, setIndex) => (
+                        <Box
+                          key={setIndex}
+                          sx={{
+                            p: 3,
+                            borderRadius: '16px',
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                            <Typography variant="body2" sx={{ color: '#CBD5E1', fontWeight: 600 }}>
+                              Set {setIndex + 1}
+                            </Typography>
+                            {exercise.sets.length > 1 && (
+                              <IconButton 
+                                onClick={() => handleRemoveSet(exIndex, setIndex)} 
+                                size="small"
+                                sx={{ 
+                                  color: '#FF3366',
+                                  '&:hover': {
+                                    background: 'rgba(255, 51, 102, 0.1)',
+                                  }
+                                }}
+                              >
+                                <Remove />
+                              </IconButton>
+                            )}
+                          </Box>
+                          
+                          {renderSetInputs(exercise, exIndex, set, setIndex)}
+                        </Box>
+                      ))}
+                      
+                      {/* Add Set Button */}
+                      <SecondaryButton
+                        onClick={() => handleAddSet(exIndex)}
+                        startIcon={<Add />}
+                        fullWidth
+                        sx={{ mt: 2 }}
+                      >
+                        Add Set
+                      </SecondaryButton>
+                    </Stack>
+                  </ModernCard>
+                </Box>
+              </Fade>
+            );
+          })}
+        </Stack>
 
-      {renderDurationModal()} {/* 👈 ADD THIS LINE */}
-    </Container>
+        {/* Workout Notes */}
+        {loggedExercises.length > 0 && (
+          <Fade in timeout={1000}>
+            <Box sx={{ mt: 4 }}>
+              <ModernCard
+                title="Workout Notes"
+                subtitle="Add any additional notes about your session"
+                variant="glass"
+              >
+                <ModernInput
+                  label="Notes (optional)"
+                  multiline
+                  rows={3}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="How did the workout feel? Any observations or achievements..."
+                  variant="outlined"
+                  fullWidth
+                  startIcon={<Notes />}
+                />
+              </ModernCard>
+            </Box>
+          </Fade>
+        )}
+
+        {/* Finish Workout Button */}
+        {loggedExercises.length > 0 && (
+          <Zoom in timeout={1200}>
+            <Box sx={{ mt: 4, textAlign: 'center' }}>
+              <PrimaryButton
+                onClick={handleFinishWorkout}
+                disabled={isSubmitting || loggedExercises.length === 0}
+                size="large"
+                startIcon={<CheckCircle />}
+                sx={{
+                  minWidth: '250px',
+                  py: 2,
+                  px: 4,
+                  fontSize: '1.125rem',
+                  fontWeight: 600,
+                }}
+              >
+                {isSubmitting ? 'Saving...' : 'Finish & Log Workout'}
+              </PrimaryButton>
+            </Box>
+          </Zoom>
+        )}
+
+        {/* Duration Modal */}
+        {renderDurationModal()}
+
+        {/* Footer */}
+        <Box sx={{ textAlign: 'center', mt: 6 }}>
+          <Typography variant="body2" sx={{ color: '#94A3B8', mb: 1 }}>
+            🏋️ All exercises logged with precision tracking and AI insights
+          </Typography>
+          <Typography variant="caption" sx={{ color: '#6B7280' }}>
+            Your workout data helps improve future AI recommendations
+          </Typography>
+        </Box>
+      </Container>
+    </Box>
   );
 };
 
