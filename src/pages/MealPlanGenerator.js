@@ -313,7 +313,9 @@ const MealPlanGenerator = () => {
               <Grid item xs={6} sm={3}>
                 <StatCard
                   icon={<TrendingUp />}
-                  value={mealPlan.macros?.protein ? `${mealPlan.macros.protein}g` : 'N/A'}
+                  value={mealPlan.macros && typeof mealPlan.macros.protein !== 'undefined'
+                    ? `${mealPlan.macros.protein}g`
+                    : 'N/A'}
                   label="Protein"
                   variant="stat"
                 />
@@ -321,13 +323,14 @@ const MealPlanGenerator = () => {
               <Grid item xs={6} sm={3}>
                 <StatCard
                   icon={<Fastfood />}
-                  value={mealPlan.macros?.carbs ? `${mealPlan.macros.carbs}g` : 'N/A'}
+                  value={mealPlan.macros && typeof mealPlan.macros.carbs !== 'undefined'
+                    ? `${mealPlan.macros.carbs}g`
+                    : 'N/A'}
                   label="Carbs"
                   variant="stat"
                 />
               </Grid>
             </Grid>
-
             <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
               <SecondaryButton
                 onClick={handleSavePlan}
@@ -473,6 +476,49 @@ const MealPlanGenerator = () => {
                         </Typography>
                       </Box>
                     )}
+
+                    {/* Macronutrients for individual meal */}
+                      {typeof mealDetails.protein !== 'undefined' ||
+                      typeof mealDetails.carbs   !== 'undefined' ||
+                      typeof mealDetails.fat     !== 'undefined' ? (
+                        <Box sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 2,
+                          mt: 1,
+                          mb: 1,
+                          flexWrap: 'wrap'
+                        }}>
+                          {typeof mealDetails.protein !== 'undefined' && (
+                            <Chip
+                              label={`Protein: ${mealDetails.protein}g`}
+                              size="small"
+                              sx={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', fontWeight: 600 }}
+                            />
+                          )}
+                          {typeof mealDetails.carbs !== 'undefined' && (
+                            <Chip
+                              label={`Carbs: ${mealDetails.carbs}g`}
+                              size="small"
+                              sx={{ background: 'rgba(0, 212, 255, 0.1)', color: '#00D4FF', fontWeight: 600 }}
+                            />
+                          )}
+                          {typeof mealDetails.fat !== 'undefined' && (
+                            <Chip
+                              label={`Fat: ${mealDetails.fat}g`}
+                              size="small"
+                              sx={{ background: 'rgba(255, 51, 102, 0.1)', color: '#FF3366', fontWeight: 600 }}
+                            />
+                          )}
+                          {typeof mealDetails.calories !== 'undefined' && (
+                            <Chip
+                              label={`Calories: ~${mealDetails.calories}`}
+                              size="small"
+                              sx={{ background: 'rgba(255, 255, 255, 0.07)', color: '#fff', fontWeight: 600 }}
+                            />
+                          )}
+                        </Box>
+                      ) : null}
                   </Stack>
                 </ModernCard>
               </Grid>
