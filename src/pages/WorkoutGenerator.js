@@ -103,25 +103,23 @@ function WorkoutGenerator() {
   };
 
   const fetchExerciseDetails = async (exerciseName) => {
-    if (exerciseDetails[exerciseName]) return;
+    if (exerciseDetails[exerciseName]) return exerciseDetails[exerciseName];
     try {
       const details = await apiService.getExerciseDetails(exerciseName);
       setExerciseDetails(prev => ({ ...prev, [exerciseName]: details }));
+      return details;
     } catch (error) {
       console.error('Failed to fetch exercise details:', error);
+      throw error; // Re-throw the error so the calling function can catch it
     }
   };
 
   // FIXED: Handle video watching - open first available video
   const handleWatchVideo = async (exerciseName) => {
     try {
-      // First fetch details if not already loaded
-      if (!exerciseDetails[exerciseName]) {
-        await fetchExerciseDetails(exerciseName);
-      }
+      // 'details' will now be populated either from cache or the fresh API call
+      const details = await fetchExerciseDetails(exerciseName);
       
-      // Get the details after fetching
-      const details = exerciseDetails[exerciseName];
       if (details && details.videos && details.videos.length > 0) {
         // Open the first video in a new tab
         window.open(details.videos[0].url, '_blank');
