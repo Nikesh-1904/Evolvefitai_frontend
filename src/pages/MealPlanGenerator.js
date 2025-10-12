@@ -306,7 +306,7 @@ const MealPlanGenerator = () => {
             sx={{ mb: 4 }}
           >
             <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={6} sm={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <StatCard
                   icon={<LocalFireDepartment />}
                   value={mealPlan.target_calories ? `~${mealPlan.target_calories}` : 'N/A'}
@@ -314,7 +314,7 @@ const MealPlanGenerator = () => {
                   variant="stat"
                 />
               </Grid>
-              <Grid item xs={6} sm={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <StatCard
                   icon={<RestaurantMenu />}
                   value={Object.keys(mealPlan.meals || {}).length}
@@ -322,7 +322,7 @@ const MealPlanGenerator = () => {
                   variant="stat"
                 />
               </Grid>
-              <Grid item xs={6} sm={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <StatCard
                   icon={<TrendingUp />}
                   value={
@@ -335,6 +335,8 @@ const MealPlanGenerator = () => {
                   label="Protein"
                   variant="stat"
                 />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
                 <StatCard
                   icon={<Fastfood />}
                   value={
