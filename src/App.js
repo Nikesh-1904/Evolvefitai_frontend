@@ -5,6 +5,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { PreferencesProvider } from './contexts/PreferencesContext';
+import { AchievementsProvider } from './contexts/AchievementsContext';
 
 // Import the modern theme
 import modernFitnessTheme from './theme/modernFitnessTheme';
@@ -25,6 +27,8 @@ import MealPlanGenerator from './pages/MealPlanGenerator';
 import WorkoutPlanDetail from './pages/WorkoutPlanDetail';
 import OAuthCallback from './pages/OAuthCallback';
 import OnboardingPage from './pages/OnboardingPage';
+import UserPreferences from './components/UserPreferences';
+import AchievementsPanel from './components/AchievementsPanel';
 
 // This component handles the core logic for redirecting users
 function AppRoutes() {
@@ -62,6 +66,9 @@ function AppRoutes() {
             <Route path="/workout-plan/:planId" element={<WorkoutPlanDetail />} />
             <Route path="/analytics" element={<Analytics />} /> {/* <-- THIS ROUTE WAS MISSING */}
             <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/settings" element={<UserPreferences />} />
+            <Route path="/achievements" element={<AchievementsPanel />} />
+
             
             {/* Fallback route for any other logged-in paths */}
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -86,16 +93,20 @@ function AppRoutes() {
 
 function App() {
   return (
-    <ThemeProvider theme={modernFitnessTheme}>
-      <CssBaseline />
-      <Router>
-        <AuthProvider>
-          <div className="App">
-            <AppRoutes />
-          </div>
-        </AuthProvider>
-      </Router>
-    </ThemeProvider>
+  <PreferencesProvider>
+    <AchievementsProvider>
+      <ThemeProvider theme={modernFitnessTheme}>
+        <CssBaseline />
+        <Router>
+          <AuthProvider>
+            <div className="App">
+              <AppRoutes />
+            </div>
+          </AuthProvider>
+        </Router>
+      </ThemeProvider>
+    </AchievementsProvider>
+  </PreferencesProvider>
   );
 }
 

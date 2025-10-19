@@ -27,6 +27,8 @@ import { useAuth } from '../contexts/AuthContext';
 import ModernCard from '../components/ModernCard';
 import ModernInput, { ModernSelect } from '../components/ModernInput';
 import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
+import ContextualHelp from '../components/ContextualHelp';
+
 
 function Profile() {
   const { user, updateProfile } = useAuth();
@@ -550,6 +552,7 @@ function Profile() {
           </Box>
         </ModernCard>
       </form>
+      <ContextualHelp page="profile" />
     </Container>
   );
 }

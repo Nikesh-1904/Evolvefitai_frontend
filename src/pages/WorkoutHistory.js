@@ -50,6 +50,7 @@ import AIModelBadge from '../components/AIModelBadge';
 // Import our modern components
 import ModernCard, { StatCard } from '../components/ModernCard';
 import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
+import ContextualHelp from '../components/ContextualHelp';
 
 function TabPanel({ children, value, index }) {
   return (
@@ -894,6 +895,7 @@ function WorkoutHistory() {
             Every workout brings you closer to your goals
           </Typography>
         </Box>
+        <ContextualHelp page="workout-history" />
       </Container>
     </Box>
   );

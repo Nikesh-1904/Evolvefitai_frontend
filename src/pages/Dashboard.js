@@ -45,6 +45,10 @@ import apiService from '../services/apiService';
 import ModernCard, { StatCard, QuickActionCard } from '../components/ModernCard';
 import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
 import AIModelBadge from '../components/AIModelBadge';
+import ContextualHelp from '../components/ContextualHelp';
+import { useAchievements } from '../contexts/AchievementsContext';
+import { PrimaryButton } from '../components/ModernButton';
+
 
 function Dashboard() {
   const { user } = useAuth();
@@ -269,6 +273,12 @@ function Dashboard() {
           </>
         )}
       </Grid>
+      
+      <Box sx={{ textAlign: 'center', mt: 2, mb: 3 }}>
+        <PrimaryButton onClick={() => navigate('/achievements')} size="large">
+          View Achievements
+        </PrimaryButton>
+      </Box>
 
       {/* Modern Quick Actions */}
       <Typography
@@ -597,6 +607,7 @@ function Dashboard() {
           </PrimaryButton>
         </DialogActions>
       </Dialog>
+      <ContextualHelp page="dashboard" />
     </Container>
   );
 }

@@ -54,6 +54,7 @@ import apiService from '../services/apiService';
 import ModernCard from '../components/ModernCard';
 import ModernInput from '../components/ModernInput';
 import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
+import ContextualHelp from '../components/ContextualHelp';
 
 const WorkoutSession = () => {
   const location = useLocation();
@@ -1160,6 +1161,7 @@ const WorkoutSession = () => {
             </SecondaryButton>
           </DialogActions>
         </Dialog>
+        <ContextualHelp page="workout-session" />
       </Container>
     </Box>
   );
