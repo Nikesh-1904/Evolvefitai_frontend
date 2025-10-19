@@ -95,15 +95,15 @@ function App() {
   return (
     <ThemeProvider theme={modernFitnessTheme}>
       <CssBaseline />
-      <PreferencesProvider>
-        <AchievementsProvider>
-          <Router>
-            <AuthProvider>
+      <AuthProvider>
+        <PreferencesProvider>
+          <AchievementsProvider>
+            <Router>
               <AppRoutes />
-            </AuthProvider>
-          </Router>
-        </AchievementsProvider>
-      </PreferencesProvider>
+            </Router>
+          </AchievementsProvider>
+        </PreferencesProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
