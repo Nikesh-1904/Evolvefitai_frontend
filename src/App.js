@@ -98,9 +98,9 @@ function App() {
       <PreferencesProvider>
         <AchievementsProvider>
           <Router>
-            <div className="App">
+            <AuthProvider>
               <AppRoutes />
-            </div>
+            </AuthProvider>
           </Router>
         </AchievementsProvider>
       </PreferencesProvider>
