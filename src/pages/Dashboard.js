@@ -47,8 +47,6 @@ import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
 import AIModelBadge from '../components/AIModelBadge';
 import ContextualHelp from '../components/ContextualHelp';
 import { useAchievements } from '../contexts/AchievementsContext';
-import { PrimaryButton } from '../components/ModernButton';
-
 
 function Dashboard() {
   const { user } = useAuth();
