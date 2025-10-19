@@ -93,20 +93,18 @@ function AppRoutes() {
 
 function App() {
   return (
-  <PreferencesProvider>
-    <AchievementsProvider>
-      <ThemeProvider theme={modernFitnessTheme}>
-        <CssBaseline />
-        <Router>
-          <AuthProvider>
+    <ThemeProvider theme={modernFitnessTheme}>
+      <CssBaseline />
+      <PreferencesProvider>
+        <AchievementsProvider>
+          <Router>
             <div className="App">
               <AppRoutes />
             </div>
-          </AuthProvider>
-        </Router>
-      </ThemeProvider>
-    </AchievementsProvider>
-  </PreferencesProvider>
+          </Router>
+        </AchievementsProvider>
+      </PreferencesProvider>
+    </ThemeProvider>
   );
 }
 
