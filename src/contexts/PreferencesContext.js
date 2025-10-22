@@ -77,6 +77,12 @@ const defaultPreferences = {
 // Preferences reducer
 const preferencesReducer = (state, action) => {
   switch (action.type) {
+    case 'SET_TOP_LEVEL_PREFERENCE':
+      return {
+        ...state,
+        [action.key]: action.value, // e.g., state['weightUnit'] = 'lbs'
+      };
+
     case 'SET_PREFERENCE':
       return {
         ...state,
@@ -136,11 +142,12 @@ export const PreferencesProvider = ({ children }) => {
 
 // Save preferences to backend whenever they change
   useEffect(() => {
-    // We don't want to save during the initial load or if the user is not logged in
-    if (!user || !user.preferences) {
+    if (!user) return; // Don't save if logged out
+    
+    // Don't save if the user object's preferences are missing (e.g., during initial load)
+    if (!user.preferences && Object.keys(preferences).length === 0) {
       return;
     }
-
     // A simple debounce to prevent saving on every single keystroke
     const handler = setTimeout(() => {
       // Check if preferences have actually changed from what's on the user object
@@ -164,6 +171,11 @@ export const PreferencesProvider = ({ children }) => {
   }, [preferences, user, updateProfile]);
 
   // Helper functions
+
+  const setTopLevelPreference = (key, value) => {
+    dispatch({ type: 'SET_TOP_LEVEL_PREFERENCE', key, value });
+  };
+
   const setPreference = (category, key, value) => {
     dispatch({ type: 'SET_PREFERENCE', category, key, value });
   };
@@ -216,6 +228,7 @@ export const PreferencesProvider = ({ children }) => {
 
   const contextValue = {
     preferences,
+    setTopLevelPreference, // 👈 --- ADD NEW FUNCTION
     setPreference,
     setNestedPreference,
     resetPreferences,
