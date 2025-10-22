@@ -33,6 +33,8 @@ import {
   Settings,
   Logout,
   AutoAwesome,
+  LocationCity as GymIcon, // Example: Material UI City icon
+  EmojiEvents as LeaderboardIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -53,6 +55,8 @@ const modernPages = [
   { name: 'Meal Planner', path: '/meal-plan-generator', icon: <Restaurant /> },
   { name: 'Log Workout', path: '/log-workout', icon: <Create /> },
   { name: 'History', path: '/workout-history', icon: <History /> },
+  { name: 'Find Gym', path: '/gyms', icon: <GymIcon /> }, // New Link
+  { name: 'Leaderboard', path: '/leaderboard', icon: <LeaderboardIcon /> },
 ];
 
 function Navbar() {

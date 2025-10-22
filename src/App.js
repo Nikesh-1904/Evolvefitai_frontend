@@ -25,6 +25,8 @@ import OAuthCallback from './pages/OAuthCallback';
 import OnboardingPage from './pages/OnboardingPage';
 import UserPreferences from './components/UserPreferences';
 import AchievementsPanel from './components/AchievementsPanel';
+import GymSelection from './pages/GymSelection'; // Assuming this is the correct path
+import CommunityLeaderboard from './pages/CommunityLeaderboard'; // Assuming this is the correct path
 
 // This component handles the core logic for redirecting users
 function AppRoutes() {
@@ -64,6 +66,8 @@ function AppRoutes() {
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/settings" element={<UserPreferences />} />
             <Route path="/achievements" element={<AchievementsPanel />} />
+            <Route path="/gyms" element={<GymSelection />} />
+            <Route path="/leaderboard" element={<CommunityLeaderboard />} />
 
             
             {/* Fallback route for any other logged-in paths */}
