@@ -1,6 +1,8 @@
 // src/contexts/PreferencesContext.js - User Preferences Management Context
 
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { useAuth } from './AuthContext'; // --- MODIFICATION ---
+import apiService from '../services/apiService'; // --- MODIFICATION ---
 
 const PreferencesContext = createContext();
 
@@ -100,7 +102,7 @@ const preferencesReducer = (state, action) => {
       return { ...defaultPreferences };
     
     case 'LOAD_PREFERENCES':
-      return { ...defaultPreferences, ...action.preferences };
+      return { ...defaultPreferences, ...(action.preferences || {}) };
     
     case 'UPDATE_DASHBOARD_LAYOUT':
       return {
@@ -118,24 +120,46 @@ const preferencesReducer = (state, action) => {
 
 export const PreferencesProvider = ({ children }) => {
   const [preferences, dispatch] = useReducer(preferencesReducer, defaultPreferences);
-
+  const { user, updateProfile } = useAuth(); // Get user and updateProfile from AuthContext
   // Load preferences from localStorage on mount
   useEffect(() => {
-    const savedPreferences = localStorage.getItem('fitness-app-preferences');
-    if (savedPreferences) {
-      try {
-        const parsed = JSON.parse(savedPreferences);
-        dispatch({ type: 'LOAD_PREFERENCES', preferences: parsed });
-      } catch (error) {
-        console.error('Failed to load preferences:', error);
-      }
+    if (user && user.preferences) {
+      console.log('🔄 Loading preferences from user object...');
+      dispatch({ type: 'LOAD_PREFERENCES', preferences: user.preferences });
+    } else if (!user) {
+      // If user logs out, reset to default
+      dispatch({ type: 'RESET_PREFERENCES' });
     }
-  }, []);
+  }, [user]);
 
-  // Save preferences to localStorage whenever they change
+// Save preferences to backend whenever they change
   useEffect(() => {
-    localStorage.setItem('fitness-app-preferences', JSON.stringify(preferences));
-  }, [preferences]);
+    // We don't want to save during the initial load or if the user is not logged in
+    if (!user || !user.preferences) {
+      return;
+    }
+
+    // A simple debounce to prevent saving on every single keystroke
+    const handler = setTimeout(() => {
+      // Check if preferences have actually changed from what's on the user object
+      if (JSON.stringify(preferences) !== JSON.stringify(user.preferences)) {
+        console.log('💾 Saving preferences to backend...');
+        
+        // We use the updateProfile function from AuthContext,
+        // which is already built to handle this.
+        updateProfile({ preferences: preferences })
+          .catch(error => {
+            console.error('Failed to save preferences:', error);
+            // Here you could add a toast notification for the user
+          });
+      }
+    }, 1000); // Wait 1 second after the last change to save
+
+    // Cleanup the timeout
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [preferences, user, updateProfile]);
 
   // Helper functions
   const setPreference = (category, key, value) => {
