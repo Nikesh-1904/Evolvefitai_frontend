@@ -14,14 +14,14 @@ function OAuthCallback() {
     const processAuth = async () => {
       try {
         // Step 1: Get the URL fragment (the part after '#')
-        const hash = window.location.hash;
-
-        if (!hash) {
+        const queryString = window.location.search;
+        
+        if (!queryString) {
           throw new Error('Authentication token not found in URL. The authentication provider might be misconfigured.');
         }
 
-        // Step 2: Parse the fragment to get the token
-        const params = new URLSearchParams(hash.substring(1)); // Remove the leading '#'
+        // Step 2: Parse the query string
+        const params = new URLSearchParams(queryString);
         const accessToken = params.get('access_token');
 
         if (!accessToken) {
