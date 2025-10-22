@@ -124,13 +124,15 @@ export const PreferencesProvider = ({ children }) => {
   // Load preferences from localStorage on mount
   useEffect(() => {
     if (user && user.preferences) {
-      console.log('🔄 Loading preferences from user object...');
-      dispatch({ type: 'LOAD_PREFERENCES', preferences: user.preferences });
+      if (JSON.stringify(user.preferences) !== JSON.stringify(preferences)) {
+        console.log('🔄 Loading preferences from user object...');
+        dispatch({ type: 'LOAD_PREFERENCES', preferences: user.preferences });
+      }
     } else if (!user) {
       // If user logs out, reset to default
       dispatch({ type: 'RESET_PREFERENCES' });
     }
-  }, [user]);
+  }, [user, preferences]);
 
 // Save preferences to backend whenever they change
   useEffect(() => {
