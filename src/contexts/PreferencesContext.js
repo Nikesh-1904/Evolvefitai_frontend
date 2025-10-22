@@ -138,7 +138,7 @@ export const PreferencesProvider = ({ children }) => {
       // If user logs out, reset to default
       dispatch({ type: 'RESET_PREFERENCES' });
     }
-  }, [user, preferences]);
+  }, [user]);
 
 // Save preferences to backend whenever they change
   useEffect(() => {
