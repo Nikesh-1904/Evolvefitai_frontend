@@ -10,7 +10,6 @@ function OAuthCallback() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    debugger;
     const processAuth = async () => {
       try {
         // Step 1: Get the URL fragment (the part after '#')
