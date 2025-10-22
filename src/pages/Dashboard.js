@@ -41,6 +41,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService';
 
+import { usePreferences } from '../contexts/PreferencesContext';
 // Import our modern components
 import ModernCard, { StatCard, QuickActionCard } from '../components/ModernCard';
 import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
@@ -63,6 +64,7 @@ function Dashboard() {
   const [mealPlanDialog, setMealPlanDialog] = useState(false);
   const [generatedMealPlan, setGeneratedMealPlan] = useState(null);
   const [mealPlanError, setMealPlanError] = useState('');
+  const { convertWeight, convertHeight, getUnitLabel } = usePreferences();
 
   // All useEffect and functions preserved exactly as original
   useEffect(() => {
@@ -493,7 +495,7 @@ function Dashboard() {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2" sx={{ color: '#CBD5E1' }}>Weight:</Typography>
                   <Typography variant="body2" sx={{ color: '#FFFFFF', fontWeight: 600 }}>
-                    {user.weight} kg
+                    {convertWeight(user.weight)} {getUnitLabel('weight')}
                   </Typography>
                 </Box>
               )}
@@ -502,7 +504,7 @@ function Dashboard() {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2" sx={{ color: '#CBD5E1' }}>Height:</Typography>
                   <Typography variant="body2" sx={{ color: '#FFFFFF', fontWeight: 600 }}>
-                    {user.height} cm
+                    {convertHeight(user.height)}
                   </Typography>
                 </Box>
               )}

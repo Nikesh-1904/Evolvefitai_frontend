@@ -22,7 +22,7 @@ import {
   CheckCircle,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-
+import { usePreferences } from '../contexts/PreferencesContext';
 // Import our modern components
 import ModernCard from '../components/ModernCard';
 import ModernInput, { ModernSelect } from '../components/ModernInput';
@@ -32,6 +32,7 @@ import ContextualHelp from '../components/ContextualHelp';
 
 function Profile() {
   const { user, updateProfile } = useAuth();
+  const { preferences } = usePreferences();
   
   // State management (preserved from original)
   const [formData, setFormData] = useState({
@@ -343,7 +344,11 @@ function Profile() {
                   onChange={handleChange}
                   placeholder="Your current weight"
                   variant="outlined"
-                  helperText="Used for calorie and workout intensity calculations"
+                  helperText={
+                    preferences.weightUnit === 'lbs' 
+                      ? "Your display preference is 'lbs', but please enter your weight in kg." 
+                      : "Used for calorie and workout intensity calculations"
+                  }
                 />
 
                 <ModernInput
@@ -354,7 +359,11 @@ function Profile() {
                   onChange={handleChange}
                   placeholder="Your height in centimeters"
                   variant="outlined"
-                  helperText="Used for BMI and fitness recommendations"
+                  helperText={
+                    preferences.heightUnit === 'ft/in' 
+                      ? "Your display preference is 'ft/in', but please enter your height in cm." 
+                      : "Used for BMI and fitness recommendations"
+                  }
                 />
 
                 {/* BMI Display */}
@@ -481,7 +490,25 @@ function Profile() {
         <Box sx={{ mt: 4, display: 'flex', gap: 2, justifyContent: 'center' }}>
           <SecondaryButton
             type="button"
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              if (user) {
+                setFormData({
+                  full_name: user.full_name || '',
+                  username: user.username || '',
+                  age: user.age || '',
+                  weight: user.weight || '',
+                  height: user.height || '',
+                  gender: user.gender || '',
+                  fitness_goal: user.fitness_goal || '',
+                  experience_level: user.experience_level || '',
+                  activity_level: user.activity_level || '',
+                  dietary_restrictions: user.dietary_restrictions || [],
+                });
+                setMessage('Changes have been reset.');
+                setError('');
+                setUsernameError('');
+              }
+            }}
             disabled={loading}
           >
             Reset Changes
