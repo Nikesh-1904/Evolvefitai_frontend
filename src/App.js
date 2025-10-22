@@ -2,17 +2,13 @@
 
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { PreferencesProvider } from './contexts/PreferencesContext';
 import { AchievementsProvider } from './contexts/AchievementsContext';
 
-// Import the modern theme
-import modernFitnessTheme from './theme/modernFitnessTheme';
-
 // Import components
 import Navbar from './components/Navbar';
+import DynamicThemeWrapper from './components/DynamicThemeWrapper';
 
 // Import pages
 import LoginPage from './pages/LoginPage';
@@ -93,18 +89,17 @@ function AppRoutes() {
 
 function App() {
   return (
-    <ThemeProvider theme={modernFitnessTheme}>
-      <CssBaseline />
       <AuthProvider>
         <PreferencesProvider>
           <AchievementsProvider>
-            <Router>
-              <AppRoutes />
-            </Router>
+            <DynamicThemeWrapper> {/* Reads preferences and applies the correct theme */}
+              <Router>
+                <AppRoutes />
+              </Router>
+            </DynamicThemeWrapper>
           </AchievementsProvider>
         </PreferencesProvider>
       </AuthProvider>
-    </ThemeProvider>
   );
 }
 
