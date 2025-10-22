@@ -1,4 +1,4 @@
-// src/services/apiService.js - Complete API Service with Authentication
+// src/services/apiService.js - Complete API Service with Authentication and restored back
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
 
