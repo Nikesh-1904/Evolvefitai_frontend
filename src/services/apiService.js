@@ -308,6 +308,35 @@ async getAchievementStatus() {
       body: JSON.stringify({ achievement_id: achievementId }),
     });
   }
+
+// ==========================================
+// GYM & COMMUNITY ENDPOINTS
+// ==========================================
+
+  async searchGyms(query = '', limit = 100, skip = 0) {
+    console.log(`🔍 Searching gyms with query: "${query}"`);
+    const endpoint = `/gyms?search=${encodeURIComponent(query)}&limit=${limit}&skip=${skip}`;
+    return this.request(endpoint);
+  }
+
+  async fetchGymOccupancy(gymId) {
+    console.log(`📊 Fetching occupancy for gym ID: ${gymId}`);
+    return this.request(`/gyms/${gymId}/occupancy`);
+  }
+
+  async joinGym(gymId) {
+    console.log(`➕ Joining gym ID: ${gymId}`);
+    return this.request(`/gyms/${gymId}/join`, {
+      method: 'POST',
+      body: JSON.stringify({}), // Empty body for POST request
+    });
+  }
+
+  async fetchMyGymLeaderboard(limit = 10) {
+    console.log(`🏆 Fetching leaderboard for current user's gym`);
+    return this.request(`/community/leaderboard/my-gym?limit=${limit}`);
+  }
+
   // ==========================================
   // UTILITY METHODS
   // ==========================================
