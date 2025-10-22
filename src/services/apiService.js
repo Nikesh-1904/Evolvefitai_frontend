@@ -296,6 +296,18 @@ class ApiService {
     return this.request(`/stats/exercise-progression?exercise_name=${encodeURIComponent(exerciseName)}`);
   }
 
+async getAchievementStatus() {
+    console.log('🏆 Fetching achievement status from backend...');
+    return this.request('/achievements/status');
+  }
+
+  async unlockAchievement(achievementId) {
+    console.log(`🎉 Unlocking achievement: ${achievementId}`);
+    return this.request('/achievements/unlock', {
+      method: 'POST',
+      body: JSON.stringify({ achievement_id: achievementId }),
+    });
+  }
   // ==========================================
   // UTILITY METHODS
   // ==========================================

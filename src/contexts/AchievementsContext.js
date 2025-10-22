@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import apiService from '../services/apiService'; // 👈 --- NEW ---
 
 const AchievementsContext = createContext();
 
@@ -180,31 +181,17 @@ const levelSystem = {
 const achievementsReducer = (state, action) => {
   switch (action.type) {
     case 'LOAD_ACHIEVEMENTS':
+      // We only store the list of unlocked achievements
       return {
         ...state,
         unlockedAchievements: action.achievements || [],
-        totalPoints: action.totalPoints || 0,
-        level: action.level || 1,
       };
     
-    case 'UNLOCK_ACHIEVEMENT':
-      const newAchievement = action.achievement;
-      const isAlreadyUnlocked = state.unlockedAchievements.some(a => a.id === newAchievement.id);
-      
-      if (isAlreadyUnlocked) return state;
-      
-      const newTotalPoints = state.totalPoints + newAchievement.points;
-      const newLevel = calculateLevel(newTotalPoints);
-      
+    case 'ADD_RECENT_ACHIEVEMENT':
+      // This is just for the UI popup
       return {
         ...state,
-        unlockedAchievements: [...state.unlockedAchievements, {
-          ...newAchievement,
-          unlockedAt: new Date().toISOString(),
-        }],
-        totalPoints: newTotalPoints,
-        level: newLevel,
-        recentAchievements: [newAchievement, ...state.recentAchievements.slice(0, 4)],
+        recentAchievements: [action.achievement, ...state.recentAchievements.slice(0, 4)],
       };
     
     case 'CLEAR_RECENT_ACHIEVEMENTS':
@@ -213,98 +200,69 @@ const achievementsReducer = (state, action) => {
         recentAchievements: [],
       };
     
-    case 'SET_USER_STATS':
-      return {
-        ...state,
-        userStats: { ...state.userStats, ...action.stats },
-      };
-    
     default:
       return state;
   }
 };
 
-const calculateLevel = (points) => {
-  for (const level in levelSystem) {
-    const { minPoints, maxPoints } = levelSystem[level];
-    if (points >= minPoints && points <= maxPoints) {
-      return parseInt(level);
-    }
-  }
-  return 1;
-};
-
 const initialState = {
   unlockedAchievements: [],
   recentAchievements: [],
-  totalPoints: 0,
-  level: 1,
-  userStats: {
-    workoutsCompleted: 0,
-    totalWorkoutHours: 0,
-    consecutiveDays: 0,
-    maxConsecutiveDays: 0,
-    totalWeightLifted: 0,
-    aiWorkoutsCompleted: 0,
-    profileComplete: false,
-  },
 };
 
 export const AchievementsProvider = ({ children }) => {
-  const { user } = useAuth();
+  // --- WE NOW GET ALL DYNAMIC DATA FROM AuthContext ---
+  const { user, stats, fetchUserStats } = useAuth();
   const [state, dispatch] = useReducer(achievementsReducer, initialState);
 
-  // Load achievements from localStorage
+  // --- Load achievements from BACKEND ---
   useEffect(() => {
-    const savedAchievements = localStorage.getItem('fitness-app-achievements');
-    if (savedAchievements) {
-      try {
-        const parsed = JSON.parse(savedAchievements);
-        dispatch({ 
-          type: 'LOAD_ACHIEVEMENTS', 
-          achievements: parsed.unlockedAchievements,
-          totalPoints: parsed.totalPoints,
-          level: parsed.level,
+    if (user) {
+      console.log('🏆 AchievementsContext: User found, fetching status...');
+      apiService.getAchievementStatus()
+        .then(data => {
+          dispatch({ 
+            type: 'LOAD_ACHIEVEMENTS', 
+            achievements: data.unlocked_achievements,
+          });
+        })
+        .catch(error => {
+          console.error('Failed to load achievements status:', error);
         });
-      } catch (error) {
-        console.error('Failed to load achievements:', error);
-      }
+    } else {
+      // User logged out, clear the state
+      dispatch({ type: 'LOAD_ACHIEVEMENTS', achievements: [] });
     }
-  }, []);
+  }, [user]);
 
-  // Save achievements to localStorage
+  // --- Check for new achievements when user stats change ---
   useEffect(() => {
-    const achievementsData = {
-      unlockedAchievements: state.unlockedAchievements,
-      totalPoints: state.totalPoints,
-      level: state.level,
-    };
-    localStorage.setItem('fitness-app-achievements', JSON.stringify(achievementsData));
-  }, [state.unlockedAchievements, state.totalPoints, state.level]);
+    // Wait for auth to be loaded and stats to be available
+    if (user && stats) {
+      checkForNewAchievements(stats, user);
+    }
+    // We listen on stats and the unlocked list to re-check
+  }, [stats, state.unlockedAchievements, user]);
 
-  // Check for new achievements when user stats change
-  useEffect(() => {
-    checkForNewAchievements();
-  }, [state.userStats]);
 
-  const checkForNewAchievements = () => {
-    Object.values(achievementDefinitions).forEach(achievement => {
-      const isUnlocked = state.unlockedAchievements.some(a => a.id === achievement.id);
-      if (!isUnlocked && checkAchievementRequirements(achievement, state.userStats)) {
-        dispatch({ type: 'UNLOCK_ACHIEVEMENT', achievement });
-      }
-    });
-  };
-
-  const checkAchievementRequirements = (achievement, stats) => {
+const checkAchievementRequirements = (achievement, authStats, authUser) => {
     const req = achievement.requirements;
     
-    if (req.workoutsCompleted && stats.workoutsCompleted >= req.workoutsCompleted) return true;
-    if (req.consecutiveDays && stats.consecutiveDays >= req.consecutiveDays) return true;
-    if (req.totalWorkoutHours && stats.totalWorkoutHours >= req.totalWorkoutHours) return true;
-    if (req.totalWeightLifted && stats.totalWeightLifted >= req.totalWeightLifted) return true;
-    if (req.aiWorkoutsCompleted && stats.aiWorkoutsCompleted >= req.aiWorkoutsCompleted) return true;
-    if (req.profileComplete && stats.profileComplete) return true;
+    // This function now maps the requirement keys to the `stats` object
+    // from useAuth() (which comes from stats.py)
+    
+    if (req.workoutsCompleted && authStats.workouts_completed >= req.workoutsCompleted) return true;
+    if (req.totalWorkoutHours && authStats.total_workout_time_hours >= req.totalWorkoutHours) return true;
+    
+    // --- We don't have these stats yet, but this is how you'd check ---
+    // if (req.consecutiveDays && authStats.consecutiveDays >= req.consecutiveDays) return true;
+    // if (req.totalWeightLifted && authStats.totalWeightLifted >= req.totalWeightLifted) return true;
+    // if (req.aiWorkoutsCompleted && authStats.aiWorkoutsCompleted >= req.aiWorkoutsCompleted) return true;
+    
+    // Check profile completion from the user object
+    if (req.profileComplete && authUser.has_completed_onboarding) return true;
+    
+    // ... (other checks like earlyBird, weightLost, etc. would go here) ...
     if (req.earlyWorkout && stats.earlyWorkout) return true;
     if (req.lateWorkout && stats.lateWorkout) return true;
     if (req.weightLost && stats.weightLost >= req.weightLost) return true;
@@ -313,26 +271,58 @@ export const AchievementsProvider = ({ children }) => {
     return false;
   };
 
-  const updateUserStats = (newStats) => {
-    dispatch({ type: 'SET_USER_STATS', stats: newStats });
+const checkForNewAchievements = (authStats, authUser) => {
+    Object.values(achievementDefinitions).forEach(achievement => {
+      // Check if ID is in our state
+      const isUnlocked = state.unlockedAchievements.some(a => a.achievement_id === achievement.id);
+      
+      if (!isUnlocked && checkAchievementRequirements(achievement, authStats, authUser)) {
+        // --- THIS IS THE NEW UNLOCK LOGIC ---
+        console.log(`🎉 Unlocking new achievement: ${achievement.name}`);
+        
+        // 1. Call the backend to permanently unlock and add points
+        apiService.unlockAchievement(achievement.id)
+          .then(response => {
+            // `response` is the new AchievementStatus
+            
+            // 2. Update our local list of achievements from the server's response
+            dispatch({ type: 'LOAD_ACHIEVEMENTS', achievements: response.unlocked_achievements });
+            
+            // 3. Show the popup
+            dispatch({ type: 'ADD_RECENT_ACHIEVEMENT', achievement });
+            
+            // 4. THIS IS THE MAGIC: Tell AuthContext to refresh its stats
+            // This will update the points and level for the *entire* app.
+            fetchUserStats();
+          })
+          .catch(error => {
+            console.error(`Failed to unlock achievement ${achievement.id}:`, error);
+          });
+      }
+    });
   };
 
   const getCurrentLevel = () => {
-    return levelSystem[state.level];
+    const levelNum = stats?.level_progress?.current_level || 1;
+    return levelSystem[levelNum];
   };
 
   const getNextLevel = () => {
-    return levelSystem[state.level + 1];
+    const levelNum = stats?.level_progress?.current_level || 1;
+    return levelSystem[levelNum + 1];
   };
 
   const getProgressToNextLevel = () => {
+    const currentPoints = stats?.level_progress?.current_points || 0;
     const currentLevel = getCurrentLevel();
     const nextLevel = getNextLevel();
     
     if (!nextLevel) return 100; // Max level
     
-    const pointsInCurrentLevel = state.totalPoints - currentLevel.minPoints;
+    const pointsInCurrentLevel = currentPoints - currentLevel.minPoints;
     const pointsNeededForNextLevel = nextLevel.minPoints - currentLevel.minPoints;
+    
+    if (pointsNeededForNextLevel === 0) return 100;
     
     return (pointsInCurrentLevel / pointsNeededForNextLevel) * 100;
   };
@@ -343,27 +333,27 @@ export const AchievementsProvider = ({ children }) => {
   };
 
   const getUnlockedAchievementsByCategory = (category) => {
-    return state.unlockedAchievements
-      .filter(achievement => achievement.category === category);
+    // Match on achievement_id from the DB model
+    const unlockedIds = new Set(state.unlockedAchievements.map(a => a.achievement_id));
+    return Object.values(achievementDefinitions)
+      .filter(ach => ach.category === category && unlockedIds.has(ach.id));
   };
 
-  const contextValue = {
-    // State
+const contextValue = {
+    // --- State (now read-only from AuthContext) ---
     unlockedAchievements: state.unlockedAchievements,
     recentAchievements: state.recentAchievements,
-    totalPoints: state.totalPoints,
-    level: state.level,
-    userStats: state.userStats,
+    totalPoints: stats?.level_progress?.current_points || 0,
+    level: stats?.level_progress?.current_level || 1,
     
-    // Functions
-    updateUserStats,
+    // --- Functions (simplified) ---
     getCurrentLevel,
     getNextLevel,
     getProgressToNextLevel,
     getAchievementsByCategory,
     getUnlockedAchievementsByCategory,
     
-    // Static data
+    // --- Static data ---
     achievementDefinitions,
     levelSystem,
   };

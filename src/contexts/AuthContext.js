@@ -176,6 +176,7 @@ export const AuthProvider = ({ children }) => {
     updateProfile,
     handleOAuthCallback,
     isAuthenticated: !!user,
+    fetchUserStats, // 👈 --- ADD THIS LINE ---
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
