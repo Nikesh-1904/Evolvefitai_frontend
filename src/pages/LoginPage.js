@@ -129,8 +129,22 @@ function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = () => {
-  window.location.href = process.env.REACT_APP_API_URL + '/auth/google/authorize';
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true); // Show loading spinner
+    setError('');
+    try {
+      // This now calls your AuthContext -> apiService.js -> backend
+      // which returns the JSON and then performs the redirect.
+      await googleLogin();
+
+      // If the call succeeds, the browser will redirect,
+      // so you won't see the loading state stop.
+
+    } catch (error) {
+      // If the backend fails to provide a URL, this will catch it
+      setError(error.message || 'Google login failed. Please try again.');
+      setGoogleLoading(false); // Stop loading on error
+    }
   };
 
 
