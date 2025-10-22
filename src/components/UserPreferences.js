@@ -402,7 +402,7 @@ const UserPreferences = ({ onClose }) => {
                   control={
                     <Switch
                       checked={preferences.notifications?.mealPlanReminders || false}
-                      onChange={(e) => handleNestedPreferenceChange('notifications', '', 'mealPlanReminders', e.target.checked)}
+                      onChange={(e) => handlePreferenceChange('notifications', 'mealPlanReminders', e.target.checked)}
                       sx={{ '& .MuiSwitch-thumb': { background: '#00D4FF' } }}
                     />
                   }
@@ -568,7 +568,7 @@ const UserPreferences = ({ onClose }) => {
                     control={
                       <Switch
                         checked={preferences.workoutPreferences?.autoStartTimer || false}
-                        onChange={(e) => handleNestedChange('workoutPreferences', '', 'autoStartTimer', e.target.checked)}
+                        onChange={(e) => handleNestedChange('workoutPreferences', 'autoStartTimer', e.target.checked)}
                         sx={{ '& .MuiSwitch-thumb': { background: '#00D4FF' } }}
                       />
                     }
@@ -580,7 +580,7 @@ const UserPreferences = ({ onClose }) => {
                     control={
                       <Switch
                         checked={preferences.workoutPreferences?.playCompletionSounds || false}
-                        onChange={(e) => handleNestedChange('workoutPreferences', '', 'playCompletionSounds', e.target.checked)}
+                        onChange={(e) => handleNestedChange('workoutPreferences', 'playCompletionSounds', e.target.checked)}
                         sx={{ '& .MuiSwitch-thumb': { background: '#00D4FF' } }}
                       />
                     }
@@ -592,7 +592,7 @@ const UserPreferences = ({ onClose }) => {
                     control={
                       <Switch
                         checked={preferences.workoutPreferences?.showExerciseVideos || false}
-                        onChange={(e) => handleNestedChange('workoutPreferences', '', 'showExerciseVideos', e.target.checked)}
+                        onChange={(e) => handleNestedChange('workoutPreferences', 'showExerciseVideos', e.target.checked)}
                         sx={{ '& .MuiSwitch-thumb': { background: '#00D4FF' } }}
                       />
                     }
@@ -619,7 +619,7 @@ const UserPreferences = ({ onClose }) => {
                 control={
                   <Switch
                     checked={preferences.aiPreferences?.personalizedRecommendations || false}
-                    onChange={(e) => handleNestedChange('aiPreferences', '', 'personalizedRecommendations', e.target.checked)}
+                    onChange={(e) => handleNestedChange('aiPreferences', 'personalizedRecommendations', e.target.checked)}
                     sx={{ '& .MuiSwitch-thumb': { background: '#00D4FF' } }}
                   />
                 }
@@ -631,7 +631,7 @@ const UserPreferences = ({ onClose }) => {
                 control={
                   <Switch
                     checked={preferences.aiPreferences?.adaptiveDifficulty || false}
-                    onChange={(e) => handleNestedChange('aiPreferences', '', 'adaptiveDifficulty', e.target.checked)}
+                    onChange={(e) => handleNestedChange('aiPreferences', 'adaptiveDifficulty', e.target.checked)}
                     sx={{ '& .MuiSwitch-thumb': { background: '#00D4FF' } }}
                   />
                 }
@@ -643,7 +643,7 @@ const UserPreferences = ({ onClose }) => {
                 control={
                   <Switch
                     checked={preferences.aiPreferences?.predictiveScheduling || false}
-                    onChange={(e) => handleNestedChange('aiPreferences', '', 'predictiveScheduling', e.target.checked)}
+                    onChange={(e) => handleNestedChange('aiPreferences', 'predictiveScheduling', e.target.checked)}
                     sx={{ '& .MuiSwitch-thumb': { background: '#00D4FF' } }}
                   />
                 }
@@ -655,7 +655,7 @@ const UserPreferences = ({ onClose }) => {
                 control={
                   <Switch
                     checked={preferences.aiPreferences?.contextAwareSuggestions || false}
-                    onChange={(e) => handleNestedChange('aiPreferences', '', 'contextAwareSuggestions', e.target.checked)}
+                    onChange={(e) => handleNestedChange('aiPreferences', 'contextAwareSuggestions', e.target.checked)}
                     sx={{ '& .MuiSwitch-thumb': { background: '#00D4FF' } }}
                   />
                 }
@@ -680,7 +680,7 @@ const UserPreferences = ({ onClose }) => {
                 control={
                   <Switch
                     checked={preferences.privacy?.shareProgressPublicly || false}
-                    onChange={(e) => handleNestedChange('privacy', '', 'shareProgressPublicly', e.target.checked)}
+                    onChange={(e) => handleNestedChange('privacy', 'shareProgressPublicly', e.target.checked)}
                     sx={{ '& .MuiSwitch-thumb': { background: '#00D4FF' } }}
                   />
                 }
@@ -692,7 +692,7 @@ const UserPreferences = ({ onClose }) => {
                 control={
                   <Switch
                     checked={preferences.privacy?.allowDataForResearch || false}
-                    onChange={(e) => handleNestedChange('privacy', '', 'allowDataForResearch', e.target.checked)}
+                    onChange={(e) => handleNestedChange('privacy', 'allowDataForResearch', e.target.checked)}
                     sx={{ '& .MuiSwitch-thumb': { background: '#00D4FF' } }}
                   />
                 }
@@ -704,7 +704,7 @@ const UserPreferences = ({ onClose }) => {
                 control={
                   <Switch
                     checked={preferences.privacy?.anonymizeData || false}
-                    onChange={(e) => handleNestedChange('privacy', '', 'anonymizeData', e.target.checked)}
+                    onChange={(e) => handleNestedChange('privacy', 'anonymizeData', e.target.checked)}
                     sx={{ '& .MuiSwitch-thumb': { background: '#00D4FF' } }}
                   />
                 }
@@ -729,7 +729,7 @@ const UserPreferences = ({ onClose }) => {
                 control={
                   <Switch
                     checked={preferences.accessibility?.highContrast || false}
-                    onChange={(e) => handleNestedChange('accessibility', '', 'highContrast', e.target.checked)}
+                    onChange={(e) => handleNestedChange('accessibility', 'highContrast', e.target.checked)}
                     sx={{ '& .MuiSwitch-thumb': { background: '#00D4FF' } }}
                   />
                 }
@@ -741,7 +741,7 @@ const UserPreferences = ({ onClose }) => {
                 control={
                   <Switch
                     checked={preferences.accessibility?.largeText || false}
-                    onChange={(e) => handleNestedChange('accessibility', '', 'largeText', e.target.checked)}
+                    onChange={(e) => handleNestedChange('accessibility', 'largeText', e.target.checked)}
                     sx={{ '& .MuiSwitch-thumb': { background: '#00D4FF' } }}
                   />
                 }
@@ -753,7 +753,7 @@ const UserPreferences = ({ onClose }) => {
                 control={
                   <Switch
                     checked={preferences.accessibility?.reduceMotion || false}
-                    onChange={(e) => handleNestedChange('accessibility', '', 'reduceMotion', e.target.checked)}
+                    onChange={(e) => handleNestedChange('accessibility', 'reduceMotion', e.target.checked)}
                     sx={{ '& .MuiSwitch-thumb': { background: '#00D4FF' } }}
                   />
                 }
@@ -765,7 +765,7 @@ const UserPreferences = ({ onClose }) => {
                 control={
                   <Switch
                     checked={preferences.accessibility?.screenReaderOptimized || false}
-                    onChange={(e) => handleNestedChange('accessibility', '', 'screenReaderOptimized', e.target.checked)}
+                    onChange={(e) => handleNestedChange('accessibility', 'screenReaderOptimized', e.target.checked)}
                     sx={{ '& .MuiSwitch-thumb': { background: '#00D4FF' } }}
                   />
                 }
