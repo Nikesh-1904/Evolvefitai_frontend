@@ -82,7 +82,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/auth/callback" element={<OAuthCallback />} />
+      <Route path="/oauth-callback" element={<OAuthCallback />} />
       {/* Any other public pages would go here */}
 
       {/* Fallback for any other logged-out paths, redirect to login */}

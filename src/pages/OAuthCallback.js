@@ -35,8 +35,6 @@ function OAuthCallback() {
         console.log('✅ User session established. Redirecting to dashboard...');
         
         // Step 4: Navigate to the dashboard, replacing the callback URL in history
-        navigate('/dashboard', { replace: true });
-
       } catch (err) {
         console.error('❌ OAuth callback processing failed:', err);
         setError(err.message || 'An unexpected error occurred during login.');
