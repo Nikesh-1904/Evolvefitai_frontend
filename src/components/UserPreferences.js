@@ -402,7 +402,7 @@ const UserPreferences = ({ onClose }) => {
                   control={
                     <Switch
                       checked={preferences.notifications?.mealPlanReminders || false}
-                      onChange={(e) => handlePreferenceChange('notifications', 'mealPlanReminders', e.target.checked)}
+                      onChange={(e) => handleTopLevelChange('notifications', 'mealPlanReminders', e.target.checked)}
                       sx={{ '& .MuiSwitch-thumb': { background: '#00D4FF' } }}
                     />
                   }
