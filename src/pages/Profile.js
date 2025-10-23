@@ -20,6 +20,7 @@ import {
   Restaurant,
   Info,
   CheckCircle,
+  VpnKey,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { usePreferences } from '../contexts/PreferencesContext';
