@@ -23,6 +23,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { usePreferences } from '../contexts/PreferencesContext';
+import apiService from '../services/apiService';
 // Import our modern components
 import ModernCard from '../components/ModernCard';
 import ModernInput, { ModernSelect } from '../components/ModernInput';
@@ -31,7 +32,7 @@ import ContextualHelp from '../components/ContextualHelp';
 
 
 function Profile() {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, fetchUserStats } = useAuth();
   const { preferences } = usePreferences();
   
   // State management (preserved from original)
@@ -47,7 +48,10 @@ function Profile() {
     activity_level: '',
     dietary_restrictions: [],
   });
-  
+  const [gymCodeInput, setGymCodeInput] = useState('');
+  const [gymCodeLoading, setGymCodeLoading] = useState(false);
+  const [gymCodeMessage, setGymCodeMessage] = useState('');
+  const [gymCodeError, setGymCodeError] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -133,6 +137,26 @@ function Profile() {
     }
   };
 
+  const handleJoinGymSubmit = async (e) => {
+    e.preventDefault();
+    setGymCodeLoading(true);
+    setGymCodeError('');
+    setGymCodeMessage('');
+
+    try {
+      const response = await apiService.joinGymByCode(gymCodeInput);
+      setGymCodeMessage(response.message || 'Successfully joined gym!');
+      setGymCodeInput(''); // Clear input on success
+      // Refresh user data to get the new gym_id
+      await fetchUserStats(); // This re-fetches the user object via AuthContext
+      // Auto-clear success message
+      setTimeout(() => setGymCodeMessage(''), 4000);
+    } catch (err) {
+      setGymCodeError(err.message || 'Failed to join gym. Please check the code.');
+    } finally {
+      setGymCodeLoading(false);
+    }
+  };
   // Options for select fields (preserved from original)
   const genderOptions = [
     { value: 'male', label: 'Male' },
@@ -260,6 +284,17 @@ function Profile() {
           }}
         >
           {error}
+        </Alert>
+      )}
+
+      {gymCodeMessage && (
+        <Alert severity="success" sx={{ mb: 3, /* ... styles ... */ }}>
+          {gymCodeMessage}
+        </Alert>
+      )}
+      {gymCodeError && (
+        <Alert severity="error" sx={{ mb: 3, /* ... styles ... */ }}>
+          {gymCodeError}
         </Alert>
       )}
 
@@ -482,6 +517,58 @@ function Profile() {
                   </Box>
                 )}
               </Stack>
+            </ModernCard>
+          </Grid>
+          {/* --- 👇 5. ADD NEW GYM CODE SECTION --- */}
+          <Grid item xs={12}>
+            <ModernCard
+              title="Gym Affiliation"
+              subtitle={user?.gym_id ? "Manage your gym membership" : "Join a gym community"}
+              variant="glass"
+              headerAction={<FitnessCenter sx={{ color: '#00D4FF' }} />}
+            >
+              {user?.gym_id ? (
+                <Box>
+                  <Typography variant="body1" sx={{ color: '#CBD5E1', mb: 2 }}>
+                    You are currently a member of a gym. {/* You could display the gym name here if you fetch it */}
+                  </Typography>
+                  <SecondaryButton
+                    // Add leave gym functionality if needed
+                    // onClick={handleLeaveGym}
+                    color="error"
+                  >
+                    Leave Gym (Implement Later)
+                  </SecondaryButton>
+                </Box>
+              ) : (
+                <form onSubmit={handleJoinGymSubmit}>
+                  <Stack spacing={2}>
+                    <Typography variant="body1" sx={{ color: '#CBD5E1' }}>
+                      Enter the unique code provided by your gym to join its community leaderboard.
+                    </Typography>
+                    <ModernInput
+                      label="Gym Code"
+                      name="gym_code"
+                      value={gymCodeInput}
+                      onChange={(e) => setGymCodeInput(e.target.value)}
+                      placeholder="Enter gym code"
+                      required
+                      variant="outlined"
+                      startIcon={<VpnKey />}
+                      error={!!gymCodeError}
+                      helperText={gymCodeError || "Ask your gym administrator for the code."}
+                    />
+                    <PrimaryButton
+                      type="submit"
+                      loading={gymCodeLoading}
+                      disabled={loading} // Disable if profile save is happening
+                      sx={{ alignSelf: 'flex-start' }}
+                    >
+                      {gymCodeLoading ? 'Joining...' : 'Join Gym'}
+                    </PrimaryButton>
+                  </Stack>
+                </form>
+              )}
             </ModernCard>
           </Grid>
         </Grid>

@@ -1,6 +1,6 @@
 // src/components/Navbar.js - Modern Redesigned Navbar with Gravitas One Brand Text
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   AppBar,
   Box,
@@ -33,7 +33,6 @@ import {
   Settings,
   Logout,
   AutoAwesome,
-  LocationCity as GymIcon, // Example: Material UI City icon
   EmojiEvents as LeaderboardIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -49,14 +48,17 @@ function HideOnScroll({ children }) {
   );
 }
 
-const modernPages = [
+const basePages = [
   { name: 'Dashboard', path: '/', icon: <Dashboard /> },
   { name: 'Generate Workout', path: '/generate-workout', icon: <AutoAwesome /> },
   { name: 'Meal Planner', path: '/meal-plan-generator', icon: <Restaurant /> },
   { name: 'Log Workout', path: '/log-workout', icon: <Create /> },
   { name: 'History', path: '/workout-history', icon: <History /> },
-  { name: 'Find Gym', path: '/gyms', icon: <GymIcon /> }, // New Link
-  { name: 'Leaderboard', path: '/leaderboard', icon: <LeaderboardIcon /> },
+  // Leaderboard is now conditional
+];
+
+const communityPages = [
+    { name: 'Leaderboard', path: '/leaderboard', icon: <LeaderboardIcon /> },
 ];
 
 function Navbar() {
@@ -65,6 +67,15 @@ function Navbar() {
   const location = useLocation();
   const [anchorElNav, setAnchorElNav] = useState(null);
   const [anchorElUser, setAnchorElUser] = useState(null);
+
+  const visiblePages = useMemo(() => {
+    let pages = [...basePages];
+    // If the user has joined a gym, add the community pages
+    if (user?.gym_id) {
+      pages = pages.concat(communityPages);
+    }
+    return pages;
+  }, [user]);
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -168,7 +179,7 @@ function Navbar() {
                   }
                 }}
               >
-                {modernPages.map((page) => (
+                {visiblePages.map((page) => (
                   <MenuItem
                     key={page.name}
                     onClick={() => handleNavigate(page.path)}
@@ -219,7 +230,7 @@ function Navbar() {
 
             {/* Desktop Navigation */}
             <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 1 }}>
-              {modernPages.map((page) => (
+              {visiblePages.map((page) => (
                 <Button
                   key={page.name}
                   onClick={() => handleNavigate(page.path)}

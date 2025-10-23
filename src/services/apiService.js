@@ -313,10 +313,12 @@ async getAchievementStatus() {
 // GYM & COMMUNITY ENDPOINTS
 // ==========================================
 
-  async searchGyms(query = '', limit = 100, skip = 0) {
-    console.log(`🔍 Searching gyms with query: "${query}"`);
-    const endpoint = `/gyms?search=${encodeURIComponent(query)}&limit=${limit}&skip=${skip}`;
-    return this.request(endpoint);
+  async joinGymByCode(gymCode) {
+    console.log(`🔑 Attempting to join gym with code: ${gymCode}`);
+    return this.request(`/community/join-by-code`, {
+      method: 'POST',
+      body: JSON.stringify({ gym_code: gymCode }),
+    });
   }
 
   async fetchGymOccupancy(gymId) {
