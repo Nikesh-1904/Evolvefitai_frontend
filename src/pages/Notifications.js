@@ -181,7 +181,6 @@ function Notifications() {
         </Box>
       ) : notifications.length === 0 ? (
         <EmptyState
-          icon={<NotificationsIcon sx={{ fontSize: 80, color: '#00D4FF', opacity: 0.5 }} />}
           title="No Notifications"
           description="You're all caught up! Check back later for updates."
         />

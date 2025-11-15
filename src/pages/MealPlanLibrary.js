@@ -308,11 +308,13 @@ function MealPlanLibrary() {
         <Loading />
       ) : mealPlans.length === 0 ? (
         <EmptyState
-          icon={<Restaurant sx={{ fontSize: 80, color: '#00D4FF', opacity: 0.5 }} />}
+          type="meal"
           title="No Saved Meal Plans"
           description="Generate and save meal plans to see them here"
-          actionLabel="Generate Meal Plan"
-          onAction={() => (window.location.href = '/meal-plan-generator')}
+          action={{
+            label: "Generate Meal Plan",
+            onClick: () => (window.location.href = '/meal-plan-generator')
+          }}
         />
       ) : (
         <Stack spacing={3}>

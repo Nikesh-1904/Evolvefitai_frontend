@@ -55,6 +55,7 @@ const basePages = [
   { name: 'Meal Planner', path: '/meal-plan-generator', icon: <Restaurant /> },
   { name: 'Log Workout', path: '/log-workout', icon: <Create /> },
   { name: 'History', path: '/workout-history', icon: <History /> },
+  { name: 'Analytics', path: '/analytics', icon: <TrendingUp /> },
   // Leaderboard is now conditional
 ];
 
@@ -390,6 +391,14 @@ function Navbar() {
                 >
                   <TrendingUp sx={{ mr: 2 }} />
                   <Typography>Analytics</Typography>
+                </MenuItem>
+
+                <MenuItem
+                  onClick={() => { handleCloseUserMenu(); navigate('/meal-plans'); }}
+                  sx={{ py: 1.5, '&:hover': { background: 'rgba(0, 212, 255, 0.05)' } }}
+                >
+                  <Restaurant sx={{ mr: 2 }} />
+                  <Typography>My Meal Plans</Typography>
                 </MenuItem>
 
                 <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />

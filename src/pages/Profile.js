@@ -100,12 +100,19 @@ function Profile() {
 
   // Function to fetch user QR code
   const fetchQRCode = async () => {
+    if (!user?.gym_id) {
+      console.log('User has no gym_id, skipping QR code fetch');
+      return;
+    }
+
     setQrCodeLoading(true);
     try {
       const data = await authService.getUserQRCode();
+      console.log('QR Code data:', data);
       setQrCodeData(data);
     } catch (err) {
       console.error('Failed to fetch QR code:', err);
+      setQrCodeData(null);
     } finally {
       setQrCodeLoading(false);
     }
@@ -113,12 +120,19 @@ function Profile() {
 
   // Function to fetch membership info
   const fetchMembershipInfo = async () => {
+    if (!user?.gym_id) {
+      console.log('User has no gym_id, skipping membership info fetch');
+      return;
+    }
+
     setMembershipLoading(true);
     try {
       const data = await authService.getMembershipInfo();
+      console.log('Membership info:', data);
       setMembershipInfo(data);
     } catch (err) {
       console.error('Failed to fetch membership info:', err);
+      setMembershipInfo(null);
     } finally {
       setMembershipLoading(false);
     }
