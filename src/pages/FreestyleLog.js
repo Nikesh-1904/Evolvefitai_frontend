@@ -2,13 +2,10 @@
 
 import React, { useState } from 'react';
 import {
-  Container,
   Typography,
   Box,
-  Grid,
   Chip,
   IconButton,
-  Alert,
   Autocomplete,
   Dialog,
   DialogActions,
@@ -16,14 +13,12 @@ import {
   DialogTitle,
   Stack,
   Avatar,
-  Divider,
   Fade,
   Slide,
   Zoom,
   LinearProgress,
 } from '@mui/material';
 import {
-  AddCircle,
   Delete,
   Notes,
   CheckCircle,
@@ -34,7 +29,6 @@ import {
   MonitorWeight,
   DirectionsRun,
   SelfImprovement,
-  PlayArrow,
   Add,
   Remove,
 } from '@mui/icons-material';
@@ -45,6 +39,7 @@ import apiService from '../services/apiService';
 import ModernCard from '../components/ModernCard';
 import ModernInput from '../components/ModernInput';
 import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
+import { PageContainer, Alert } from '../components/design-system';
 
 const FreestyleLog = () => {
   const navigate = useNavigate();
@@ -358,15 +353,7 @@ const FreestyleLog = () => {
       
       <DialogContent sx={{ textAlign: 'center' }}>
         {error && (
-          <Alert 
-            severity="error" 
-            sx={{ 
-              mb: 3,
-              background: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.2)',
-              '& .MuiAlert-message': { color: '#FFFFFF' },
-            }}
-          >
+          <Alert severity="error" sx={{ mb: 3 }}>
             {error}
           </Alert>
         )}
@@ -405,118 +392,47 @@ const FreestyleLog = () => {
   const totalSets = loggedExercises.reduce((sum, ex) => sum + ex.sets.length, 0);
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0F1419 0%, #1A202C 50%, #2D3748 100%)',
-        py: 4,
-      }}
+    <PageContainer
+      title="Log Your Workout"
+      subtitle="Track your exercises, sets, and reps with our smart logging system"
+      icon="💪"
+      maxWidth="lg"
     >
-      <Container maxWidth="lg">
-        {/* Hero Section */}
-        <Fade in timeout={500}>
-          <Box>
-            <ModernCard
-              variant="feature"
-              elevation="high"
-              sx={{ mb: 4, position: 'relative', overflow: 'hidden' }}
-            >
-              <Box sx={{ textAlign: 'center' }}>
-                <Box
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: '20px',
-                    background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#FFFFFF',
-                    fontSize: '2.5rem',
-                    mx: 'auto',
-                    mb: 3,
-                  }}
-                >
-                  💪
-                </Box>
-                
-                <Typography
-                  variant="h3"
-                  sx={{
-                    fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                    fontWeight: 400,
-                    fontSize: { xs: '1.8rem', sm: '2.5rem' },
-                    color: '#FFFFFF',
-                    lineHeight: 1.2,
-                    mb: 1,
-                  }}
-                >
-                  Log Your Workout
-                </Typography>
-                
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: '#CBD5E1',
-                    fontWeight: 500,
-                    fontSize: '1.125rem',
-                    maxWidth: '600px',
-                    mx: 'auto',
-                    mb: 2,
-                  }}
-                >
-                  Track your exercises, sets, and reps with our smart logging system
-                </Typography>
+      {/* Progress Indicator */}
+      {loggedExercises.length > 0 && (
+        <Stack direction="row" spacing={2} sx={{ justifyContent: 'center', mb: 4 }}>
+          <Chip
+            icon={<FitnessCenter />}
+            label={`${loggedExercises.length} exercise${loggedExercises.length !== 1 ? 's' : ''}`}
+            sx={{
+              background: 'rgba(0, 212, 255, 0.1)',
+              color: '#00D4FF',
+              fontWeight: 600,
+            }}
+          />
+          <Chip
+            icon={<Speed />}
+            label={`${totalSets} set${totalSets !== 1 ? 's' : ''}`}
+            sx={{
+              background: 'rgba(16, 185, 129, 0.1)',
+              color: '#10B981',
+              fontWeight: 600,
+            }}
+          />
+        </Stack>
+      )}
 
-                {/* Progress Indicator */}
-                {loggedExercises.length > 0 && (
-                  <Stack direction="row" spacing={2} sx={{ justifyContent: 'center' }}>
-                    <Chip
-                      icon={<FitnessCenter />}
-                      label={`${loggedExercises.length} exercise${loggedExercises.length !== 1 ? 's' : ''}`}
-                      sx={{ 
-                        background: 'rgba(0, 212, 255, 0.1)', 
-                        color: '#00D4FF',
-                        fontWeight: 600,
-                      }}
-                    />
-                    <Chip
-                      icon={<Speed />}
-                      label={`${totalSets} set${totalSets !== 1 ? 's' : ''}`}
-                      sx={{ 
-                        background: 'rgba(16, 185, 129, 0.1)', 
-                        color: '#10B981',
-                        fontWeight: 600,
-                      }}
-                    />
-                  </Stack>
-                )}
-              </Box>
-            </ModernCard>
-          </Box>
-        </Fade>
+      {/* Error Alert */}
+      {error && !isDurationModalOpen && (
+        <Alert severity="error" closable sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
 
-        {/* Error Alert */}
-        {error && !isDurationModalOpen && (
-          <Zoom in>
-            <Alert 
-              severity="error"
-              sx={{
-                mb: 3,
-                background: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
-                '& .MuiAlert-message': { color: '#FFFFFF' },
-              }}
-            >
-              {error}
-            </Alert>
-          </Zoom>
-        )}
-
-        {/* Exercise Search */}
-        <Fade in timeout={700}>
-          <Box>
-            <ModernCard
+      {/* Exercise Search */}
+      <Fade in timeout={700}>
+        <Box>
+          <ModernCard
               title="Add Exercise"
               subtitle="Search from our comprehensive exercise database"
               variant="glass"
@@ -584,10 +500,10 @@ const FreestyleLog = () => {
           </Box>
         </Fade>
 
-        {/* Empty State */}
-        {loggedExercises.length === 0 && (
-          <Slide direction="up" in timeout={900}>
-            <Box>
+      {/* Empty State */}
+      {loggedExercises.length === 0 && (
+        <Slide direction="up" in timeout={900}>
+          <Box>
               <ModernCard
                 variant="glass"
                 sx={{ textAlign: 'center', py: 6 }}
@@ -622,8 +538,8 @@ const FreestyleLog = () => {
           </Slide>
         )}
 
-        {/* Exercise Cards */}
-        <Stack spacing={3}>
+      {/* Exercise Cards */}
+      <Stack spacing={3}>
           {loggedExercises.map((exercise, exIndex) => {
             const typeInfo = getExerciseTypeInfo(exercise.exercise_type);
             
@@ -728,12 +644,12 @@ const FreestyleLog = () => {
               </Fade>
             );
           })}
-        </Stack>
+      </Stack>
 
-        {/* Workout Notes */}
-        {loggedExercises.length > 0 && (
-          <Fade in timeout={1000}>
-            <Box sx={{ mt: 4 }}>
+      {/* Workout Notes */}
+      {loggedExercises.length > 0 && (
+        <Fade in timeout={1000}>
+          <Box sx={{ mt: 4 }}>
               <ModernCard
                 title="Workout Notes"
                 subtitle="Add any additional notes about your session"
@@ -755,10 +671,10 @@ const FreestyleLog = () => {
           </Fade>
         )}
 
-        {/* Finish Workout Button */}
-        {loggedExercises.length > 0 && (
-          <Zoom in timeout={1200}>
-            <Box sx={{ mt: 4, textAlign: 'center' }}>
+      {/* Finish Workout Button */}
+      {loggedExercises.length > 0 && (
+        <Zoom in timeout={1200}>
+          <Box sx={{ mt: 4, textAlign: 'center' }}>
               <PrimaryButton
                 onClick={handleFinishWorkout}
                 disabled={isSubmitting || loggedExercises.length === 0}
@@ -778,20 +694,9 @@ const FreestyleLog = () => {
           </Zoom>
         )}
 
-        {/* Duration Modal */}
-        {renderDurationModal()}
-
-        {/* Footer */}
-        <Box sx={{ textAlign: 'center', mt: 6 }}>
-          <Typography variant="body2" sx={{ color: '#94A3B8', mb: 1 }}>
-            🏋️ All exercises logged with precision tracking and AI insights
-          </Typography>
-          <Typography variant="caption" sx={{ color: '#6B7280' }}>
-            Your workout data helps improve future AI recommendations
-          </Typography>
-        </Box>
-      </Container>
-    </Box>
+      {/* Duration Modal */}
+      {renderDurationModal()}
+    </PageContainer>
   );
 };
 

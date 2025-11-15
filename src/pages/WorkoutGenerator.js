@@ -2,11 +2,9 @@
 
 import React, { useState } from 'react';
 import {
-  Container,
   Typography,
   Box,
   CircularProgress,
-  Alert,
   Grid,
   Chip,
   List,
@@ -41,7 +39,16 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import apiService from '../services/apiService';
+
+// Import new design system components
+import { PageContainer } from '../components/design-system';
+import { Alert } from '../components/design-system';
+
+// Import API services
+import { workoutService } from '../services/api';
+
+// Import new hooks
+import { useGenerateWorkout, useExerciseDetails, useSaveWorkoutPlan } from '../hooks/useWorkouts';
 
 // Import our modern components
 import ModernCard, { StatCard } from '../components/ModernCard';
@@ -55,23 +62,28 @@ const workoutTypes = ['Gym', 'Home Workout', 'Yoga', 'Cardio', 'HIIT'];
 function WorkoutGenerator() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  
-  // State management (preserved from original)
-  const [generating, setGenerating] = useState(false);
+
+  // Use new hooks
+  const { execute: generateWorkout, loading: generating, error: generateError } = useGenerateWorkout();
+  const { execute: saveWorkoutPlan, loading: saving } = useSaveWorkoutPlan();
+  const { execute: getExerciseDetails } = useExerciseDetails();
+
+  // State management
   const [workoutPlan, setWorkoutPlan] = useState(null);
   const [duration, setDuration] = useState(45);
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [exerciseDetails, setExerciseDetails] = useState({});
   const [generationTime, setGenerationTime] = useState(null);
   const [selectedMuscles, setSelectedMuscles] = useState([]);
   const [numExercises, setNumExercises] = useState('');
   const [workoutType, setWorkoutType] = useState('');
-  
+
   // New state for exercise details display
   const [expandedExercise, setExpandedExercise] = useState(null);
   const [loadingExerciseDetails, setLoadingExerciseDetails] = useState({});
   const [exerciseDetailsDialog, setExerciseDetailsDialog] = useState(null);
+
+  const error = generateError ? 'Failed to generate workout. Please try again.' : '';
 
   // All functions preserved exactly as original
   const handleMuscleToggle = (muscle) => {
@@ -83,8 +95,6 @@ function WorkoutGenerator() {
   };
 
   const handleGenerateWorkout = async () => {
-    setGenerating(true);
-    setError('');
     setSuccess('');
     setWorkoutPlan(null);
     setGenerationTime(null);
@@ -102,7 +112,7 @@ function WorkoutGenerator() {
         workout_type: workoutType || null,
       };
 
-      const response = await apiService.generateWorkout(requestData);
+      const response = await generateWorkout(requestData);
       const endTime = Date.now();
       const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
 
@@ -110,9 +120,7 @@ function WorkoutGenerator() {
       setWorkoutPlan(response);
       setSuccess(`Workout generated in ${timeTaken}s by ${response.ai_model || 'AI'}!`);
     } catch (err) {
-      setError('Failed to generate workout. Please try again.');
-    } finally {
-      setGenerating(false);
+      // Error handled by hook
     }
   };
 
@@ -123,16 +131,15 @@ function WorkoutGenerator() {
       setExerciseDetailsDialog(exerciseName);
       return;
     }
-    
+
     setLoadingExerciseDetails(prev => ({ ...prev, [exerciseName]: true }));
-    
+
     try {
-      const details = await apiService.getExerciseDetails(exerciseName);
+      const details = await getExerciseDetails(exerciseName);
       setExerciseDetails(prev => ({ ...prev, [exerciseName]: details }));
       setExerciseDetailsDialog(exerciseName);
     } catch (error) {
       console.error('Failed to fetch exercise details:', error);
-      setError(`Failed to load details for ${exerciseName}`);
     } finally {
       setLoadingExerciseDetails(prev => ({ ...prev, [exerciseName]: false }));
     }
@@ -146,16 +153,16 @@ function WorkoutGenerator() {
   const handleSaveWorkout = async () => {
     if (!workoutPlan) return;
     try {
-      await apiService.saveWorkoutPlan(workoutPlan);
+      await saveWorkoutPlan(workoutPlan);
       setSuccess('Workout saved successfully!');
     } catch (error) {
-      setError('Failed to save workout');
+      // Error handled by hook
     }
   };
 
   const handleExerciseFeedback = async (exerciseName, feedback) => {
     try {
-      await apiService.submitExerciseFeedback(exerciseName, feedback);
+      await workoutService.submitExerciseFeedback(exerciseName, feedback);
       setSuccess(`Feedback submitted! This helps improve AI recommendations.`);
     } catch (error) {
       console.error('Failed to submit feedback:', error);
@@ -174,88 +181,21 @@ function WorkoutGenerator() {
   ];
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 6 }}>
-      {/* Modern Hero Section */}
-      <ModernCard 
-        variant="feature" 
-        elevation="high"
-        sx={{ mb: 4, position: 'relative', overflow: 'hidden' }}
-      >
-        <Box sx={{ textAlign: 'center' }}>
-          <Box
-            sx={{
-              width: 80,
-              height: 80,
-              borderRadius: '20px',
-              background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#FFFFFF',
-              fontSize: '2.5rem',
-              mx: 'auto',
-              mb: 3,
-            }}
-          >
-            🤖
-          </Box>
-          
-          <Typography
-            variant="h3"
-            sx={{
-              fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-              fontWeight: 400,
-              fontSize: { xs: '1.8rem', sm: '2.5rem' },
-              color: '#FFFFFF',
-              lineHeight: 1.2,
-              mb: 1,
-            }}
-          >
-            AI Workout Generator
-          </Typography>
-          
-          <Typography
-            variant="h6"
-            sx={{
-              color: '#CBD5E1',
-              fontWeight: 500,
-              fontSize: '1.125rem',
-              maxWidth: '600px',
-              mx: 'auto',
-            }}
-          >
-            Get personalized workouts powered by advanced AI models, tailored to your goals and preferences
-          </Typography>
-        </Box>
-      </ModernCard>
-
+    <PageContainer
+      title="AI Workout Generator"
+      subtitle="Get personalized workouts powered by advanced AI models, tailored to your goals and preferences"
+      icon="💪"
+      maxWidth="lg"
+    >
       {/* Success/Error Messages */}
       {success && (
-        <Alert 
-          severity="success" 
-          onClose={() => setSuccess('')}
-          sx={{ 
-            mb: 3,
-            background: 'rgba(16, 185, 129, 0.1)',
-            border: '1px solid rgba(16, 185, 129, 0.2)',
-            '& .MuiAlert-message': { color: '#FFFFFF' },
-          }}
-        >
+        <Alert severity="success" closable onClose={() => setSuccess('')} sx={{ mb: 3 }}>
           {success}
         </Alert>
       )}
-      
+
       {error && (
-        <Alert 
-          severity="error" 
-          onClose={() => setError('')}
-          sx={{ 
-            mb: 3,
-            background: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
-            '& .MuiAlert-message': { color: '#FFFFFF' },
-          }}
-        >
+        <Alert severity="error" closable onClose={() => {}} sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}
@@ -852,7 +792,7 @@ function WorkoutGenerator() {
       )}
     </Dialog>
 
-    </Container>
+    </PageContainer>
   );
 }
 

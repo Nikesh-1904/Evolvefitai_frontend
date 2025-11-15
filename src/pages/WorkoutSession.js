@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Container,
   Typography,
   Box,
   Dialog,
@@ -12,7 +11,6 @@ import {
   Grid,
   Chip,
   IconButton,
-  Alert,
   List,
   ListItem,
   ListItemText,
@@ -24,14 +22,12 @@ import {
   Fade,
   Slide,
   Zoom,
-  Divider,
 } from '@mui/material';
 import {
   SkipNext,
   SkipPrevious,
   CheckCircle,
   FitnessCenter,
-  AddCircle,
   Delete,
   Notes,
   Warning,
@@ -55,6 +51,7 @@ import ModernCard from '../components/ModernCard';
 import ModernInput from '../components/ModernInput';
 import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
 import ContextualHelp from '../components/ContextualHelp';
+import { PageContainer, Alert } from '../components/design-system';
 
 const WorkoutSession = () => {
   const location = useLocation();
@@ -408,135 +405,66 @@ const WorkoutSession = () => {
   const totalSets = Object.values(loggedData).flat().length;
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0F1419 0%, #1A202C 50%, #2D3748 100%)',
-        py: 4,
-      }}
+    <PageContainer
+      title={editablePlan.name}
+      subtitle="Active Workout Session"
+      icon="🏋️"
+      maxWidth="lg"
     >
-      <Container maxWidth="lg">
-        {/* Hero Section with Progress */}
-        <Fade in timeout={500}>
-          <Box>
-            <ModernCard
-              variant="feature"
-              elevation="high"
-              sx={{ mb: 4, position: 'relative', overflow: 'hidden' }}
-            >
-              <Box sx={{ textAlign: 'center', position: 'relative' }}>
-                <Box
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: '20px',
-                    background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#FFFFFF',
-                    fontSize: '2.5rem',
-                    mx: 'auto',
-                    mb: 3,
-                  }}
-                >
-                  🏋️
-                </Box>
-                
-                <Typography
-                  variant="h3"
-                  sx={{
-                    fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                    fontWeight: 400,
-                    fontSize: { xs: '1.8rem', sm: '2.5rem' },
-                    color: '#FFFFFF',
-                    lineHeight: 1.2,
-                    mb: 1,
-                  }}
-                >
-                  {editablePlan.name}
-                </Typography>
-                
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: '#CBD5E1',
-                    fontWeight: 500,
-                    fontSize: '1.125rem',
-                    mb: 3,
-                  }}
-                >
-                  Active Workout Session
-                </Typography>
+      {/* Progress Indicators */}
+      <Stack direction="row" spacing={2} sx={{ justifyContent: 'center', mb: 3 }}>
+        <Chip
+          icon={<FitnessCenter />}
+          label={`Exercise ${currentExerciseIndex + 1}/${editablePlan.exercises.length}`}
+          sx={{
+            background: 'rgba(0, 212, 255, 0.1)',
+            color: '#00D4FF',
+            fontWeight: 600,
+          }}
+        />
+        <Chip
+          icon={<Speed />}
+          label={`${totalSets} sets logged`}
+          sx={{
+            background: 'rgba(16, 185, 129, 0.1)',
+            color: '#10B981',
+            fontWeight: 600,
+          }}
+        />
+      </Stack>
 
-                {/* Progress Indicators */}
-                <Stack direction="row" spacing={2} sx={{ justifyContent: 'center', mb: 3 }}>
-                  <Chip
-                    icon={<FitnessCenter />}
-                    label={`Exercise ${currentExerciseIndex + 1}/${editablePlan.exercises.length}`}
-                    sx={{ 
-                      background: 'rgba(0, 212, 255, 0.1)', 
-                      color: '#00D4FF',
-                      fontWeight: 600,
-                    }}
-                  />
-                  <Chip
-                    icon={<Speed />}
-                    label={`${totalSets} sets logged`}
-                    sx={{ 
-                      background: 'rgba(16, 185, 129, 0.1)', 
-                      color: '#10B981',
-                      fontWeight: 600,
-                    }}
-                  />
-                </Stack>
+      {/* Progress Bar */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="body2" sx={{ color: '#94A3B8', mb: 1, textAlign: 'center' }}>
+          Workout Progress: {Math.round(progress)}%
+        </Typography>
+        <LinearProgress
+          variant="determinate"
+          value={progress}
+          sx={{
+            height: 8,
+            borderRadius: 4,
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            '& .MuiLinearProgress-bar': {
+              background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
+              borderRadius: 4,
+            },
+          }}
+        />
+      </Box>
 
-                {/* Progress Bar */}
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body2" sx={{ color: '#94A3B8', mb: 1 }}>
-                    Workout Progress: {Math.round(progress)}%
-                  </Typography>
-                  <LinearProgress
-                    variant="determinate"
-                    value={progress}
-                    sx={{
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      '& .MuiLinearProgress-bar': {
-                        background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
-                        borderRadius: 4,
-                      },
-                    }}
-                  />
-                </Box>
-              </Box>
-            </ModernCard>
-          </Box>
-        </Fade>
+      {/* Error Alert */}
+      {error && (
+        <Alert severity="error" closable sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
 
-        {/* Error Alert */}
-        {error && (
-          <Zoom in>
-            <Alert 
-              severity="error"
-              sx={{
-                mb: 3,
-                background: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
-                '& .MuiAlert-message': { color: '#FFFFFF' },
-              }}
-            >
-              {error}
-            </Alert>
-          </Zoom>
-        )}
-
-        <Grid container spacing={4}>
-          {/* Current Exercise Panel */}
-          <Grid item xs={12} lg={8}>
-            <Fade in timeout={700}>
-              <Box>
+      <Grid container spacing={4}>
+        {/* Current Exercise Panel */}
+        <Grid item xs={12} lg={8}>
+          <Fade in timeout={700}>
+            <Box>
                 <ModernCard variant="glass" sx={{ mb: 3 }}>
                   {/* Exercise Header */}
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
@@ -980,15 +908,7 @@ const WorkoutSession = () => {
           
           <DialogContent sx={{ textAlign: 'center' }}>
             {error && (
-              <Alert 
-                severity="error" 
-                sx={{ 
-                  mb: 3,
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  border: '1px solid rgba(239, 68, 68, 0.2)',
-                  '& .MuiAlert-message': { color: '#FFFFFF' },
-                }}
-              >
+              <Alert severity="error" sx={{ mb: 3 }}>
                 {error}
               </Alert>
             )}
@@ -1161,9 +1081,8 @@ const WorkoutSession = () => {
             </SecondaryButton>
           </DialogActions>
         </Dialog>
-        <ContextualHelp page="workout-session" />
-      </Container>
-    </Box>
+      <ContextualHelp page="workout-session" />
+    </PageContainer>
   );
 };
 

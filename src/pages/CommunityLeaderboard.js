@@ -1,6 +1,6 @@
 // src/pages/CommunityLeaderboard.js - Modern Dark Glass UI
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Box,
   Typography,
@@ -13,40 +13,18 @@ import {
   Paper,
   Avatar,
   Chip,
-  CircularProgress,
-  Alert,
-  Container,
 } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import TimerIcon from '@mui/icons-material/Timer';
-import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
-import apiService from '../services/apiService';
 import { useAuth } from '../contexts/AuthContext';
-import { toast } from 'react-toastify';
+import { PageContainer, LoadingSpinner, Alert } from '../components/design-system';
+import { useLeaderboard } from '../hooks';
 
 const CommunityLeaderboard = () => {
   const { user } = useAuth();
-  const [leaderboard, setLeaderboard] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadLeaderboard();
-  }, []);
-
-  const loadLeaderboard = async () => {
-    try {
-      setLoading(true);
-      const data = await apiService.fetchMyGymLeaderboard(20);
-      setLeaderboard(data);
-    } catch (error) {
-      console.error('Failed to load leaderboard:', error);
-      toast.error('Failed to load leaderboard data');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: leaderboard, loading, error } = useLeaderboard();
 
   const getRankIcon = (rank) => {
     if (rank === 1) return <EmojiEventsIcon sx={{ color: '#FFD700', fontSize: 32 }} />;
@@ -56,91 +34,46 @@ const CommunityLeaderboard = () => {
   };
 
   if (loading) {
-    return (
-      <Box sx={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0A0E1A 0%, #1A1F2E 50%, #252A3D 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        pt: 12,
-      }}>
-        <Box textAlign="center">
-          <CircularProgress size={60} sx={{ color: '#00D4FF', mb: 3 }} />
-          <Typography variant="h6" sx={{ color: '#CBD5E1' }}>
-            Loading leaderboard...
-          </Typography>
-        </Box>
-      </Box>
-    );
+    return <LoadingSpinner fullScreen message="Loading leaderboard..." />;
   }
 
   return (
-    <Box sx={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0A0E1A 0%, #1A1F2E 50%, #252A3D 100%)',
-      pt: 12,
-      pb: 6,
-    }}>
-      <Container maxWidth="lg">
-        {/* Hero Header */}
-        <Box sx={{ mb: 6, textAlign: 'center' }}>
-          <Box sx={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 2,
-            mb: 2,
-            p: 2,
-            borderRadius: 3,
-            background: 'rgba(0, 212, 255, 0.1)',
-            border: '1px solid rgba(0, 212, 255, 0.3)',
-          }}>
-            <WorkspacePremiumIcon sx={{ fontSize: 48, color: '#00D4FF' }} />
-            <Typography
-              variant="h3"
-              sx={{
-                fontWeight: 800,
-                background: 'linear-gradient(45deg, #00D4FF, #FFFFFF)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              Community Leaderboard
-            </Typography>
-          </Box>
-          <Typography variant="body1" sx={{ color: '#94A3B8', maxWidth: 600, mx: 'auto' }}>
-            Compete with fellow gym members and climb the ranks! 🏆
-          </Typography>
-        </Box>
+    <PageContainer
+      title="Community Leaderboard"
+      subtitle="Compete with fellow gym members and climb the ranks!"
+      icon="🏆"
+      maxWidth="lg"
+    >
+      {error && <Alert severity="error" closable sx={{ mb: 4 }}>{error}</Alert>}
 
-        {/* Gym Info Card */}
-        {leaderboard?.gym && (
-          <Paper sx={{
-            mb: 4,
-            p: 3,
-            background: 'rgba(26, 31, 46, 0.8)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: 3,
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-          }}>
-            <Box display="flex" alignItems="center" gap={2}>
-              <FitnessCenterIcon sx={{ fontSize: 40, color: '#00D4FF' }} />
-              <Box>
-                <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
-                  {leaderboard.gym.name}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#94A3B8' }}>
-                  {leaderboard.gym.address}
-                </Typography>
-              </Box>
+      {/* Gym Info Card */}
+      {leaderboard?.gym && (
+        <Paper sx={{
+          mb: 4,
+          p: 3,
+          background: 'rgba(26, 31, 46, 0.8)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: 3,
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+        }}>
+          <Box display="flex" alignItems="center" gap={2}>
+            <FitnessCenterIcon sx={{ fontSize: 40, color: '#00D4FF' }} />
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
+                {leaderboard.gym.name}
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#94A3B8' }}>
+                {leaderboard.gym.address}
+              </Typography>
             </Box>
-          </Paper>
-        )}
+          </Box>
+        </Paper>
+      )}
 
-        {/* Leaderboard Table */}
-        {leaderboard?.leaderboard && leaderboard.leaderboard.length > 0 ? (
-          <TableContainer
+      {/* Leaderboard Table */}
+      {leaderboard?.leaderboard && leaderboard.leaderboard.length > 0 ? (
+        <TableContainer
             component={Paper}
             sx={{
               background: 'rgba(26, 31, 46, 0.8)',
@@ -307,8 +240,7 @@ const CommunityLeaderboard = () => {
             </Typography>
           </Paper>
         )}
-      </Container>
-    </Box>
+    </PageContainer>
   );
 };
 

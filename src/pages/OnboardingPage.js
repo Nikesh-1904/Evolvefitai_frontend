@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import {
-  Container,
   Box,
   Typography,
   Stepper,
@@ -10,7 +9,6 @@ import {
   StepLabel,
   Chip,
   Grid,
-  Alert,
   Stack,
   Avatar,
   LinearProgress,
@@ -34,6 +32,7 @@ import { useNavigate } from 'react-router-dom';
 import ModernCard from '../components/ModernCard';
 import ModernInput, { ModernSelect } from '../components/ModernInput';
 import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
+import { PageContainer, Alert } from '../components/design-system';
 
 const steps = ['Welcome', 'Your Stats', 'Fitness Goals'];
 
@@ -533,7 +532,7 @@ function OnboardingPage() {
                   </Grid>
                   
                   {fieldErrors.fitness_goal && (
-                    <Alert severity="error" sx={{ mt: 2, background: 'rgba(239, 68, 68, 0.1)' }}>
+                    <Alert severity="error" sx={{ mt: 2 }}>
                       {fieldErrors.fitness_goal}
                     </Alert>
                   )}
@@ -604,23 +603,21 @@ function OnboardingPage() {
   const progressPercentage = ((activeStep + 1) / steps.length) * 100;
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0F1419 0%, #1A202C 50%, #2D3748 100%)',
-        py: 4,
-      }}
+    <PageContainer
+      title="Setup Your Profile"
+      subtitle="Let's personalize your EvolveFit AI experience"
+      icon="🚀"
+      maxWidth="lg"
     >
-      <Container maxWidth="lg">
-        {/* Progress Header */}
-        <ModernCard
-          variant="glass"
-          sx={{
-            mb: 4,
-            background: 'rgba(37, 42, 61, 0.6)',
-            backdropFilter: 'blur(20px)',
-          }}
-        >
+      {/* Progress Header */}
+      <ModernCard
+        variant="glass"
+        sx={{
+          mb: 4,
+          background: 'rgba(37, 42, 61, 0.6)',
+          backdropFilter: 'blur(20px)',
+        }}
+      >
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
             <Typography
               variant="h5"
@@ -687,69 +684,50 @@ function OnboardingPage() {
           </Stepper>
         </ModernCard>
 
-        {/* Error Message */}
-        {submitError && (
-          <Alert 
-            severity="error" 
-            sx={{ 
-              mb: 3,
-              background: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.2)',
-              '& .MuiAlert-message': { color: '#FFFFFF' },
-            }}
+      {/* Error Message */}
+      {submitError && (
+        <Alert severity="error" closable sx={{ mb: 3 }}>
+          {submitError}
+        </Alert>
+      )}
+
+      {/* Step Content */}
+      <Box sx={{ mb: 4 }}>
+        {getStepContent(activeStep)}
+      </Box>
+
+      {/* Navigation Buttons */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+        {activeStep > 0 && (
+          <SecondaryButton
+            onClick={handleBack}
+            disabled={isSubmitting}
           >
-            {submitError}
-          </Alert>
+            Back
+          </SecondaryButton>
         )}
 
-        {/* Step Content */}
-        <Box sx={{ mb: 4 }}>
-          {getStepContent(activeStep)}
-        </Box>
-
-        {/* Navigation Buttons */}
-        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-          {activeStep > 0 && (
-            <SecondaryButton
-              onClick={handleBack}
-              disabled={isSubmitting}
-            >
-              Back
-            </SecondaryButton>
-          )}
-          
-          {activeStep === steps.length - 1 ? (
-            <PrimaryButton
-              onClick={handleFinish}
-              loading={isSubmitting}
-              disabled={isSubmitting}
-              size="large"
-              sx={{ minWidth: '200px' }}
-            >
-              {isSubmitting ? 'Setting up your profile...' : '🚀 Complete Setup'}
-            </PrimaryButton>
-          ) : (
-            <PrimaryButton
-              onClick={handleNext}
-              size="large"
-              sx={{ minWidth: '160px' }}
-            >
-              Next Step
-            </PrimaryButton>
-          )}
-        </Box>
-
-        {/* Footer */}
-        <Box sx={{ textAlign: 'center', mt: 6 }}>
-          <Typography variant="body2" sx={{ color: '#94A3B8', mb: 1 }}>
-            🤖 Powered by EvolveFit AI - Your Personal Fitness Assistant
-          </Typography>
-          <Typography variant="caption" sx={{ color: '#6B7280' }}>
-            All information is securely encrypted and used only to personalize your experience
-          </Typography>
-        </Box>
-      </Container>
-    </Box>
+        {activeStep === steps.length - 1 ? (
+          <PrimaryButton
+            onClick={handleFinish}
+            loading={isSubmitting}
+            disabled={isSubmitting}
+            size="large"
+            sx={{ minWidth: '200px' }}
+          >
+            {isSubmitting ? 'Setting up your profile...' : '🚀 Complete Setup'}
+          </PrimaryButton>
+        ) : (
+          <PrimaryButton
+            onClick={handleNext}
+            size="large"
+            sx={{ minWidth: '160px' }}
+          >
+            Next Step
+          </PrimaryButton>
+        )}
+      </Box>
+    </PageContainer>
   );
 }
 
