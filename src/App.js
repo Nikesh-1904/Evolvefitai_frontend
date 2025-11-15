@@ -17,7 +17,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardNew from './pages/DashboardNew';
 import WorkoutGenerator from './pages/WorkoutGenerator';
 import WorkoutHistory from './pages/WorkoutHistory';
-import ProfileNew from './pages/ProfileNew';
+import ProfileEnhanced from './pages/ProfileEnhanced';
 import Analytics from './pages/Analytics';
 import WorkoutSession from './pages/WorkoutSession';
 import FreestyleLog from './pages/FreestyleLog';
@@ -68,7 +68,7 @@ function AppRoutes() {
             <Route path="/workout-session" element={<WorkoutSession />} />
             <Route path="/log-workout" element={<FreestyleLog />} />
             <Route path="/workout-history" element={<WorkoutHistory />} />
-            <Route path="/profile" element={<ProfileNew />} />
+            <Route path="/profile" element={<ProfileEnhanced />} />
             <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />
             <Route path="/meal-plans" element={<MealPlanLibrary />} />
             <Route path="/exercises" element={<ExerciseLibrary />} />
