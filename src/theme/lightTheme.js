@@ -1,14 +1,15 @@
-/* src/theme/lightTheme.js - Modern Light Fitness Theme with Gravitas One */
+/* src/theme/lightTheme.js - Enhanced Light Fitness Theme */
 
 import { createTheme } from '@mui/material/styles';
 
-// Modern Fitness Color Palette - Light Mode
+// Enhanced Modern Fitness Color Palette - Light Mode
 export const fitnessColorsLight = {
-  // Light Base Colors
+  // Light Base Colors - Warm and comfortable
   background: {
-    primary: '#F8FAFC',      // Soft cool gray
+    primary: '#FAFAFA',      // Soft warm gray (reduced blue tint)
     secondary: '#FFFFFF',    // Pure white for cards
-    tertiary: '#F1F5F9',     // Light slate for elevated elements
+    tertiary: '#F5F5F5',     // Light gray for elevated elements
+    paper: '#FCFCFC',        // Alternative card background
   },
 
   // Vibrant Accent Colors (kept consistent for brand identity)
@@ -26,23 +27,27 @@ export const fitnessColorsLight = {
     primary: 'linear-gradient(135deg, #0EA5E9 0%, #8B5CF6 100%)',
     secondary: 'linear-gradient(135deg, #EC4899 0%, #F97316 100%)',
     success: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
-    light: 'linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%)',
+    background: 'linear-gradient(135deg, #FAFAFA 0%, #FFFFFF 50%, #F5F5F5 100%)',
   },
 
-  // Text Colors
+  // Text Colors - Optimized for readability
   text: {
-    primary: '#0F172A',      // Dark slate for headings
-    secondary: '#475569',    // Medium slate for body text
-    tertiary: '#64748B',     // Light slate for secondary text
+    primary: '#0F172A',      // Dark slate for headings (14:1 contrast)
+    secondary: '#334155',    // Darker slate for body text (10:1 contrast) - improved from #475569
+    tertiary: '#64748B',     // Medium slate for secondary text (7:1 contrast)
+    muted: '#94A3B8',        // For less important text (4.5:1 contrast)
     inverse: '#FFFFFF',      // White text on dark backgrounds
   },
 
   // Surface Colors
   surface: {
     glass: 'rgba(255, 255, 255, 0.8)',     // Glassmorphism effect
-    border: 'rgba(15, 23, 42, 0.1)',       // Subtle borders
+    glassLight: 'rgba(255, 255, 255, 0.95)', // More opaque glass
+    border: 'rgba(15, 23, 42, 0.12)',       // Subtle borders - slightly more visible
+    borderStrong: 'rgba(15, 23, 42, 0.2)',  // More visible borders
     hover: 'rgba(14, 165, 233, 0.08)',     // Hover states
     active: 'rgba(14, 165, 233, 0.15)',    // Active states
+    overlay: 'rgba(0, 0, 0, 0.4)',         // For modals/overlays
   },
 };
 
@@ -83,21 +88,23 @@ const modernFitnessThemeLight = createTheme({
 
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    
+
     // Brand/Header Typography with Gravitas One
     h1: {
       fontFamily: '"Gravitas One", "Montserrat", "Inter", sans-serif',
       fontWeight: 400, // Gravitas One is naturally bold
       fontSize: '2.75rem',
-      lineHeight: 1.1,
-      letterSpacing: '-0.03em',
+      lineHeight: 1.15,
+      letterSpacing: '-0.02em',
+      color: fitnessColorsLight.text.primary,
     },
     h2: {
       fontFamily: '"Gravitas One", "Montserrat", "Inter", sans-serif',
       fontWeight: 400,
       fontSize: '2.25rem',
       lineHeight: 1.2,
-      letterSpacing: '-0.02em',
+      letterSpacing: '-0.015em',
+      color: fitnessColorsLight.text.primary,
     },
     h3: {
       fontFamily: '"Gravitas One", "Montserrat", "Inter", sans-serif',
@@ -105,44 +112,57 @@ const modernFitnessThemeLight = createTheme({
       fontSize: '1.75rem',
       lineHeight: 1.3,
       letterSpacing: '-0.01em',
+      color: fitnessColorsLight.text.primary,
     },
     h4: {
-      fontFamily: '"Gravitas One", "Montserrat", "Inter", sans-serif',
-      fontWeight: 400,
+      fontFamily: '"Montserrat", "Inter", sans-serif',
+      fontWeight: 600,
       fontSize: '1.5rem',
-      lineHeight: 1.3,
+      lineHeight: 1.35,
+      letterSpacing: '-0.005em',
+      color: fitnessColorsLight.text.primary,
     },
     h5: {
-      fontFamily: '"Montserrat", "Inter", sans-serif',
+      fontFamily: '"Inter", sans-serif',
       fontWeight: 600,
       fontSize: '1.25rem',
       lineHeight: 1.4,
+      color: fitnessColorsLight.text.primary,
     },
     h6: {
-      fontFamily: '"Montserrat", "Inter", sans-serif',
+      fontFamily: '"Inter", sans-serif',
       fontWeight: 600,
       fontSize: '1.125rem',
       lineHeight: 1.4,
+      color: fitnessColorsLight.text.primary,
     },
 
     // Body typography stays with Inter for readability
     body1: {
       fontFamily: '"Inter", sans-serif',
       fontSize: '1rem',
-      lineHeight: 1.6,
-      letterSpacing: '0.01em',
+      lineHeight: 1.65,
+      letterSpacing: '0.005em',
+      color: fitnessColorsLight.text.secondary,
     },
     body2: {
       fontFamily: '"Inter", sans-serif',
       fontSize: '0.875rem',
       lineHeight: 1.6,
-      letterSpacing: '0.01em',
+      letterSpacing: '0.005em',
+      color: fitnessColorsLight.text.tertiary,
+    },
+    caption: {
+      fontFamily: '"Inter", sans-serif',
+      fontSize: '0.75rem',
+      lineHeight: 1.5,
+      color: fitnessColorsLight.text.muted,
     },
     button: {
       fontFamily: '"Inter", sans-serif',
       fontWeight: 600,
-      fontSize: '0.875rem',
-      letterSpacing: '0.02em',
+      fontSize: '0.9375rem',
+      letterSpacing: '0.015em',
       textTransform: 'none',
     },
 
@@ -152,7 +172,8 @@ const modernFitnessThemeLight = createTheme({
       fontWeight: 400,
       fontSize: '3rem',
       lineHeight: 1.1,
-      letterSpacing: '-0.03em',
+      letterSpacing: '-0.025em',
+      color: fitnessColorsLight.text.primary,
     },
     brandSubtitle: {
       fontFamily: '"Gravitas One", "Montserrat", sans-serif',
@@ -160,9 +181,11 @@ const modernFitnessThemeLight = createTheme({
       fontSize: '1.5rem',
       lineHeight: 1.3,
       letterSpacing: '-0.01em',
+      color: fitnessColorsLight.text.secondary,
     },
   },
 
+  spacing: 8, // 8px base spacing for consistency
   shape: {
     borderRadius: 12,
   },
@@ -171,9 +194,29 @@ const modernFitnessThemeLight = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          background: fitnessColorsLight.background.primary,
+          background: fitnessColorsLight.gradients.background,
           backgroundAttachment: 'fixed',
           minHeight: '100vh',
+          transition: 'background 0.3s ease-in-out',
+        },
+        '*': {
+          scrollbarWidth: 'thin',
+          scrollbarColor: `${fitnessColorsLight.accent.primary} ${fitnessColorsLight.background.tertiary}`,
+        },
+        '*::-webkit-scrollbar': {
+          width: '8px',
+          height: '8px',
+        },
+        '*::-webkit-scrollbar-track': {
+          background: fitnessColorsLight.background.tertiary,
+          borderRadius: '4px',
+        },
+        '*::-webkit-scrollbar-thumb': {
+          background: fitnessColorsLight.accent.primary,
+          borderRadius: '4px',
+          '&:hover': {
+            background: fitnessColorsLight.accent.secondary,
+          },
         },
       },
     },
