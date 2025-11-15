@@ -1,6 +1,6 @@
 // src/components/Navbar.js - Modern Redesigned Navbar with Gravitas One Brand Text
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   AppBar,
   Box,
@@ -37,6 +37,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import authService from '../services/api/authService';
 
 // Hide on scroll component
 function HideOnScroll({ children }) {
@@ -67,6 +68,7 @@ function Navbar() {
   const location = useLocation();
   const [anchorElNav, setAnchorElNav] = useState(null);
   const [anchorElUser, setAnchorElUser] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const visiblePages = useMemo(() => {
     let pages = [...basePages];
@@ -75,6 +77,26 @@ function Navbar() {
       pages = pages.concat(communityPages);
     }
     return pages;
+  }, [user]);
+
+  // Fetch unread notification count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const data = await authService.getNotifications();
+        const count = data.notifications?.filter((n) => !n.is_read).length || 0;
+        setUnreadCount(count);
+      } catch (err) {
+        console.error('Failed to fetch notifications:', err);
+      }
+    };
+
+    if (user) {
+      fetchUnreadCount();
+      // Poll for new notifications every 60 seconds
+      const interval = setInterval(fetchUnreadCount, 60000);
+      return () => clearInterval(interval);
+    }
   }, [user]);
 
   const handleOpenNavMenu = (event) => {
@@ -262,8 +284,8 @@ function Navbar() {
             <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center', gap: 2 }}>
               {/* Notifications */}
               <Tooltip title="Notifications">
-                <IconButton sx={{ color: 'white' }}>
-                  <Badge badgeContent={0} color="error">
+                <IconButton onClick={() => navigate('/notifications')} sx={{ color: 'white' }}>
+                  <Badge badgeContent={unreadCount} color="error">
                     <Notifications />
                   </Badge>
                 </IconButton>

@@ -25,7 +25,9 @@ import OAuthCallback from './pages/OAuthCallback';
 import OnboardingPage from './pages/OnboardingPage';
 import UserPreferences from './components/UserPreferences';
 import AchievementsPanel from './components/AchievementsPanel';
-import CommunityLeaderboard from './pages/CommunityLeaderboard'; // Assuming this is the correct path
+import CommunityLeaderboard from './pages/CommunityLeaderboard';
+import Notifications from './pages/Notifications';
+import MealPlanLibrary from './pages/MealPlanLibrary';
 
 // This component handles the core logic for redirecting users
 function AppRoutes() {
@@ -60,14 +62,15 @@ function AppRoutes() {
             <Route path="/workout-history" element={<WorkoutHistory />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />
+            <Route path="/meal-plans" element={<MealPlanLibrary />} />
             <Route path="/workout-plan/:planId" element={<WorkoutPlanDetail />} />
             <Route path="/analytics" element={<Analytics />} /> {/* <-- THIS ROUTE WAS MISSING */}
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/settings" element={<UserPreferences />} />
             <Route path="/achievements" element={<AchievementsPanel />} />
             <Route path="/leaderboard" element={<CommunityLeaderboard />} />
+            <Route path="/notifications" element={<Notifications />} />
 
-            
             {/* Fallback route for any other logged-in paths */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

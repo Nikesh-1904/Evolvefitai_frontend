@@ -7,6 +7,8 @@ import {
   Box,
   Chip,
   Stack,
+  CircularProgress,
+  Button,
 } from '@mui/material';
 import {
   AccountCircle,
@@ -16,6 +18,9 @@ import {
   Restaurant,
   Info,
   VpnKey,
+  QrCode2,
+  CardMembership,
+  Refresh,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { usePreferences } from '../contexts/PreferencesContext';
@@ -26,6 +31,7 @@ import { Alert } from '../components/design-system';
 
 // Import API services
 import { communityService } from '../services/api';
+import authService from '../services/api/authService';
 
 // Import our modern components
 import ModernCard from '../components/ModernCard';
@@ -60,6 +66,12 @@ function Profile() {
   const [error, setError] = useState('');
   const [usernameError, setUsernameError] = useState('');
 
+  // QR Code and Membership state
+  const [qrCodeData, setQrCodeData] = useState(null);
+  const [qrCodeLoading, setQrCodeLoading] = useState(false);
+  const [membershipInfo, setMembershipInfo] = useState(null);
+  const [membershipLoading, setMembershipLoading] = useState(false);
+
   // All useEffect and functions preserved exactly as original
   useEffect(() => {
     if (user) {
@@ -77,6 +89,40 @@ function Profile() {
       });
     }
   }, [user]);
+
+  // Fetch QR code when user joins a gym
+  useEffect(() => {
+    if (user?.gym_id) {
+      fetchQRCode();
+      fetchMembershipInfo();
+    }
+  }, [user?.gym_id]);
+
+  // Function to fetch user QR code
+  const fetchQRCode = async () => {
+    setQrCodeLoading(true);
+    try {
+      const data = await authService.getUserQRCode();
+      setQrCodeData(data);
+    } catch (err) {
+      console.error('Failed to fetch QR code:', err);
+    } finally {
+      setQrCodeLoading(false);
+    }
+  };
+
+  // Function to fetch membership info
+  const fetchMembershipInfo = async () => {
+    setMembershipLoading(true);
+    try {
+      const data = await authService.getMembershipInfo();
+      setMembershipInfo(data);
+    } catch (err) {
+      console.error('Failed to fetch membership info:', err);
+    } finally {
+      setMembershipLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -453,7 +499,7 @@ function Profile() {
               </Stack>
             </ModernCard>
           </Grid>
-          {/* --- 👇 5. ADD NEW GYM CODE SECTION --- */}
+          {/* Gym Affiliation, QR Code & Membership Section */}
           <Grid item xs={12}>
             <ModernCard
               title="Gym Affiliation"
@@ -462,18 +508,143 @@ function Profile() {
               headerAction={<FitnessCenter sx={{ color: '#00D4FF' }} />}
             >
               {user?.gym_id ? (
-                <Box>
-                  <Typography variant="body1" sx={{ color: '#CBD5E1', mb: 2 }}>
-                    You are currently a member of a gym. {/* You could display the gym name here if you fetch it */}
-                  </Typography>
-                  <SecondaryButton
-                    // Add leave gym functionality if needed
-                    // onClick={handleLeaveGym}
-                    color="error"
-                  >
-                    Leave Gym (Implement Later)
-                  </SecondaryButton>
-                </Box>
+                <Grid container spacing={3}>
+                  {/* Membership Info */}
+                  <Grid item xs={12} md={6}>
+                    <Box
+                      sx={{
+                        p: 3,
+                        borderRadius: '16px',
+                        background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%)',
+                        border: '1px solid rgba(124, 58, 237, 0.2)',
+                      }}
+                    >
+                      <Stack spacing={2}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <CardMembership sx={{ color: '#7C3AED' }} />
+                          <Typography variant="h6" sx={{ color: '#FFFFFF', fontWeight: 600 }}>
+                            Membership Details
+                          </Typography>
+                        </Box>
+
+                        {membershipLoading ? (
+                          <CircularProgress size={24} sx={{ color: '#7C3AED' }} />
+                        ) : membershipInfo ? (
+                          <Stack spacing={1.5}>
+                            <Box>
+                              <Typography variant="caption" sx={{ color: '#94A3B8' }}>
+                                Gym Name
+                              </Typography>
+                              <Typography variant="body1" sx={{ color: '#CBD5E1', fontWeight: 500 }}>
+                                {membershipInfo.gym_name || 'N/A'}
+                              </Typography>
+                            </Box>
+
+                            <Box>
+                              <Typography variant="caption" sx={{ color: '#94A3B8' }}>
+                                Membership Status
+                              </Typography>
+                              <Chip
+                                label={membershipInfo.membership_status || 'ACTIVE'}
+                                size="small"
+                                sx={{
+                                  mt: 0.5,
+                                  background: membershipInfo.membership_status === 'ACTIVE'
+                                    ? 'linear-gradient(135deg, #10B981 0%, #34D399 100%)'
+                                    : 'linear-gradient(135deg, #EF4444 0%, #F87171 100%)',
+                                  color: '#FFFFFF',
+                                  fontWeight: 600,
+                                }}
+                              />
+                            </Box>
+
+                            {membershipInfo.membership_expiry && (
+                              <Box>
+                                <Typography variant="caption" sx={{ color: '#94A3B8' }}>
+                                  Membership Expiry
+                                </Typography>
+                                <Typography variant="body1" sx={{ color: '#CBD5E1', fontWeight: 500 }}>
+                                  {new Date(membershipInfo.membership_expiry).toLocaleDateString()}
+                                </Typography>
+                              </Box>
+                            )}
+                          </Stack>
+                        ) : (
+                          <Typography variant="body2" sx={{ color: '#94A3B8' }}>
+                            Unable to load membership details
+                          </Typography>
+                        )}
+                      </Stack>
+                    </Box>
+                  </Grid>
+
+                  {/* QR Code Display */}
+                  <Grid item xs={12} md={6}>
+                    <Box
+                      sx={{
+                        p: 3,
+                        borderRadius: '16px',
+                        background: 'linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 168, 255, 0.05) 100%)',
+                        border: '1px solid rgba(0, 212, 255, 0.2)',
+                        textAlign: 'center',
+                      }}
+                    >
+                      <Stack spacing={2} alignItems="center">
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <QrCode2 sx={{ color: '#00D4FF' }} />
+                          <Typography variant="h6" sx={{ color: '#FFFFFF', fontWeight: 600 }}>
+                            Check-In QR Code
+                          </Typography>
+                        </Box>
+
+                        {qrCodeLoading ? (
+                          <CircularProgress size={100} sx={{ color: '#00D4FF' }} />
+                        ) : qrCodeData?.qr_code_url ? (
+                          <>
+                            <Box
+                              sx={{
+                                p: 2,
+                                background: '#FFFFFF',
+                                borderRadius: '12px',
+                                display: 'inline-block',
+                              }}
+                            >
+                              <img
+                                src={qrCodeData.qr_code_url}
+                                alt="User QR Code"
+                                style={{
+                                  width: '200px',
+                                  height: '200px',
+                                  display: 'block',
+                                }}
+                              />
+                            </Box>
+                            <Typography variant="caption" sx={{ color: '#94A3B8' }}>
+                              Show this QR code at gym entrance for check-in
+                            </Typography>
+                            <Button
+                              startIcon={<Refresh />}
+                              onClick={fetchQRCode}
+                              sx={{
+                                color: '#00D4FF',
+                                textTransform: 'none',
+                                '&:hover': {
+                                  background: 'rgba(0, 212, 255, 0.1)',
+                                },
+                              }}
+                            >
+                              Refresh QR Code
+                            </Button>
+                          </>
+                        ) : (
+                          <Typography variant="body2" sx={{ color: '#94A3B8' }}>
+                            QR code not available
+                          </Typography>
+                        )}
+                      </Stack>
+                    </Box>
+                  </Grid>
+                </Grid>
               ) : (
                 <form onSubmit={handleJoinGymSubmit}>
                   <Stack spacing={2}>
@@ -495,7 +666,7 @@ function Profile() {
                     <PrimaryButton
                       type="submit"
                       loading={gymCodeLoading}
-                      disabled={loading} // Disable if profile save is happening
+                      disabled={loading}
                       sx={{ alignSelf: 'flex-start' }}
                     >
                       {gymCodeLoading ? 'Joining...' : 'Join Gym'}

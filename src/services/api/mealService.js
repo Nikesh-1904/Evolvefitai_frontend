@@ -13,6 +13,27 @@ class MealService extends BaseApiClient {
   async generateMealPlan(requestData) {
     return this.post('/ai/meal-plans/generate', requestData);
   }
+
+  /**
+   * Save a meal plan
+   */
+  async saveMealPlan(mealPlanData) {
+    return this.post('/meal-plans', mealPlanData);
+  }
+
+  /**
+   * Get user's saved meal plans
+   */
+  async getMealPlans() {
+    return this.get('/meal-plans');
+  }
+
+  /**
+   * Get a specific meal plan by ID
+   */
+  async getMealPlanById(planId) {
+    return this.get(`/meal-plans/${planId}`);
+  }
 }
 
 const mealServiceInstance = new MealService();

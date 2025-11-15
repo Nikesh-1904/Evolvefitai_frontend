@@ -33,7 +33,7 @@ import { PageContainer } from '../components/design-system';
 import { Alert } from '../components/design-system';
 
 // Import new hooks
-import { useGenerateMealPlan } from '../hooks/useMeals';
+import { useGenerateMealPlan, useSaveMealPlan } from '../hooks/useMeals';
 
 // Import our modern components
 import ModernCard, { StatCard } from '../components/ModernCard';
@@ -45,12 +45,17 @@ const MealPlanGenerator = () => {
 
   // Use new hooks
   const { execute: generateMealPlan, loading: generating, error: generateError } = useGenerateMealPlan();
+  const { execute: saveMealPlan, loading: saving, error: saveError } = useSaveMealPlan();
 
   // State management
   const [mealPlan, setMealPlan] = useState(null);
   const [success, setSuccess] = useState('');
 
-  const error = generateError ? (generateError.message || 'An unexpected error occurred.') : '';
+  const error = generateError
+    ? (generateError.message || 'An unexpected error occurred.')
+    : saveError
+    ? (saveError.message || 'Failed to save meal plan.')
+    : '';
 
   // All functions preserved exactly as original
   const handleGeneratePlan = async () => {
@@ -75,10 +80,23 @@ const MealPlanGenerator = () => {
     if (!mealPlan) return;
 
     try {
-      console.log("Saving meal plan:", mealPlan);
-      setSuccess('Meal plan saved successfully! (Feature coming soon)');
+      // Prepare meal plan data for saving
+      const mealPlanData = {
+        name: `Meal Plan - ${new Date().toLocaleDateString()}`,
+        target_calories: mealPlan.target_calories,
+        target_protein: mealPlan.target_protein,
+        target_carbs: mealPlan.target_carbs,
+        target_fat: mealPlan.target_fat,
+        meals: mealPlan.meals,
+        ai_generated: mealPlan.ai_generated,
+        ai_model: mealPlan.ai_model,
+      };
+
+      await saveMealPlan(mealPlanData);
+      setSuccess('Meal plan saved successfully! View it in your meal plan library.');
     } catch (err) {
       console.error('Failed to save meal plan:', err);
+      setSuccess(''); // Clear any previous success message
     }
   };
 
@@ -308,8 +326,10 @@ const MealPlanGenerator = () => {
               <SecondaryButton
                 onClick={handleSavePlan}
                 startIcon={<Save />}
+                loading={saving}
+                disabled={saving}
               >
-                Save Plan
+                {saving ? 'Saving...' : 'Save Plan'}
               </SecondaryButton>
             </Box>
           </ModernCard>

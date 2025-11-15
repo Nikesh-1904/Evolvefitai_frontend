@@ -89,6 +89,48 @@ class AuthService extends BaseApiClient {
   }
 
   /**
+   * Get user QR code for gym check-ins
+   */
+  async getUserQRCode() {
+    return this.get('/users/me/qr-code');
+  }
+
+  /**
+   * Get user membership information
+   */
+  async getMembershipInfo() {
+    return this.get('/users/me/membership-info');
+  }
+
+  /**
+   * Get user notifications
+   */
+  async getNotifications() {
+    return this.get('/users/me/notifications');
+  }
+
+  /**
+   * Mark notification as read
+   */
+  async markNotificationAsRead(notificationId) {
+    return this.patch(`/users/me/notifications/${notificationId}/read`, {});
+  }
+
+  /**
+   * Get user notification preferences
+   */
+  async getNotificationPreferences() {
+    return this.get('/users/me/preferences');
+  }
+
+  /**
+   * Update user notification preferences
+   */
+  async updateNotificationPreferences(preferences) {
+    return this.patch('/users/me/preferences', preferences);
+  }
+
+  /**
    * Check if user is authenticated
    */
   isAuthenticated() {
