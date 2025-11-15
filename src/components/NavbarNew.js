@@ -173,13 +173,18 @@ function NavbarNew() {
               sx={{
                 mr: 4,
                 display: { xs: 'none', md: 'flex' },
-                fontFamily: 'Gravitas One',
-                fontSize: '1.5rem',
-                fontWeight: 700,
-                background: 'linear-gradient(45deg, #00D4FF 0%, #7C3AED 100%)',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                fontSize: '1.35rem',
+                fontWeight: 800,
+                letterSpacing: '-0.02em',
+                background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 cursor: 'pointer',
+                transition: 'transform 0.2s ease',
+                '&:hover': {
+                  transform: 'scale(1.02)',
+                },
               }}
             >
               EvolveFit AI
