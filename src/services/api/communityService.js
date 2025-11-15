@@ -70,6 +70,38 @@ class CommunityService extends BaseApiClient {
     console.log(`🎉 Unlocking achievement: ${achievementId}`);
     return this.post('/achievements/unlock', { achievement_id: achievementId });
   }
+
+  /**
+   * Leave current gym
+   */
+  async leaveGym(gymId) {
+    console.log(`🚪 Leaving gym ID: ${gymId}`);
+    return this.post(`/gyms/${gymId}/leave`, {});
+  }
+
+  /**
+   * Create gym booking
+   */
+  async createBooking(bookingData) {
+    console.log(`📅 Creating booking:`, bookingData);
+    return this.post('/gyms/bookings/', bookingData);
+  }
+
+  /**
+   * Get user's bookings
+   */
+  async getUserBookings(params = {}) {
+    console.log(`📋 Fetching user bookings`);
+    return this.get('/users/me/bookings/', params);
+  }
+
+  /**
+   * Cancel booking
+   */
+  async cancelBooking(bookingId) {
+    console.log(`❌ Cancelling booking ID: ${bookingId}`);
+    return this.delete(`/users/me/bookings/${bookingId}`);
+  }
 }
 
 const communityServiceInstance = new CommunityService();

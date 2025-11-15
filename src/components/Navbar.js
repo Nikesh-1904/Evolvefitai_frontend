@@ -37,6 +37,7 @@ import {
   LibraryBooks,
   Lightbulb,
   Business,
+  CalendarMonth,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -66,6 +67,7 @@ const basePages = [
 
 const communityPages = [
     { name: 'Discover Gyms', path: '/gyms', icon: <Business /> },
+    { name: 'My Bookings', path: '/gym-bookings', icon: <CalendarMonth /> },
     { name: 'Leaderboard', path: '/leaderboard', icon: <LeaderboardIcon /> },
 ];
 

@@ -138,6 +138,23 @@ function Profile() {
     }
   };
 
+  // Function to leave gym
+  const handleLeaveGym = async () => {
+    if (!user?.gym_id) return;
+
+    if (window.confirm('Are you sure you want to leave your current gym? This action cannot be undone.')) {
+      try {
+        await communityService.leaveGym(user.gym_id);
+        setSuccess('Successfully left the gym. You can now join another gym.');
+        // Reload the page to update user info
+        window.location.reload();
+      } catch (err) {
+        console.error('Failed to leave gym:', err);
+        setError(err.message || 'Failed to leave gym. Please try again.');
+      }
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -582,6 +599,25 @@ function Profile() {
                                 </Typography>
                               </Box>
                             )}
+
+                            {/* Leave Gym Button */}
+                            <Button
+                              variant="outlined"
+                              onClick={handleLeaveGym}
+                              sx={{
+                                mt: 2,
+                                color: '#EF4444',
+                                borderColor: 'rgba(239, 68, 68, 0.3)',
+                                textTransform: 'none',
+                                fontWeight: 600,
+                                '&:hover': {
+                                  borderColor: '#EF4444',
+                                  background: 'rgba(239, 68, 68, 0.1)',
+                                },
+                              }}
+                            >
+                              Leave Gym
+                            </Button>
                           </Stack>
                         ) : (
                           <Typography variant="body2" sx={{ color: '#94A3B8' }}>
