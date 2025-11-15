@@ -47,7 +47,6 @@ const FreestyleLog = () => {
   // State management (preserving all original functionality)
   const [loggedExercises, setLoggedExercises] = useState([]);
   const [notes, setNotes] = useState('');
-  const [startTime] = useState(new Date());
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDurationModalOpen, setDurationModalOpen] = useState(false);

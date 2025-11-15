@@ -15,13 +15,11 @@ import {
   Card,
   CardContent,
   Fade,
-  Slide,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   IconButton,
-  Tooltip,
 } from '@mui/material';
 import {
   EmojiEvents,
@@ -34,7 +32,6 @@ import {
   Star,
   Close,
   Share,
-  Download,
 } from '@mui/icons-material';
 
 // Import our contexts and components

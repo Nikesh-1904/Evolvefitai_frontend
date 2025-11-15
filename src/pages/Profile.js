@@ -6,7 +6,6 @@ import {
   Grid,
   Box,
   Chip,
-  Avatar,
   Stack,
 } from '@mui/material';
 import {
@@ -16,7 +15,6 @@ import {
   FitnessCenter,
   Restaurant,
   Info,
-  CheckCircle,
   VpnKey,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';

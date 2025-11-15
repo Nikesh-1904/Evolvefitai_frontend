@@ -30,7 +30,7 @@ import { useNavigate } from 'react-router-dom';
 
 // Import our modern components
 import ModernCard from '../components/ModernCard';
-import ModernInput, { ModernSelect } from '../components/ModernInput';
+import ModernInput from '../components/ModernInput';
 import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
 import { PageContainer, Alert } from '../components/design-system';
 

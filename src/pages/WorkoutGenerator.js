@@ -9,11 +9,9 @@ import {
   Chip,
   List,
   ListItem,
-  ListItemText,
   IconButton,
   Divider,
   Stack,
-  Collapse,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -33,8 +31,6 @@ import {
   TrendingUp,
   Psychology,
   Close,
-  ExpandMore,
-  ExpandLess,
   OpenInNew,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
@@ -65,7 +61,7 @@ function WorkoutGenerator() {
 
   // Use new hooks
   const { execute: generateWorkout, loading: generating, error: generateError } = useGenerateWorkout();
-  const { execute: saveWorkoutPlan, loading: saving } = useSaveWorkoutPlan();
+  const { execute: saveWorkoutPlan } = useSaveWorkoutPlan();
   const { execute: getExerciseDetails } = useExerciseDetails();
 
   // State management
@@ -79,7 +75,6 @@ function WorkoutGenerator() {
   const [workoutType, setWorkoutType] = useState('');
 
   // New state for exercise details display
-  const [expandedExercise, setExpandedExercise] = useState(null);
   const [loadingExerciseDetails, setLoadingExerciseDetails] = useState({});
   const [exerciseDetailsDialog, setExerciseDetailsDialog] = useState(null);
 

@@ -21,7 +21,6 @@ import {
   LinearProgress,
   Fade,
   Slide,
-  Zoom,
 } from '@mui/material';
 import {
   SkipNext,
@@ -63,7 +62,6 @@ const WorkoutSession = () => {
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [loggedData, setLoggedData] = useState({});
   const [notes, setNotes] = useState('');
-  const [startTime] = useState(new Date());
   const [error, setError] = useState('');
   const [showQuitDialog, setShowQuitDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);

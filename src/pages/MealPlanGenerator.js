@@ -4,19 +4,14 @@ import React, { useState } from 'react';
 import {
   Typography,
   Box,
-  CircularProgress,
   Grid,
   Chip,
-  Divider,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  List,
-  ListItem,
-  ListItemText,
   Stack,
   Paper,
 } from '@mui/material';
@@ -38,7 +33,7 @@ import { PageContainer } from '../components/design-system';
 import { Alert } from '../components/design-system';
 
 // Import new hooks
-import { useGenerateMealPlan, useSaveMealPlan } from '../hooks/useMeals';
+import { useGenerateMealPlan } from '../hooks/useMeals';
 
 // Import our modern components
 import ModernCard, { StatCard } from '../components/ModernCard';
@@ -50,7 +45,6 @@ const MealPlanGenerator = () => {
 
   // Use new hooks
   const { execute: generateMealPlan, loading: generating, error: generateError } = useGenerateMealPlan();
-  const { execute: saveMealPlan, loading: saving } = useSaveMealPlan();
 
   // State management
   const [mealPlan, setMealPlan] = useState(null);

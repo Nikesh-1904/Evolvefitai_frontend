@@ -17,13 +17,11 @@ import {
   ListItemText,
   Divider,
   IconButton,
-  LinearProgress,
   Avatar,
   Stack,
   Skeleton,
 } from '@mui/material';
 import {
-  FitnessCenter,
   Restaurant,
   TrendingUp,
   PlayArrow,
@@ -34,7 +32,6 @@ import {
   LocalFireDepartment,
   Timer,
   EmojiEvents,
-  Bolt,
   NavigateNext,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
@@ -47,7 +44,6 @@ import ModernCard, { StatCard, QuickActionCard } from '../components/ModernCard'
 import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
 import AIModelBadge from '../components/AIModelBadge';
 import ContextualHelp from '../components/ContextualHelp';
-import { useAchievements } from '../contexts/AchievementsContext';
 
 function Dashboard() {
   const { user } = useAuth();
