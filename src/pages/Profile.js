@@ -9,6 +9,10 @@ import {
   Stack,
   CircularProgress,
   Button,
+  Tabs,
+  Tab,
+  Card,
+  CardContent,
 } from '@mui/material';
 import {
   AccountCircle,
@@ -21,6 +25,9 @@ import {
   QrCode2,
   CardMembership,
   Refresh,
+  LocalFireDepartment,
+  Timer,
+  History,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { usePreferences } from '../contexts/PreferencesContext';
@@ -32,6 +39,8 @@ import { Alert } from '../components/design-system';
 // Import API services
 import { communityService } from '../services/api';
 import authService from '../services/api/authService';
+import workoutService from '../services/api/workoutService';
+import mealService from '../services/api/mealService';
 
 // Import our modern components
 import ModernCard from '../components/ModernCard';
@@ -72,6 +81,12 @@ function Profile() {
   const [membershipInfo, setMembershipInfo] = useState(null);
   const [membershipLoading, setMembershipLoading] = useState(false);
 
+  // History state
+  const [historyTab, setHistoryTab] = useState(0);
+  const [workoutHistory, setWorkoutHistory] = useState([]);
+  const [mealHistory, setMealHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
   // All useEffect and functions preserved exactly as original
   useEffect(() => {
     if (user) {
@@ -96,6 +111,7 @@ function Profile() {
       fetchQRCode();
       fetchMembershipInfo();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.gym_id]);
 
   // Function to fetch user QR code
@@ -137,6 +153,43 @@ function Profile() {
       setMembershipLoading(false);
     }
   };
+
+  // Fetch workout history
+  const fetchWorkoutHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      const data = await workoutService.getWorkoutLogs(10); // Get last 10 workouts
+      setWorkoutHistory(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to fetch workout history:', err);
+      setWorkoutHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // Fetch meal plan history
+  const fetchMealHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      const data = await mealService.getMealPlans();
+      setMealHistory(Array.isArray(data) ? data.slice(0, 10) : []);
+    } catch (err) {
+      console.error('Failed to fetch meal history:', err);
+      setMealHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // Load history when tab changes
+  useEffect(() => {
+    if (historyTab === 0) {
+      fetchWorkoutHistory();
+    } else if (historyTab === 1) {
+      fetchMealHistory();
+    }
+  }, [historyTab]);
 
   // Function to leave gym
   const handleLeaveGym = async () => {
@@ -727,6 +780,220 @@ function Profile() {
             </ModernCard>
           </Grid>
         </Grid>
+
+        {/* History Section */}
+        <ModernCard
+          variant="glass"
+          sx={{ mt: 4 }}
+        >
+          <Box sx={{ borderBottom: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+            <Tabs
+              value={historyTab}
+              onChange={(e, newValue) => setHistoryTab(newValue)}
+              sx={{
+                '& .MuiTab-root': {
+                  color: '#94A3B8',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: '1rem',
+                  minHeight: 56,
+                },
+                '& .Mui-selected': {
+                  color: '#00D4FF !important',
+                },
+                '& .MuiTabs-indicator': {
+                  backgroundColor: '#00D4FF',
+                  height: 3,
+                },
+              }}
+            >
+              <Tab icon={<FitnessCenter />} iconPosition="start" label="Workout History" />
+              <Tab icon={<Restaurant />} iconPosition="start" label="Meal Plan History" />
+            </Tabs>
+          </Box>
+
+          <Box sx={{ p: 3, minHeight: 300 }}>
+            {historyLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 8 }}>
+                <CircularProgress sx={{ color: '#00D4FF' }} />
+              </Box>
+            ) : (
+              <>
+                {/* Workout History Tab */}
+                {historyTab === 0 && (
+                  <Box>
+                    {workoutHistory.length === 0 ? (
+                      <Box sx={{ textAlign: 'center', py: 6 }}>
+                        <History sx={{ fontSize: 64, color: '#475569', mb: 2 }} />
+                        <Typography variant="h6" sx={{ color: '#94A3B8', mb: 1 }}>
+                          No Workout History Yet
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#64748B' }}>
+                          Start logging your workouts to track your progress!
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Grid container spacing={2}>
+                        {workoutHistory.map((workout, index) => {
+                          const date = new Date(workout.workout_date || workout.created_at);
+                          return (
+                            <Grid item xs={12} md={6} key={index}>
+                              <Card
+                                sx={{
+                                  background: 'rgba(37, 42, 61, 0.6)',
+                                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                                  borderRadius: '16px',
+                                  transition: 'all 0.3s ease',
+                                  '&:hover': {
+                                    transform: 'translateY(-4px)',
+                                    boxShadow: '0 12px 24px rgba(0, 212, 255, 0.15)',
+                                    border: '1px solid rgba(0, 212, 255, 0.2)',
+                                  },
+                                }}
+                              >
+                                <CardContent sx={{ p: 2.5 }}>
+                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                    <Box>
+                                      <Typography variant="subtitle1" sx={{ color: '#FFFFFF', fontWeight: 600 }}>
+                                        {date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                      </Typography>
+                                      <Typography variant="caption" sx={{ color: '#94A3B8' }}>
+                                        {date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                      </Typography>
+                                    </Box>
+                                    <Chip
+                                      label={`${workout.exercises_completed?.length || 0} exercises`}
+                                      size="small"
+                                      sx={{
+                                        background: 'rgba(0, 212, 255, 0.15)',
+                                        color: '#00D4FF',
+                                        fontWeight: 600,
+                                        fontSize: '0.75rem',
+                                      }}
+                                    />
+                                  </Box>
+
+                                  <Grid container spacing={1.5}>
+                                    <Grid item xs={6}>
+                                      <Box sx={{ textAlign: 'center', p: 1.5, borderRadius: '12px', background: 'rgba(245, 158, 11, 0.1)' }}>
+                                        <LocalFireDepartment sx={{ color: '#F59E0B', fontSize: 20, mb: 0.5 }} />
+                                        <Typography variant="body2" sx={{ color: '#F59E0B', fontWeight: 700 }}>
+                                          {Math.round(workout.calories_burned || 0)}
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ color: '#94A3B8', fontSize: '0.7rem' }}>
+                                          Calories
+                                        </Typography>
+                                      </Box>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                      <Box sx={{ textAlign: 'center', p: 1.5, borderRadius: '12px', background: 'rgba(124, 58, 237, 0.1)' }}>
+                                        <Timer sx={{ color: '#7C3AED', fontSize: 20, mb: 0.5 }} />
+                                        <Typography variant="body2" sx={{ color: '#7C3AED', fontWeight: 700 }}>
+                                          {Math.round(workout.duration || 0)}m
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ color: '#94A3B8', fontSize: '0.7rem' }}>
+                                          Duration
+                                        </Typography>
+                                      </Box>
+                                    </Grid>
+                                  </Grid>
+                                </CardContent>
+                              </Card>
+                            </Grid>
+                          );
+                        })}
+                      </Grid>
+                    )}
+                  </Box>
+                )}
+
+                {/* Meal Plan History Tab */}
+                {historyTab === 1 && (
+                  <Box>
+                    {mealHistory.length === 0 ? (
+                      <Box sx={{ textAlign: 'center', py: 6 }}>
+                        <Restaurant sx={{ fontSize: 64, color: '#475569', mb: 2 }} />
+                        <Typography variant="h6" sx={{ color: '#94A3B8', mb: 1 }}>
+                          No Meal Plans Yet
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#64748B' }}>
+                          Generate your first meal plan to get started!
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Grid container spacing={2}>
+                        {mealHistory.map((meal, index) => {
+                          const date = new Date(meal.created_at);
+                          return (
+                            <Grid item xs={12} md={6} key={index}>
+                              <Card
+                                sx={{
+                                  background: 'rgba(37, 42, 61, 0.6)',
+                                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                                  borderRadius: '16px',
+                                  transition: 'all 0.3s ease',
+                                  '&:hover': {
+                                    transform: 'translateY(-4px)',
+                                    boxShadow: '0 12px 24px rgba(16, 185, 129, 0.15)',
+                                    border: '1px solid rgba(16, 185, 129, 0.2)',
+                                  },
+                                }}
+                              >
+                                <CardContent sx={{ p: 2.5 }}>
+                                  <Box sx={{ mb: 2 }}>
+                                    <Typography variant="subtitle1" sx={{ color: '#FFFFFF', fontWeight: 600, mb: 0.5 }}>
+                                      {meal.name || 'Custom Meal Plan'}
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: '#94A3B8' }}>
+                                      Created {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                    </Typography>
+                                  </Box>
+
+                                  <Grid container spacing={1}>
+                                    <Grid item xs={4}>
+                                      <Box sx={{ textAlign: 'center', p: 1, borderRadius: '8px', background: 'rgba(16, 185, 129, 0.1)' }}>
+                                        <Typography variant="caption" sx={{ color: '#94A3B8', fontSize: '0.7rem' }}>
+                                          Calories
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: '#10B981', fontWeight: 700 }}>
+                                          {meal.total_calories || 0}
+                                        </Typography>
+                                      </Box>
+                                    </Grid>
+                                    <Grid item xs={4}>
+                                      <Box sx={{ textAlign: 'center', p: 1, borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)' }}>
+                                        <Typography variant="caption" sx={{ color: '#94A3B8', fontSize: '0.7rem' }}>
+                                          Protein
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: '#EF4444', fontWeight: 700 }}>
+                                          {meal.total_protein || 0}g
+                                        </Typography>
+                                      </Box>
+                                    </Grid>
+                                    <Grid item xs={4}>
+                                      <Box sx={{ textAlign: 'center', p: 1, borderRadius: '8px', background: 'rgba(59, 130, 246, 0.1)' }}>
+                                        <Typography variant="caption" sx={{ color: '#94A3B8', fontSize: '0.7rem' }}>
+                                          Carbs
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: '#3B82F6', fontWeight: 700 }}>
+                                          {meal.total_carbs || 0}g
+                                        </Typography>
+                                      </Box>
+                                    </Grid>
+                                  </Grid>
+                                </CardContent>
+                              </Card>
+                            </Grid>
+                          );
+                        })}
+                      </Grid>
+                    )}
+                  </Box>
+                )}
+              </>
+            )}
+          </Box>
+        </ModernCard>
 
         {/* Action Buttons */}
         <Box sx={{ mt: 4, display: 'flex', gap: 2, justifyContent: 'center' }}>

@@ -291,7 +291,7 @@ function Dashboard() {
       </Typography>
       
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={4}>
           <QuickActionCard
             icon={<AutoAwesome />}
             title="AI Workout Generator"
@@ -300,8 +300,8 @@ function Dashboard() {
             gradient="linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)"
           />
         </Grid>
-        
-        <Grid item xs={12} md={4}>
+
+        <Grid item xs={12} sm={6} md={4}>
           <QuickActionCard
             icon={<Create />}
             title="Freestyle Logger"
@@ -310,8 +310,8 @@ function Dashboard() {
             gradient="linear-gradient(135deg, #FF3366 0%, #FF6B35 100%)"
           />
         </Grid>
-        
-        <Grid item xs={12} md={4}>
+
+        <Grid item xs={12} sm={6} md={4}>
           <QuickActionCard
             icon={<Restaurant />}
             title="AI Meal Planner"
@@ -320,12 +320,42 @@ function Dashboard() {
             gradient="linear-gradient(135deg, #10B981 0%, #34D399 100%)"
             sx={{ opacity: mealPlanLoading ? 0.7 : 1 }}
           />
-          
+
           {mealPlanError && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {mealPlanError}
             </Alert>
           )}
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4}>
+          <QuickActionCard
+            icon={<PlayArrow />}
+            title="AI Recommendations"
+            description="Get smart workout suggestions based on your progress and fitness goals."
+            onClick={() => navigate('/workout-recommendations')}
+            gradient="linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4}>
+          <QuickActionCard
+            icon={<TrendingUp />}
+            title="View Analytics"
+            description="Track your progress with detailed insights and performance charts."
+            onClick={() => navigate('/analytics')}
+            gradient="linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4}>
+          <QuickActionCard
+            icon={<CheckCircle />}
+            title="Exercise Library"
+            description="Browse our comprehensive exercise library with detailed instructions and demos."
+            onClick={() => navigate('/exercises')}
+            gradient="linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%)"
+          />
         </Grid>
       </Grid>
 
