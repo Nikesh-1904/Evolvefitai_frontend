@@ -142,8 +142,8 @@ const ModernCard = ({
               <Typography
                 variant="h6"
                 sx={{
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                  fontWeight: 700,
+                  fontFamily: '"Montserrat", sans-serif',
+                  fontWeight: 600,
                   fontSize: '1.25rem',
                   color: '#FFFFFF',
                   lineHeight: 1.3,
@@ -255,8 +255,8 @@ export const StatCard = ({ icon, label, value, change, changeColor, ...props }) 
       <Typography
         variant="h4"
         sx={{
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-          fontWeight: 800,
+          fontFamily: '"Montserrat", sans-serif',
+          fontWeight: 700,
           fontSize: '2rem',
           color: '#FFFFFF',
           lineHeight: 1.2,
@@ -331,8 +331,8 @@ export const QuickActionCard = ({ icon, title, description, onClick, gradient, .
         <Typography
           variant="h6"
           sx={{
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-            fontWeight: 700,
+            fontFamily: '"Montserrat", sans-serif',
+            fontWeight: 600,
             fontSize: '1.125rem',
             color: '#FFFFFF',
             lineHeight: 1.3,

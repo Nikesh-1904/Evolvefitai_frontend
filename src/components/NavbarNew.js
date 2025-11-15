@@ -173,10 +173,10 @@ function NavbarNew() {
               sx={{
                 mr: 4,
                 display: { xs: 'none', md: 'flex' },
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                fontFamily: '"Montserrat", sans-serif',
                 fontSize: '1.35rem',
-                fontWeight: 800,
-                letterSpacing: '-0.02em',
+                fontWeight: 700,
+                letterSpacing: '0.02em',
                 background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',

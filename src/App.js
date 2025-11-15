@@ -14,10 +14,10 @@ import { Container } from '@mui/material';
 
 // Import pages
 import LoginPage from './pages/LoginPage';
-import DashboardNew from './pages/DashboardNew';
+import Dashboard from './pages/Dashboard';
 import WorkoutGenerator from './pages/WorkoutGenerator';
 import WorkoutHistory from './pages/WorkoutHistory';
-import ProfileEnhanced from './pages/ProfileEnhanced';
+import Profile from './pages/Profile';
 import Analytics from './pages/Analytics';
 import WorkoutSession from './pages/WorkoutSession';
 import FreestyleLog from './pages/FreestyleLog';
@@ -63,12 +63,12 @@ function AppRoutes() {
           <Container maxWidth="xl" sx={{ py: 3 }}>
             <Breadcrumbs />
             <Routes>
-            <Route path="/" element={<DashboardNew />} />
+            <Route path="/" element={<Dashboard />} />
             <Route path="/generate-workout" element={<WorkoutGenerator />} />
             <Route path="/workout-session" element={<WorkoutSession />} />
             <Route path="/log-workout" element={<FreestyleLog />} />
             <Route path="/workout-history" element={<WorkoutHistory />} />
-            <Route path="/profile" element={<ProfileEnhanced />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />
             <Route path="/meal-plans" element={<MealPlanLibrary />} />
             <Route path="/exercises" element={<ExerciseLibrary />} />
