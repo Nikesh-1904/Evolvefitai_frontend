@@ -2,15 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Container,
   Typography,
   Grid,
   Box,
-  Alert,
   Chip,
   Avatar,
   Stack,
-  Divider,
 } from '@mui/material';
 import {
   AccountCircle,
@@ -24,7 +21,14 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { usePreferences } from '../contexts/PreferencesContext';
-import apiService from '../services/apiService';
+
+// Import new design system components
+import { PageContainer } from '../components/design-system';
+import { Alert } from '../components/design-system';
+
+// Import API services
+import { communityService } from '../services/api';
+
 // Import our modern components
 import ModernCard from '../components/ModernCard';
 import ModernInput, { ModernSelect } from '../components/ModernInput';
@@ -145,7 +149,7 @@ function Profile() {
     setGymCodeMessage('');
 
     try {
-      const response = await apiService.joinGymByCode(gymCodeInput);
+      const response = await communityService.joinGymByCode(gymCodeInput);
       setGymCodeMessage(response.message || 'Successfully joined gym!');
       setGymCodeInput(''); // Clear input on success
       // Refresh user data to get the new gym_id
@@ -200,101 +204,32 @@ function Profile() {
   ];
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 6 }}>
-      {/* Modern Profile Header */}
-      <ModernCard 
-        variant="feature" 
-        elevation="high"
-        sx={{ mb: 4, position: 'relative', overflow: 'hidden' }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <Avatar
-            sx={{
-              width: 100,
-              height: 100,
-              background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
-              fontSize: '2.5rem',
-              fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-              fontWeight: 400,
-            }}
-          >
-            {formData.full_name ? formData.full_name.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase() || 'U'}
-          </Avatar>
-          
-          <Box sx={{ flex: 1 }}>
-            <Typography
-              variant="h3"
-              sx={{
-                fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                fontWeight: 400,
-                fontSize: { xs: '1.8rem', sm: '2.5rem' },
-                color: '#FFFFFF',
-                lineHeight: 1.2,
-                mb: 1,
-              }}
-            >
-              Your Fitness Profile
-            </Typography>
-            
-            <Typography
-              variant="h6"
-              sx={{
-                color: '#CBD5E1',
-                fontWeight: 500,
-                fontSize: '1.125rem',
-                mb: 2,
-              }}
-            >
-              Personalize your fitness journey for better AI recommendations
-            </Typography>
-
-            {/* Profile Completion Status */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CheckCircle sx={{ color: '#10B981', fontSize: '1.25rem' }} />
-              <Typography variant="body2" sx={{ color: '#10B981', fontWeight: 600 }}>
-                Profile Active
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
-      </ModernCard>
-
+    <PageContainer
+      title="Your Fitness Profile"
+      subtitle="Personalize your fitness journey for better AI recommendations"
+      maxWidth="lg"
+    >
       {/* Success/Error Messages */}
       {message && (
-        <Alert 
-          severity="success" 
-          sx={{ 
-            mb: 3,
-            background: 'rgba(16, 185, 129, 0.1)',
-            border: '1px solid rgba(16, 185, 129, 0.2)',
-            '& .MuiAlert-message': { color: '#FFFFFF' },
-          }}
-        >
+        <Alert severity="success" closable sx={{ mb: 3 }}>
           {message}
         </Alert>
       )}
-      
+
       {error && (
-        <Alert 
-          severity="error" 
-          sx={{ 
-            mb: 3,
-            background: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
-            '& .MuiAlert-message': { color: '#FFFFFF' },
-          }}
-        >
+        <Alert severity="error" closable sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}
 
       {gymCodeMessage && (
-        <Alert severity="success" sx={{ mb: 3, /* ... styles ... */ }}>
+        <Alert severity="success" closable sx={{ mb: 3 }}>
           {gymCodeMessage}
         </Alert>
       )}
+
       {gymCodeError && (
-        <Alert severity="error" sx={{ mb: 3, /* ... styles ... */ }}>
+        <Alert severity="error" closable sx={{ mb: 3 }}>
           {gymCodeError}
         </Alert>
       )}
@@ -668,7 +603,7 @@ function Profile() {
         </ModernCard>
       </form>
       <ContextualHelp page="profile" />
-    </Container>
+    </PageContainer>
   );
 }
 

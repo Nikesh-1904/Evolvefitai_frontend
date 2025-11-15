@@ -1,13 +1,11 @@
 // src/pages/Analytics.js - Modern AI Fitness Analytics Dashboard
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Container,
   Typography,
   Box,
-  Alert,
   Grid,
-  Skeleton,
   Stack,
   Avatar,
   Chip,
@@ -40,69 +38,32 @@ import {
   Filler
 } from 'chart.js';
 
-import apiService from '../services/apiService';
+// Import new design system components
+import { PageContainer } from '../components/design-system';
+import { Alert } from '../components/design-system';
+import { LoadingSpinner } from '../components/design-system/Loading';
+
+// Import new hooks
+import { useAnalyticsData, useLoggedExercises, useExerciseProgression } from '../hooks/useAnalytics';
 
 // Import our modern components
 import ModernCard, { StatCard } from '../components/ModernCard';
-import ModernInput, { ModernSelect } from '../components/ModernInput';
-import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
+import { ModernSelect } from '../components/ModernInput';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 const Analytics = () => {
-  const [analyticsData, setAnalyticsData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [aggregation, setAggregation] = useState('day');
-  
-  // State for the progression chart
-  const [exerciseList, setExerciseList] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState(null);
-  const [progressionData, setProgressionData] = useState(null);
-  const [progressionLoading, setProgressionLoading] = useState(false);
 
-  // Effect for the main analytics data (heatmap & calorie chart)
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [data, exercises] = await Promise.all([
-          apiService.getAnalyticsData(aggregation),
-          apiService.getLoggedExercises()
-        ]);
-        setAnalyticsData(data);
-        setExerciseList(exercises);
-      } catch (err) {
-        setError('Failed to load analytics data.');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Use new hooks for data fetching
+  const { data: analyticsData, loading: analyticsLoading, error: analyticsError } = useAnalyticsData(aggregation);
+  const { data: exerciseList, loading: exercisesLoading } = useLoggedExercises();
+  const { data: progressionData, loading: progressionLoading } = useExerciseProgression(selectedExercise);
 
-    fetchData();
-  }, [aggregation]);
-
-  // Effect to fetch progression data when an exercise is selected
-  useEffect(() => {
-    if (selectedExercise) {
-      const fetchProgressionData = async () => {
-        setProgressionLoading(true);
-        setProgressionData(null);
-        try {
-          const data = await apiService.getExerciseProgression(selectedExercise);
-          setProgressionData(data);
-        } catch (err) {
-          console.error("Failed to fetch progression data:", err);
-        } finally {
-          setProgressionLoading(false);
-        }
-      };
-
-      fetchProgressionData();
-    }
-  }, [selectedExercise]);
+  const loading = analyticsLoading || exercisesLoading;
+  const error = analyticsError ? 'Failed to load analytics data.' : '';
 
   const handleAggregationChange = (newAggregation) => {
     if (newAggregation !== null) {
@@ -302,125 +263,22 @@ const Analytics = () => {
   }
 
   if (loading) {
-    return (
-      <Box
-        sx={{
-          minHeight: '100vh',
-          background: 'linear-gradient(135deg, #0F1419 0%, #1A202C 50%, #2D3748 100%)',
-          py: 4,
-        }}
-      >
-        <Container maxWidth="lg">
-          <Skeleton variant="rectangular" height={200} sx={{ mb: 4, borderRadius: '16px' }} />
-          <Grid container spacing={3}>
-            {[1, 2, 3, 4].map((i) => (
-              <Grid item xs={12} sm={6} md={3} key={i}>
-                <Skeleton variant="rectangular" height={120} sx={{ borderRadius: '16px' }} />
-              </Grid>
-            ))}
-            <Grid item xs={12} md={8}>
-              <Skeleton variant="rectangular" height={400} sx={{ borderRadius: '16px' }} />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Skeleton variant="rectangular" height={400} sx={{ borderRadius: '16px' }} />
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box
-        sx={{
-          minHeight: '100vh',
-          background: 'linear-gradient(135deg, #0F1419 0%, #1A202C 50%, #2D3748 100%)',
-          py: 4,
-        }}
-      >
-        <Container maxWidth="lg">
-          <Alert 
-            severity="error"
-            sx={{
-              background: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.2)',
-              '& .MuiAlert-message': { color: '#FFFFFF' },
-            }}
-          >
-            {error}
-          </Alert>
-        </Container>
-      </Box>
-    );
+    return <LoadingSpinner fullScreen message="Loading your analytics dashboard..." />;
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0F1419 0%, #1A202C 50%, #2D3748 100%)',
-        py: 4,
-      }}
+    <PageContainer
+      title="Your Analytics Dashboard"
+      subtitle="Track your progress, analyze your performance, and celebrate your achievements"
+      icon="📊"
+      maxWidth="lg"
     >
-      <Container maxWidth="lg">
-        {/* Hero Section */}
-        <Fade in timeout={500}>
-          <Box>
-            <ModernCard
-              variant="feature"
-              elevation="high"
-              sx={{ mb: 4, position: 'relative', overflow: 'hidden' }}
-            >
-              <Box sx={{ textAlign: 'center' }}>
-                <Box
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: '20px',
-                    background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#FFFFFF',
-                    fontSize: '2.5rem',
-                    mx: 'auto',
-                    mb: 3,
-                  }}
-                >
-                  📊
-                </Box>
-                
-                <Typography
-                  variant="h3"
-                  sx={{
-                    fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                    fontWeight: 400,
-                    fontSize: { xs: '1.8rem', sm: '2.5rem' },
-                    color: '#FFFFFF',
-                    lineHeight: 1.2,
-                    mb: 1,
-                  }}
-                >
-                  Your Analytics Dashboard
-                </Typography>
-                
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: '#CBD5E1',
-                    fontWeight: 500,
-                    fontSize: '1.125rem',
-                    maxWidth: '600px',
-                    mx: 'auto',
-                  }}
-                >
-                  Track your progress, analyze your performance, and celebrate your achievements
-                </Typography>
-              </Box>
-            </ModernCard>
-          </Box>
-        </Fade>
+      {/* Error Alert */}
+      {error && (
+        <Alert severity="error" closable sx={{ mb: 4 }}>
+          {error}
+        </Alert>
+      )}
 
         {/* Summary Stats */}
         <Zoom in timeout={700}>
@@ -695,9 +553,9 @@ const Analytics = () => {
                       onChange={(e) => setSelectedExercise(e.target.value)}
                       options={[
                         { value: '', label: 'Choose an exercise...' },
-                        ...exerciseList.map(exercise => ({ 
-                          value: exercise, 
-                          label: exercise 
+                        ...(exerciseList || []).map(exercise => ({
+                          value: exercise,
+                          label: exercise
                         }))
                       ]}
                       variant="outlined"
@@ -707,8 +565,8 @@ const Analytics = () => {
                   </Box>
 
                   {progressionLoading && (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                      <Skeleton variant="rectangular" width="100%" height={300} sx={{ borderRadius: '12px' }} />
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 4, height: 300, alignItems: 'center' }}>
+                      <LoadingSpinner message="Loading progression data..." />
                     </Box>
                   )}
 
@@ -765,17 +623,16 @@ const Analytics = () => {
           </Grid>
         </Grid>
 
-        {/* Footer */}
-        <Box sx={{ textAlign: 'center', mt: 6 }}>
-          <Typography variant="body2" sx={{ color: '#94A3B8', mb: 1 }}>
-            📈 Analytics powered by your workout data and AI insights
-          </Typography>
-          <Typography variant="caption" sx={{ color: '#6B7280' }}>
-            Keep logging workouts to see more detailed analytics and trends
-          </Typography>
-        </Box>
-      </Container>
-    </Box>
+      {/* Footer */}
+      <Box sx={{ textAlign: 'center', mt: 6 }}>
+        <Typography variant="body2" sx={{ color: '#94A3B8', mb: 1 }}>
+          📈 Analytics powered by your workout data and AI insights
+        </Typography>
+        <Typography variant="caption" sx={{ color: '#6B7280' }}>
+          Keep logging workouts to see more detailed analytics and trends
+        </Typography>
+      </Box>
+    </PageContainer>
   );
 };
 

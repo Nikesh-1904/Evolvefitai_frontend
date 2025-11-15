@@ -1,8 +1,7 @@
 // src/pages/WorkoutHistory.js - Modern AI Fitness Workout History & Progress Tracking
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  Container,
   Typography,
   Box,
   Grid,
@@ -11,31 +10,22 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  List,
-  ListItem,
-  ListItemText,
   Stack,
   Avatar,
-  Skeleton,
   Tabs,
   Tab,
   IconButton,
-  Tooltip,
   Fade,
   Slide,
   Zoom,
-  Divider,
 } from '@mui/material';
 import {
   CalendarToday,
   Timer,
   FitnessCenter,
-  TrendingUp,
   AutoAwesome,
   PlayArrow,
   History,
-  EmojiEvents,
-  LocalFireDepartment,
   Speed,
   Assessment,
   Close,
@@ -44,8 +34,14 @@ import {
   DirectionsRun,
   SelfImprovement,
 } from '@mui/icons-material';
-import apiService from '../services/apiService';
 import AIModelBadge from '../components/AIModelBadge';
+
+// Import new design system components
+import { PageContainer } from '../components/design-system';
+import { LoadingSpinner } from '../components/design-system/Loading';
+
+// Import new hooks
+import { useWorkoutPlans, useWorkoutLogs } from '../hooks/useWorkouts';
 
 // Import our modern components
 import ModernCard, { StatCard } from '../components/ModernCard';
@@ -66,31 +62,15 @@ function TabPanel({ children, value, index }) {
 }
 
 function WorkoutHistory() {
-  // State management (preserving all original functionality)
-  const [workouts, setWorkouts] = useState([]);
-  const [workoutPlans, setWorkoutPlans] = useState([]);
   const [selectedWorkout, setSelectedWorkout] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [tabValue, setTabValue] = useState(0);
 
-  useEffect(() => {
-    loadWorkoutHistory();
-  }, []);
+  // Use new hooks for data fetching
+  const { data: workoutLogs, loading: logsLoading } = useWorkoutLogs();
+  const { data: workoutPlans, loading: plansLoading } = useWorkoutPlans();
 
-  const loadWorkoutHistory = async () => {
-    try {
-      const [workoutLogs, plans] = await Promise.all([
-        apiService.getWorkoutLogs(),
-        apiService.getWorkoutPlans(),
-      ]);
-      setWorkouts(workoutLogs);
-      setWorkoutPlans(plans);
-    } catch (error) {
-      console.error('Failed to load workout history:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = logsLoading || plansLoading;
+  const workouts = workoutLogs || [];
 
   const handleWorkoutClick = (workout) => {
     setSelectedWorkout(workout);
@@ -141,7 +121,7 @@ function WorkoutHistory() {
 
   // Calculate stats
   const totalHours = Math.round(workouts.reduce((sum, w) => sum + (w.duration_minutes || 0), 0) / 60);
-  const aiGeneratedCount = workoutPlans.filter(p => p.ai_generated).length;
+  const aiGeneratedCount = (workoutPlans || []).filter(p => p.ai_generated).length;
   const thisWeekWorkouts = workouts.filter(w => {
     const workoutDate = new Date(w.workout_date);
     const weekAgo = new Date();
@@ -150,107 +130,26 @@ function WorkoutHistory() {
   }).length;
 
   // Sort workouts by date (most recent first)
-  const sortedWorkouts = [...workouts].sort((a, b) => 
+  const sortedWorkouts = [...workouts].sort((a, b) =>
     new Date(b.workout_date) - new Date(a.workout_date)
   );
 
   // Sort plans by creation date (most recent first)
-  const sortedPlans = [...workoutPlans].sort((a, b) => 
+  const sortedPlans = [...(workoutPlans || [])].sort((a, b) =>
     new Date(b.created_at) - new Date(a.created_at)
   );
 
   if (loading) {
-    return (
-      <Box
-        sx={{
-          minHeight: '100vh',
-          background: 'linear-gradient(135deg, #0F1419 0%, #1A202C 50%, #2D3748 100%)',
-          py: 4,
-        }}
-      >
-        <Container maxWidth="lg">
-          <Skeleton variant="rectangular" height={200} sx={{ mb: 4, borderRadius: '16px' }} />
-          <Grid container spacing={3}>
-            {[1, 2, 3, 4].map((i) => (
-              <Grid item xs={12} sm={6} md={3} key={i}>
-                <Skeleton variant="rectangular" height={120} sx={{ borderRadius: '16px' }} />
-              </Grid>
-            ))}
-            <Grid item xs={12}>
-              <Skeleton variant="rectangular" height={400} sx={{ borderRadius: '16px' }} />
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
-    );
+    return <LoadingSpinner fullScreen message="Loading your workout history..." />;
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0F1419 0%, #1A202C 50%, #2D3748 100%)',
-        py: 4,
-      }}
+    <PageContainer
+      title="Your Fitness Journey"
+      subtitle="Track your progress, review your workouts, and celebrate your achievements"
+      icon="📈"
+      maxWidth="lg"
     >
-      <Container maxWidth="lg">
-        {/* Hero Section */}
-        <Fade in timeout={500}>
-          <Box>
-            <ModernCard
-              variant="feature"
-              elevation="high"
-              sx={{ mb: 4, position: 'relative', overflow: 'hidden' }}
-            >
-              <Box sx={{ textAlign: 'center' }}>
-                <Box
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: '20px',
-                    background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#FFFFFF',
-                    fontSize: '2.5rem',
-                    mx: 'auto',
-                    mb: 3,
-                  }}
-                >
-                  📈
-                </Box>
-                
-                <Typography
-                  variant="h3"
-                  sx={{
-                    fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                    fontWeight: 400,
-                    fontSize: { xs: '1.8rem', sm: '2.5rem' },
-                    color: '#FFFFFF',
-                    lineHeight: 1.2,
-                    mb: 1,
-                  }}
-                >
-                  Your Fitness Journey
-                </Typography>
-                
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: '#CBD5E1',
-                    fontWeight: 500,
-                    fontSize: '1.125rem',
-                    maxWidth: '600px',
-                    mx: 'auto',
-                  }}
-                >
-                  Track your progress, review your workouts, and celebrate your achievements
-                </Typography>
-              </Box>
-            </ModernCard>
-          </Box>
-        </Fade>
 
         {/* Summary Stats */}
         <Zoom in timeout={700}>
@@ -886,18 +785,17 @@ function WorkoutHistory() {
           </Dialog>
         )}
 
-        {/* Footer */}
-        <Box sx={{ textAlign: 'center', mt: 6 }}>
-          <Typography variant="body2" sx={{ color: '#94A3B8', mb: 1 }}>
-            🏆 Keep up the great work on your fitness journey!
-          </Typography>
-          <Typography variant="caption" sx={{ color: '#6B7280' }}>
-            Every workout brings you closer to your goals
-          </Typography>
-        </Box>
-        <ContextualHelp page="workout-history" />
-      </Container>
-    </Box>
+      {/* Footer */}
+      <Box sx={{ textAlign: 'center', mt: 6 }}>
+        <Typography variant="body2" sx={{ color: '#94A3B8', mb: 1 }}>
+          🏆 Keep up the great work on your fitness journey!
+        </Typography>
+        <Typography variant="caption" sx={{ color: '#6B7280' }}>
+          Every workout brings you closer to your goals
+        </Typography>
+      </Box>
+      <ContextualHelp page="workout-history" />
+    </PageContainer>
   );
 }
 
