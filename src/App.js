@@ -7,15 +7,17 @@ import { PreferencesProvider } from './contexts/PreferencesContext';
 import { AchievementsProvider } from './contexts/AchievementsContext';
 
 // Import components
-import Navbar from './components/Navbar';
+import NavbarNew from './components/NavbarNew';
+import Breadcrumbs from './components/Breadcrumbs';
 import DynamicThemeWrapper from './components/DynamicThemeWrapper';
+import { Container } from '@mui/material';
 
 // Import pages
 import LoginPage from './pages/LoginPage';
-import Dashboard from './pages/Dashboard';
+import DashboardNew from './pages/DashboardNew';
 import WorkoutGenerator from './pages/WorkoutGenerator';
 import WorkoutHistory from './pages/WorkoutHistory';
-import Profile from './pages/Profile';
+import ProfileNew from './pages/ProfileNew';
 import Analytics from './pages/Analytics';
 import WorkoutSession from './pages/WorkoutSession';
 import FreestyleLog from './pages/FreestyleLog';
@@ -56,15 +58,17 @@ function AppRoutes() {
   if (user) {
     return (
       <>
-        <Navbar />
+        <NavbarNew />
         <div style={{ paddingTop: '80px' }}>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
+          <Container maxWidth="xl" sx={{ py: 3 }}>
+            <Breadcrumbs />
+            <Routes>
+            <Route path="/" element={<DashboardNew />} />
             <Route path="/generate-workout" element={<WorkoutGenerator />} />
             <Route path="/workout-session" element={<WorkoutSession />} />
             <Route path="/log-workout" element={<FreestyleLog />} />
             <Route path="/workout-history" element={<WorkoutHistory />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile" element={<ProfileNew />} />
             <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />
             <Route path="/meal-plans" element={<MealPlanLibrary />} />
             <Route path="/exercises" element={<ExerciseLibrary />} />
@@ -82,6 +86,7 @@ function AppRoutes() {
             {/* Fallback route for any other logged-in paths */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </Container>
         </div>
       </>
     );
