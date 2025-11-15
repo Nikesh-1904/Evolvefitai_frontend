@@ -14,5 +14,7 @@
  * New: import { authService, workoutService } from './services/api';
  */
 
+import api from './api';
+
 // Re-export the new API service for backward compatibility
 export default api;

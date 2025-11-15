@@ -137,4 +137,5 @@ class WorkoutService extends BaseApiClient {
   }
 }
 
-export default new WorkoutService();
+const workoutServiceInstance = new WorkoutService();
+export default workoutServiceInstance;

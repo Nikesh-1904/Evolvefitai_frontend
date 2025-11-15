@@ -15,4 +15,5 @@ class MealService extends BaseApiClient {
   }
 }
 
-export default new MealService();
+const mealServiceInstance = new MealService();
+export default mealServiceInstance;

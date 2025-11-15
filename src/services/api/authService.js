@@ -112,4 +112,5 @@ class AuthService extends BaseApiClient {
   }
 }
 
-export default new AuthService();
+const authServiceInstance = new AuthService();
+export default authServiceInstance;

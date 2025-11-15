@@ -56,4 +56,5 @@ class CommunityService extends BaseApiClient {
   }
 }
 
-export default new CommunityService();
+const communityServiceInstance = new CommunityService();
+export default communityServiceInstance;

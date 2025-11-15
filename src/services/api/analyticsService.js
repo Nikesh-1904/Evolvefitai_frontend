@@ -45,4 +45,5 @@ class AnalyticsService extends BaseApiClient {
   }
 }
 
-export default new AnalyticsService();
+const analyticsServiceInstance = new AnalyticsService();
+export default analyticsServiceInstance;
