@@ -145,9 +145,9 @@ function Profile() {
     if (window.confirm('Are you sure you want to leave your current gym? This action cannot be undone.')) {
       try {
         await communityService.leaveGym(user.gym_id);
-        setSuccess('Successfully left the gym. You can now join another gym.');
+        setMessage('Successfully left the gym. You can now join another gym.');
         // Reload the page to update user info
-        window.location.reload();
+        setTimeout(() => window.location.reload(), 1500);
       } catch (err) {
         console.error('Failed to leave gym:', err);
         setError(err.message || 'Failed to leave gym. Please try again.');
