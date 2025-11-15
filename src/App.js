@@ -28,6 +28,9 @@ import AchievementsPanel from './components/AchievementsPanel';
 import CommunityLeaderboard from './pages/CommunityLeaderboard';
 import Notifications from './pages/Notifications';
 import MealPlanLibrary from './pages/MealPlanLibrary';
+import ExerciseLibrary from './pages/ExerciseLibrary';
+import WorkoutRecommendations from './pages/WorkoutRecommendations';
+import GymDiscovery from './pages/GymDiscovery';
 
 // This component handles the core logic for redirecting users
 function AppRoutes() {
@@ -63,6 +66,9 @@ function AppRoutes() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />
             <Route path="/meal-plans" element={<MealPlanLibrary />} />
+            <Route path="/exercises" element={<ExerciseLibrary />} />
+            <Route path="/workout-recommendations" element={<WorkoutRecommendations />} />
+            <Route path="/gyms" element={<GymDiscovery />} />
             <Route path="/workout-plan/:planId" element={<WorkoutPlanDetail />} />
             <Route path="/analytics" element={<Analytics />} /> {/* <-- THIS ROUTE WAS MISSING */}
             <Route path="/onboarding" element={<OnboardingPage />} />

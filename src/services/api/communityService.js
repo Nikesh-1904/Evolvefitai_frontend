@@ -8,6 +8,22 @@ import BaseApiClient from './baseApi';
  */
 class CommunityService extends BaseApiClient {
   /**
+   * List all gyms with optional search
+   */
+  async listGyms(params = {}) {
+    console.log('🏢 Fetching gym list', params);
+    return this.get('/gyms', params);
+  }
+
+  /**
+   * Get gym details by ID
+   */
+  async getGymDetails(gymId) {
+    console.log(`🏢 Fetching details for gym ID: ${gymId}`);
+    return this.get(`/gyms/${gymId}`);
+  }
+
+  /**
    * Join gym using code
    */
   async joinGymByCode(gymCode) {

@@ -271,7 +271,8 @@ const MealPlanCard = ({ plan }) => {
 function MealPlanLibrary() {
   const { data: mealPlansData, loading, error, execute: refetch } = useMealPlans();
 
-  const mealPlans = mealPlansData?.meal_plans || [];
+  // Backend returns array directly, not wrapped in object
+  const mealPlans = Array.isArray(mealPlansData) ? mealPlansData : [];
 
   return (
     <PageContainer

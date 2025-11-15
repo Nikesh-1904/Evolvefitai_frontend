@@ -135,6 +135,27 @@ class WorkoutService extends BaseApiClient {
       throw error;
     }
   }
+
+  /**
+   * Get exercise library with filters
+   */
+  async getExercises(params = {}) {
+    return this.get('/workouts/exercises', params);
+  }
+
+  /**
+   * Create custom exercise
+   */
+  async createExercise(exerciseData) {
+    return this.post('/workouts/exercises', exerciseData);
+  }
+
+  /**
+   * Get AI workout recommendation
+   */
+  async getWorkoutRecommendation(params = {}) {
+    return this.get('/ai/workouts/recommend', params);
+  }
 }
 
 const workoutServiceInstance = new WorkoutService();

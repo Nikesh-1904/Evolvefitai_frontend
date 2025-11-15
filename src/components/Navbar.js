@@ -34,6 +34,9 @@ import {
   Logout,
   AutoAwesome,
   EmojiEvents as LeaderboardIcon,
+  LibraryBooks,
+  Lightbulb,
+  Business,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -52,6 +55,8 @@ function HideOnScroll({ children }) {
 const basePages = [
   { name: 'Dashboard', path: '/', icon: <Dashboard /> },
   { name: 'Generate Workout', path: '/generate-workout', icon: <AutoAwesome /> },
+  { name: 'Recommendations', path: '/workout-recommendations', icon: <Lightbulb /> },
+  { name: 'Exercise Library', path: '/exercises', icon: <LibraryBooks /> },
   { name: 'Meal Planner', path: '/meal-plan-generator', icon: <Restaurant /> },
   { name: 'Log Workout', path: '/log-workout', icon: <Create /> },
   { name: 'History', path: '/workout-history', icon: <History /> },
@@ -60,6 +65,7 @@ const basePages = [
 ];
 
 const communityPages = [
+    { name: 'Discover Gyms', path: '/gyms', icon: <Business /> },
     { name: 'Leaderboard', path: '/leaderboard', icon: <LeaderboardIcon /> },
 ];
 
