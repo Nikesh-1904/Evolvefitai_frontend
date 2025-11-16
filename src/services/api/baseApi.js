@@ -2,6 +2,10 @@
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
 
+// Log API URL for debugging
+console.log('🔧 API Base URL:', API_BASE_URL);
+console.log('🔧 REACT_APP_API_URL env var:', process.env.REACT_APP_API_URL);
+
 /**
  * Base API Client with common HTTP methods and error handling
  */
