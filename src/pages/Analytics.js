@@ -50,6 +50,7 @@ import ModernCard, { StatCard } from '../components/ModernCard';
 import { ModernSelect } from '../components/ModernInput';
 import ExerciseProgressionChart from '../components/ExerciseProgressionChart';
 import PlateauAnalysis from '../components/PlateauAnalysis';
+import PredictiveAnalytics from '../components/PredictiveAnalytics';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
@@ -637,6 +638,15 @@ const Analytics = () => {
             <Fade in timeout={1900}>
               <Box>
                 <PlateauAnalysis />
+              </Box>
+            </Fade>
+          </Grid>
+
+          {/* Predictive Analytics */}
+          <Grid item xs={12}>
+            <Fade in timeout={1400}>
+              <Box>
+                <PredictiveAnalytics />
               </Box>
             </Fade>
           </Grid>

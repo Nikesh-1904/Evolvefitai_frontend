@@ -31,6 +31,8 @@ import {
   SelfImprovement,
   Add,
   Remove,
+  Mic,
+  Videocam,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService';
@@ -40,6 +42,8 @@ import ModernCard from '../components/ModernCard';
 import ModernInput from '../components/ModernInput';
 import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
 import { PageContainer, Alert } from '../components/design-system';
+import VoiceWorkoutLogger from '../components/VoiceWorkoutLogger';
+import FormCorrectionAI from '../components/FormCorrectionAI';
 
 const FreestyleLog = () => {
   const navigate = useNavigate();
@@ -55,6 +59,8 @@ const FreestyleLog = () => {
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
+  const [isVoiceLoggerOpen, setVoiceLoggerOpen] = useState(false);
+  const [isFormAnalysisOpen, setFormAnalysisOpen] = useState(false);
 
   // All original handlers preserved exactly
   const handleSearchChange = async (event, value) => {
@@ -96,7 +102,7 @@ const FreestyleLog = () => {
           initialSet = { reps: 8, weight: 0 };
           break;
       }
-      
+
       setLoggedExercises([
         ...loggedExercises,
         { ...exercise, sets: [initialSet] }
@@ -104,6 +110,36 @@ const FreestyleLog = () => {
       setInputValue('');
       setOptions([]);
     }
+  };
+
+  const handleVoiceExerciseLogged = (parsedCommand) => {
+    // Check if exercise already exists
+    const existingExerciseIndex = loggedExercises.findIndex(
+      ex => ex.name.toLowerCase() === parsedCommand.exercise.toLowerCase()
+    );
+
+    if (existingExerciseIndex >= 0) {
+      // Add set to existing exercise
+      const updatedExercises = [...loggedExercises];
+      updatedExercises[existingExerciseIndex].sets.push(parsedCommand.sets[0]);
+      setLoggedExercises(updatedExercises);
+    } else {
+      // Add new exercise
+      setLoggedExercises([
+        ...loggedExercises,
+        {
+          name: parsedCommand.exercise,
+          exercise_type: parsedCommand.exercise_type,
+          sets: parsedCommand.sets
+        }
+      ]);
+    }
+  };
+
+  const handleFormAnalyzed = (analysis) => {
+    setError('');
+    console.log('Form analysis:', analysis);
+    // You can display a success message or add the analyzed exercise to the log
   };
 
   const handleAddSet = (exerciseIndex) => {
@@ -433,9 +469,41 @@ const FreestyleLog = () => {
         <Box>
           <ModernCard
               title="Add Exercise"
-              subtitle="Search from our comprehensive exercise database"
+              subtitle="Search from our comprehensive exercise database or use voice commands"
               variant="glass"
               sx={{ mb: 4 }}
+              action={
+                <Stack direction="row" spacing={1}>
+                  <IconButton
+                    onClick={() => setVoiceLoggerOpen(true)}
+                    sx={{
+                      background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
+                      color: '#FFFFFF',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #00BFEA 0%, #6B2FD4 100%)',
+                        transform: 'scale(1.05)',
+                      },
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <Mic />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => setFormAnalysisOpen(true)}
+                    sx={{
+                      background: 'linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%)',
+                      color: '#FFFFFF',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #6B2FD4 0%, #9673E6 100%)',
+                        transform: 'scale(1.05)',
+                      },
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <Videocam />
+                  </IconButton>
+                </Stack>
+              }
             >
               <Autocomplete
                 open={open}
@@ -695,6 +763,20 @@ const FreestyleLog = () => {
 
       {/* Duration Modal */}
       {renderDurationModal()}
+
+      {/* Voice Workout Logger */}
+      <VoiceWorkoutLogger
+        isOpen={isVoiceLoggerOpen}
+        onClose={() => setVoiceLoggerOpen(false)}
+        onExerciseLogged={handleVoiceExerciseLogged}
+      />
+
+      {/* Form Correction AI */}
+      <FormCorrectionAI
+        isOpen={isFormAnalysisOpen}
+        onClose={() => setFormAnalysisOpen(false)}
+        onFormAnalyzed={handleFormAnalyzed}
+      />
     </PageContainer>
   );
 };
