@@ -49,6 +49,7 @@ import { useAnalyticsData, useLoggedExercises, useExerciseProgression } from '..
 import ModernCard, { StatCard } from '../components/ModernCard';
 import { ModernSelect } from '../components/ModernInput';
 import ExerciseProgressionChart from '../components/ExerciseProgressionChart';
+import PlateauAnalysis from '../components/PlateauAnalysis';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
@@ -627,6 +628,15 @@ const Analytics = () => {
             <Fade in timeout={1700}>
               <Box>
                 <ExerciseProgressionChart />
+              </Box>
+            </Fade>
+          </Grid>
+
+          {/* AI Plateau Analysis */}
+          <Grid item xs={12}>
+            <Fade in timeout={1900}>
+              <Box>
+                <PlateauAnalysis />
               </Box>
             </Fade>
           </Grid>
