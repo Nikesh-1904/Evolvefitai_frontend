@@ -272,12 +272,19 @@ function Profile() {
 
   const handleJoinGymSubmit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
+
+    console.log('🎯 handleJoinGymSubmit called with gym code:', gymCodeInput);
+
     setGymCodeLoading(true);
     setGymCodeError('');
     setGymCodeMessage('');
 
     try {
+      console.log('📡 Calling communityService.joinGymByCode...');
       const response = await communityService.joinGymByCode(gymCodeInput);
+      console.log('✅ Join gym response:', response);
+
       setGymCodeMessage(response.message || 'Successfully joined gym! Refreshing...');
       setGymCodeInput(''); // Clear input on success
       // Refresh user data to get the new gym_id
@@ -285,6 +292,7 @@ function Profile() {
       // Reload the page to ensure all components update with new gym_id
       setTimeout(() => window.location.reload(), 1500);
     } catch (err) {
+      console.error('❌ Join gym error:', err);
       setGymCodeError(err.message || 'Failed to join gym. Please check the code.');
     } finally {
       setGymCodeLoading(false);
@@ -749,7 +757,7 @@ function Profile() {
                   </Grid>
                 </Grid>
               ) : (
-                <form onSubmit={handleJoinGymSubmit}>
+                <Box component="form" onSubmit={handleJoinGymSubmit} noValidate>
                   <Stack spacing={2}>
                     <Typography variant="body1" sx={{ color: '#CBD5E1' }}>
                       Enter the unique code provided by your gym to join its community leaderboard.
@@ -775,7 +783,7 @@ function Profile() {
                       {gymCodeLoading ? 'Joining...' : 'Join Gym'}
                     </PrimaryButton>
                   </Stack>
-                </form>
+                </Box>
               )}
             </ModernCard>
           </Grid>
