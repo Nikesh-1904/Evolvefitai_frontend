@@ -35,6 +35,7 @@ import ExerciseLibrary from './pages/ExerciseLibrary';
 import WorkoutRecommendations from './pages/WorkoutRecommendations';
 import GymDiscovery from './pages/GymDiscovery';
 import GymBookings from './pages/GymBookings';
+import GymAccess from './pages/GymAccess';
 
 // This component handles the core logic for redirecting users
 function AppRoutes() {
@@ -76,6 +77,7 @@ function AppRoutes() {
             <Route path="/workout-recommendations" element={<WorkoutRecommendations />} />
             <Route path="/gyms" element={<GymDiscovery />} />
             <Route path="/gym-bookings" element={<GymBookings />} />
+            <Route path="/gym-access" element={<GymAccess />} />
             <Route path="/workout-plan/:planId" element={<WorkoutPlanDetail />} />
             <Route path="/analytics" element={<Analytics />} /> {/* <-- THIS ROUTE WAS MISSING */}
             <Route path="/onboarding" element={<OnboardingPage />} />

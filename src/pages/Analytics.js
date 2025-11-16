@@ -48,6 +48,7 @@ import { useAnalyticsData, useLoggedExercises, useExerciseProgression } from '..
 // Import our modern components
 import ModernCard, { StatCard } from '../components/ModernCard';
 import { ModernSelect } from '../components/ModernInput';
+import ExerciseProgressionChart from '../components/ExerciseProgressionChart';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
@@ -617,6 +618,15 @@ const Analytics = () => {
                     </Box>
                   )}
                 </ModernCard>
+              </Box>
+            </Fade>
+          </Grid>
+
+          {/* Enhanced Exercise Progression Tracker */}
+          <Grid item xs={12}>
+            <Fade in timeout={1700}>
+              <Box>
+                <ExerciseProgressionChart />
               </Box>
             </Fade>
           </Grid>
