@@ -6,8 +6,8 @@ import { useApi } from './useApi';
 /**
  * Hook for fetching leaderboard
  */
-export const useLeaderboard = (gymId = null) => {
-  return useApi(() => communityService.getLeaderboard(gymId), true, [gymId]);
+export const useLeaderboard = (limit = 10) => {
+  return useApi(() => communityService.getLeaderboard(limit), true, [limit]);
 };
 
 /**
