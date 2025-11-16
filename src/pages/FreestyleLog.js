@@ -17,6 +17,7 @@ import {
   Slide,
   Zoom,
   LinearProgress,
+  Tooltip,
 } from '@mui/material';
 import {
   Delete,
@@ -474,34 +475,38 @@ const FreestyleLog = () => {
               sx={{ mb: 4 }}
               action={
                 <Stack direction="row" spacing={1}>
-                  <IconButton
-                    onClick={() => setVoiceLoggerOpen(true)}
-                    sx={{
-                      background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
-                      color: '#FFFFFF',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #00BFEA 0%, #6B2FD4 100%)',
-                        transform: 'scale(1.05)',
-                      },
-                      transition: 'all 0.2s ease',
-                    }}
-                  >
-                    <Mic />
-                  </IconButton>
-                  <IconButton
-                    onClick={() => setFormAnalysisOpen(true)}
-                    sx={{
-                      background: 'linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%)',
-                      color: '#FFFFFF',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #6B2FD4 0%, #9673E6 100%)',
-                        transform: 'scale(1.05)',
-                      },
-                      transition: 'all 0.2s ease',
-                    }}
-                  >
-                    <Videocam />
-                  </IconButton>
+                  <Tooltip title="Voice Commands - Log workouts hands-free" arrow>
+                    <IconButton
+                      onClick={() => setVoiceLoggerOpen(true)}
+                      sx={{
+                        background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
+                        color: '#FFFFFF',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #00BFEA 0%, #6B2FD4 100%)',
+                          transform: 'scale(1.05)',
+                        },
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <Mic />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="AI Form Check - Analyze your exercise form" arrow>
+                    <IconButton
+                      onClick={() => setFormAnalysisOpen(true)}
+                      sx={{
+                        background: 'linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%)',
+                        color: '#FFFFFF',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #6B2FD4 0%, #9673E6 100%)',
+                          transform: 'scale(1.05)',
+                        },
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <Videocam />
+                    </IconButton>
+                  </Tooltip>
                 </Stack>
               }
             >

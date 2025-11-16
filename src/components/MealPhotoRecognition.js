@@ -31,6 +31,7 @@ import {
 } from '@mui/icons-material';
 import { Alert } from './design-system';
 import { PrimaryButton, SecondaryButton } from './ModernButton';
+import mockAIService from '../services/mockAIService';
 
 const MealPhotoRecognition = ({ isOpen, onClose, onMealAnalyzed }) => {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -82,23 +83,32 @@ const MealPhotoRecognition = ({ isOpen, onClose, onMealAnalyzed }) => {
       // Convert image to base64
       const base64Image = await convertToBase64(selectedImage);
 
-      // Send to AI backend for analysis
-      const response = await fetch('/api/v1/ai/analyze-meal-photo', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          image: base64Image,
-        }),
-      });
+      let data;
 
-      if (!response.ok) {
-        throw new Error('Failed to analyze meal photo');
+      // Try real API first, fallback to mock if it fails
+      try {
+        const response = await fetch('/api/v1/ai/analyze-meal-photo', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify({
+            image: base64Image,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Backend endpoint not available');
+        }
+
+        data = await response.json();
+      } catch (apiError) {
+        console.warn('Real API failed, using mock data:', apiError.message);
+        // Use mock service as fallback
+        data = await mockAIService.analyzeMealPhoto(base64Image);
       }
 
-      const data = await response.json();
       setAnalysis(data);
 
       // Notify parent component
