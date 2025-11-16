@@ -18,11 +18,18 @@ export const AuthProvider = ({ children }) => {
   const [stats, setStats] = useState(null); // 👈 1. ADD NEW STATE
   const [loading, setLoading] = useState(true);
 
-  // 2. ADD HELPER FUNCTION TO FETCH STATS
+  // 2. ADD HELPER FUNCTION TO FETCH STATS AND REFRESH USER
   const fetchUserStats = async () => {
     try {
+      // Refresh user profile (including gym_id if joined)
+      const userProfile = await apiService.getCurrentUser();
+      setUser(userProfile);
+
+      // Fetch dashboard stats
       const statsData = await apiService.getDashboardOverview();
       setStats(statsData);
+
+      console.log('✅ User data and stats refreshed', userProfile.gym_id ? 'with gym' : 'no gym');
     } catch (error) {
       console.error("Failed to fetch user stats:", error);
     }
