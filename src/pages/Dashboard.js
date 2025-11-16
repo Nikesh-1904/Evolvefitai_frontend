@@ -36,7 +36,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import apiService from '../services/apiService';
+import { workoutService, analyticsService, mealService } from '../services/api';
 
 import { usePreferences } from '../contexts/PreferencesContext';
 // Import our modern components
@@ -70,11 +70,11 @@ function Dashboard() {
   const loadDashboardData = async () => {
     try {
       const [workoutLogsData, workoutPlansData, statsData] = await Promise.all([
-        apiService.getWorkoutLogs(),
-        apiService.getWorkoutPlans(),
-        apiService.getDashboardOverview(),
+        workoutService.getWorkoutLogs(),
+        workoutService.getWorkoutPlans(),
+        analyticsService.getDashboardOverview(),
       ]);
-      
+
       setRecentWorkouts(workoutLogsData.slice(0, 3));
       setWorkoutPlans(workoutPlansData.slice(0, 3));
       setStats(statsData);
@@ -102,7 +102,7 @@ function Dashboard() {
         }
       };
       
-      const mealPlan = await apiService.generateMealPlan(requestData);
+      const mealPlan = await mealService.generateMealPlan(requestData);
       setGeneratedMealPlan(mealPlan);
       setMealPlanDialog(true);
     } catch (error) {

@@ -1,7 +1,7 @@
 // src/contexts/AuthContext.js - Fixed Authentication Context
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import apiService from '../services/apiService';
+import { authService, analyticsService } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -22,11 +22,11 @@ export const AuthProvider = ({ children }) => {
   const fetchUserStats = async () => {
     try {
       // Refresh user profile (including gym_id if joined)
-      const userProfile = await apiService.getCurrentUser();
+      const userProfile = await authService.getCurrentUser();
       setUser(userProfile);
 
       // Fetch dashboard stats
-      const statsData = await apiService.getDashboardOverview();
+      const statsData = await analyticsService.getDashboardOverview();
       setStats(statsData);
 
       console.log('✅ User data and stats refreshed', userProfile.gym_id ? 'with gym' : 'no gym');
@@ -43,13 +43,13 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           console.log('🔍 Found token, fetching user profile...');
-          const userProfile = await apiService.getCurrentUser();
+          const userProfile = await authService.getCurrentUser();
           setUser(userProfile);
           await fetchUserStats(); // 👈 3. FETCH STATS ON INITIAL LOAD
           console.log('✅ User authenticated:', userProfile.email);
         } catch (error) {
           console.error('❌ Token invalid, clearing auth:', error);
-          apiService.clearAuth();
+          authService.clearAuth();
         }
       }
 
@@ -64,11 +64,11 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('🔐 AuthContext: Starting login process...');
 
-      // Call the apiService login function
-      const loginResponse = await apiService.login(email, password);
+      // Call the authService login function
+      const loginResponse = await authService.login(email, password);
 
       // Get the user profile after successful login
-      const userProfile = await apiService.getCurrentUser();
+      const userProfile = await authService.getCurrentUser();
       setUser(userProfile);
       await fetchUserStats(); // 👈 3. FETCH STATS ON LOGIN
 
@@ -85,7 +85,7 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('📝 AuthContext: Starting registration process...');
 
-      const registerResponse = await apiService.register(userData);
+      const registerResponse = await authService.register(userData);
 
       // Automatically log in after successful registration
       if (userData.email && userData.password) {
@@ -106,7 +106,7 @@ export const AuthProvider = ({ children }) => {
       console.log('🔍 AuthContext: Starting Google OAuth...');
 
       // This will redirect to Google OAuth
-      await apiService.googleLogin();
+      await authService.googleLogin();
 
       // Note: The actual user setting happens in the OAuth callback
     } catch (error) {
@@ -120,14 +120,14 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('🚪 AuthContext: Starting logout process...');
 
-      await apiService.logout();
+      await authService.logout();
       setUser(null);
 
       console.log('✅ AuthContext: Logout successful');
     } catch (error) {
       console.error('❌ AuthContext: Logout failed:', error);
       // Still clear user state even if API call fails
-      apiService.clearAuth();
+      authService.clearAuth();
       setUser(null);
       setStats(null); // 👈 4. CLEAR STATS ON LOGOUT
     }
@@ -138,7 +138,7 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('👤 AuthContext: Updating user profile...');
 
-      const updatedUser = await apiService.updateProfile(profileData);
+      const updatedUser = await authService.updateProfile(profileData);
       setUser(updatedUser);
 
       console.log('✅ AuthContext: Profile updated successfully');
@@ -159,7 +159,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token_type', 'bearer');
 
       // Get user profile
-      const userProfile = await apiService.getCurrentUser();
+      const userProfile = await authService.getCurrentUser();
       setUser(userProfile);
       await fetchUserStats(); // 👈 3. FETCH STATS ON OAUTH LOGIN
 
@@ -167,7 +167,7 @@ export const AuthProvider = ({ children }) => {
       return userProfile;
     } catch (error) {
       console.error('❌ AuthContext: OAuth callback failed:', error);
-      apiService.clearAuth();
+      authService.clearAuth();
       throw error;
     }
   };

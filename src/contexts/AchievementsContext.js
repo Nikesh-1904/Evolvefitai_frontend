@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import apiService from '../services/apiService'; // 👈 --- NEW ---
+import { communityService } from '../services/api'; // 👈 --- NEW ---
 
 const AchievementsContext = createContext();
 
@@ -219,10 +219,10 @@ export const AchievementsProvider = ({ children }) => {
   useEffect(() => {
     if (user) {
       console.log('🏆 AchievementsContext: User found, fetching status...');
-      apiService.getAchievementStatus()
+      communityService.getAchievementStatus()
         .then(data => {
-          dispatch({ 
-            type: 'LOAD_ACHIEVEMENTS', 
+          dispatch({
+            type: 'LOAD_ACHIEVEMENTS',
             achievements: data.unlocked_achievements,
           });
         })
@@ -281,7 +281,7 @@ const checkForNewAchievements = (authStats, authUser) => {
         console.log(`🎉 Unlocking new achievement: ${achievement.name}`);
         
         // 1. Call the backend to permanently unlock and add points
-        apiService.unlockAchievement(achievement.id)
+        communityService.unlockAchievement(achievement.id)
           .then(response => {
             // `response` is the new AchievementStatus
             

@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { useAuth } from './AuthContext'; // --- MODIFICATION ---
-import apiService from '../services/apiService'; // --- MODIFICATION ---
 
 const PreferencesContext = createContext();
 

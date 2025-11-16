@@ -36,7 +36,7 @@ import {
   Videocam,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import apiService from '../services/apiService';
+import { workoutService } from '../services/api';
 
 // Import our modern components
 import ModernCard from '../components/ModernCard';
@@ -69,7 +69,7 @@ const FreestyleLog = () => {
     if (value && value.length > 2) {
       setLoading(true);
       try {
-        const results = await apiService.getExerciseDetails(value);
+        const results = await workoutService.getExerciseDetails(value);
         const formattedOptions = Array.isArray(results)
           ? results.map(r => r.exercise).filter(Boolean)
           : (results.exercise ? [results.exercise] : []);
@@ -222,7 +222,7 @@ const FreestyleLog = () => {
     };
 
     try {
-      await apiService.logWorkout(logPayload);
+      await workoutService.logWorkout(logPayload);
       setDurationModalOpen(false);
       navigate('/workout-history');
     } catch (err) {

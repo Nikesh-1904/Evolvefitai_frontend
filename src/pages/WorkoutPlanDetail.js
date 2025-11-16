@@ -41,7 +41,7 @@ import {
   SelfImprovement,
   OpenInNew,
 } from '@mui/icons-material';
-import apiService from '../services/apiService';
+import { workoutService } from '../services/api';
 import AIModelBadge from '../components/AIModelBadge';
 
 // Import our modern components
@@ -61,7 +61,7 @@ function WorkoutPlanDetail() {
   useEffect(() => {
     const fetchPlan = async () => {
       try {
-        const planData = await apiService.getWorkoutPlanById(planId);
+        const planData = await workoutService.getWorkoutPlanById(planId);
         setPlan(planData);
       } catch (err) {
         setError('Failed to load workout plan. It may not exist or you may not have permission to view it.');
@@ -77,7 +77,7 @@ function WorkoutPlanDetail() {
     if (exerciseDetails[exerciseName]) return;
     
     try {
-      const details = await apiService.getExerciseDetails(exerciseName);
+      const details = await workoutService.getExerciseDetails(exerciseName);
       setExerciseDetails(prev => ({ ...prev, [exerciseName]: details }));
     } catch (error) {
       console.error('Failed to fetch exercise details:', error);

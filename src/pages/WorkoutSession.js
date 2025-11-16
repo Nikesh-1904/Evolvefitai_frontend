@@ -43,7 +43,7 @@ import {
   Close,
 } from '@mui/icons-material';
 import { useLocation, useNavigate } from 'react-router-dom';
-import apiService from '../services/apiService';
+import { workoutService } from '../services/api';
 
 // Import our modern components
 import ModernCard from '../components/ModernCard';
@@ -208,7 +208,7 @@ const WorkoutSession = () => {
     };
 
     try {
-      await apiService.logWorkout(logPayload);
+      await workoutService.logWorkout(logPayload);
       setDurationModalOpen(false);
       navigate('/workout-history');
     } catch (err) {
@@ -231,7 +231,7 @@ const WorkoutSession = () => {
     setVideoModalOpen(true);
     setVideoLoading(true);
     try {
-      const details = await apiService.getExerciseDetails(exerciseName);
+      const details = await workoutService.getExerciseDetails(exerciseName);
       setCurrentExerciseVideos(details.videos || []);
     } catch (error) {
       console.error("Failed to fetch video details:", error);
@@ -246,7 +246,7 @@ const WorkoutSession = () => {
     if (value && value.length > 2) {
       setSearchLoading(true);
       try {
-        const results = await apiService.getExerciseDetails(value);
+        const results = await workoutService.getExerciseDetails(value);
         const formattedOptions = Array.isArray(results)
           ? results.map(r => r.exercise).filter(Boolean)
           : (results.exercise ? [results.exercise] : []);
