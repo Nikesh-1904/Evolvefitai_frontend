@@ -278,12 +278,12 @@ function Profile() {
 
     try {
       const response = await communityService.joinGymByCode(gymCodeInput);
-      setGymCodeMessage(response.message || 'Successfully joined gym!');
+      setGymCodeMessage(response.message || 'Successfully joined gym! Refreshing...');
       setGymCodeInput(''); // Clear input on success
       // Refresh user data to get the new gym_id
       await fetchUserStats(); // This re-fetches the user object via AuthContext
-      // Auto-clear success message
-      setTimeout(() => setGymCodeMessage(''), 4000);
+      // Reload the page to ensure all components update with new gym_id
+      setTimeout(() => window.location.reload(), 1500);
     } catch (err) {
       setGymCodeError(err.message || 'Failed to join gym. Please check the code.');
     } finally {
