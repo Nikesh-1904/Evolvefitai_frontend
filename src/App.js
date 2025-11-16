@@ -1,41 +1,74 @@
 // src/App.js
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { PreferencesProvider } from './contexts/PreferencesContext';
 import { AchievementsProvider } from './contexts/AchievementsContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 
-// Import components
+// Import components (always loaded)
 import NavbarNew from './components/NavbarNew';
 import Breadcrumbs from './components/Breadcrumbs';
 import DynamicThemeWrapper from './components/DynamicThemeWrapper';
-import { Container } from '@mui/material';
+import ErrorBoundary from './components/ErrorBoundary';
+import { Container, CircularProgress, Box } from '@mui/material';
 
-// Import pages
+// Eager load critical pages (for faster first render)
 import LoginPage from './pages/LoginPage';
-import Dashboard from './pages/Dashboard';
-import WorkoutGenerator from './pages/WorkoutGenerator';
-import WorkoutHistory from './pages/WorkoutHistory';
-import Profile from './pages/Profile';
-import Analytics from './pages/Analytics';
-import WorkoutSession from './pages/WorkoutSession';
-import FreestyleLog from './pages/FreestyleLog';
-import MealPlanGenerator from './pages/MealPlanGenerator';
-import WorkoutPlanDetail from './pages/WorkoutPlanDetail';
 import OAuthCallback from './pages/OAuthCallback';
 import OnboardingPage from './pages/OnboardingPage';
-import UserPreferences from './components/UserPreferences';
-import AchievementsPanel from './components/AchievementsPanel';
-import CommunityLeaderboard from './pages/CommunityLeaderboard';
-import Notifications from './pages/Notifications';
-import MealPlanLibrary from './pages/MealPlanLibrary';
-import ExerciseLibrary from './pages/ExerciseLibrary';
-import WorkoutRecommendations from './pages/WorkoutRecommendations';
-import GymDiscovery from './pages/GymDiscovery';
-import GymBookings from './pages/GymBookings';
-import GymAccess from './pages/GymAccess';
+
+// Lazy load all other pages (code splitting)
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const WorkoutGenerator = lazy(() => import('./pages/WorkoutGenerator'));
+const WorkoutHistory = lazy(() => import('./pages/WorkoutHistory'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Analytics = lazy(() => import('./pages/Analytics'));
+const WorkoutSession = lazy(() => import('./pages/WorkoutSession'));
+const FreestyleLog = lazy(() => import('./pages/FreestyleLog'));
+const MealPlanGenerator = lazy(() => import('./pages/MealPlanGenerator'));
+const WorkoutPlanDetail = lazy(() => import('./pages/WorkoutPlanDetail'));
+const UserPreferences = lazy(() => import('./components/UserPreferences'));
+const AchievementsPanel = lazy(() => import('./components/AchievementsPanel'));
+const CommunityLeaderboard = lazy(() => import('./pages/CommunityLeaderboard'));
+const Notifications = lazy(() => import('./pages/Notifications'));
+const MealPlanLibrary = lazy(() => import('./pages/MealPlanLibrary'));
+const ExerciseLibrary = lazy(() => import('./pages/ExerciseLibrary'));
+const WorkoutRecommendations = lazy(() => import('./pages/WorkoutRecommendations'));
+const GymDiscovery = lazy(() => import('./pages/GymDiscovery'));
+const GymBookings = lazy(() => import('./pages/GymBookings'));
+const GymAccess = lazy(() => import('./pages/GymAccess'));
+
+// Loading fallback component
+const PageLoader = () => (
+  <Box
+    sx={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '60vh',
+      flexDirection: 'column',
+      gap: 2,
+    }}
+  >
+    <CircularProgress
+      size={48}
+      sx={{
+        color: '#00D4FF',
+      }}
+    />
+    <Box
+      sx={{
+        color: '#94A3B8',
+        fontSize: '0.875rem',
+        fontWeight: 500,
+      }}
+    >
+      Loading...
+    </Box>
+  </Box>
+);
 
 // This component handles the core logic for redirecting users
 function AppRoutes() {
@@ -64,7 +97,8 @@ function AppRoutes() {
         <div style={{ paddingTop: '80px' }}>
           <Container maxWidth="xl" sx={{ py: 3 }}>
             <Breadcrumbs />
-            <Routes>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/generate-workout" element={<WorkoutGenerator />} />
             <Route path="/workout-session" element={<WorkoutSession />} />
@@ -88,7 +122,8 @@ function AppRoutes() {
 
             {/* Fallback route for any other logged-in paths */}
             <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+              </Routes>
+            </Suspense>
           </Container>
         </div>
       </>
@@ -110,6 +145,7 @@ function AppRoutes() {
 
 function App() {
   return (
+    <ErrorBoundary>
       <AuthProvider>
         <PreferencesProvider>
           <AchievementsProvider>
@@ -123,6 +159,7 @@ function App() {
           </AchievementsProvider>
         </PreferencesProvider>
       </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
