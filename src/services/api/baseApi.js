@@ -1,8 +1,26 @@
 // src/services/api/baseApi.js - Base API Client
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+// Determine API URL based on environment
+const getApiBaseUrl = () => {
+  // If env var is set, use it
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+
+  // Otherwise, detect based on hostname
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:8000/api/v1';
+  }
+
+  // Production fallback - always use HTTPS for deployed apps
+  return 'https://evolvefitaibackend-production.up.railway.app/api/v1';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 // Log API URL for debugging
+console.log('🔧 Environment:', process.env.NODE_ENV);
+console.log('🔧 Hostname:', window.location.hostname);
 console.log('🔧 API Base URL:', API_BASE_URL);
 console.log('🔧 REACT_APP_API_URL env var:', process.env.REACT_APP_API_URL);
 
