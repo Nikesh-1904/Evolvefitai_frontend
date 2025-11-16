@@ -92,7 +92,7 @@ class CommunityService extends BaseApiClient {
    */
   async getUserBookings(params = {}) {
     console.log(`📋 Fetching user bookings`);
-    return this.get('/users/me/bookings/', params);
+    return this.get('/users/bookings/', params);
   }
 
   /**
@@ -100,7 +100,15 @@ class CommunityService extends BaseApiClient {
    */
   async cancelBooking(bookingId) {
     console.log(`❌ Cancelling booking ID: ${bookingId}`);
-    return this.delete(`/users/me/bookings/${bookingId}`);
+    return this.delete(`/users/bookings/${bookingId}`);
+  }
+
+  /**
+   * Get gym leaderboard
+   */
+  async getLeaderboard(limit = 10) {
+    console.log(`🏆 Fetching gym leaderboard`);
+    return this.get('/gyms/leaderboard/my-gym', { limit });
   }
 }
 
