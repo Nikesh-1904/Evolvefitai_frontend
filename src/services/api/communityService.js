@@ -28,7 +28,7 @@ class CommunityService extends BaseApiClient {
    */
   async joinGymByCode(gymCode) {
     console.log(`🔑 Attempting to join gym with code: ${gymCode}`);
-    return this.post('/community/join-by-code', { gym_code: gymCode });
+    return this.post('/gyms/join-by-code', { gym_code: gymCode });
   }
 
   /**
@@ -52,7 +52,7 @@ class CommunityService extends BaseApiClient {
    */
   async fetchMyGymLeaderboard(limit = 10) {
     console.log(`🏆 Fetching leaderboard for current user's gym`);
-    return this.get('/community/leaderboard/my-gym', { limit });
+    return this.get('/gyms/leaderboard/my-gym', { limit });
   }
 
   /**

@@ -42,6 +42,8 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import NotificationPanel from './NotificationPanel';
 import authService from '../services/api/authService';
 
 // Hide on scroll
@@ -97,6 +99,7 @@ function NavbarNew() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
 
   // Menu states
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
@@ -104,28 +107,7 @@ function NavbarNew() {
   const [workoutsMenuAnchor, setWorkoutsMenuAnchor] = useState(null);
   const [nutritionMenuAnchor, setNutritionMenuAnchor] = useState(null);
   const [communityMenuAnchor, setCommunityMenuAnchor] = useState(null);
-
-  // Notifications
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    const fetchUnreadCount = async () => {
-      if (!user) return;
-      try {
-        const data = await authService.getNotifications();
-        const count = data.notifications?.filter((n) => !n.is_read).length || 0;
-        setUnreadCount(count);
-      } catch (err) {
-        console.error('Failed to fetch notifications:', err);
-      }
-    };
-
-    if (user) {
-      fetchUnreadCount();
-      const interval = setInterval(fetchUnreadCount, 60000);
-      return () => clearInterval(interval);
-    }
-  }, [user]);
+  const [notificationsAnchor, setNotificationsAnchor] = useState(null);
 
   const handleOpenMenu = (setter) => (event) => {
     setter(event.currentTarget);
@@ -456,7 +438,7 @@ function NavbarNew() {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {/* Notifications */}
               <IconButton
-                onClick={() => navigate('/notifications')}
+                onClick={handleOpenMenu(setNotificationsAnchor)}
                 sx={{
                   color: '#FFFFFF',
                   '&:hover': {
@@ -468,6 +450,15 @@ function NavbarNew() {
                   <NotificationsIcon />
                 </Badge>
               </IconButton>
+              <NotificationPanel
+                anchorEl={notificationsAnchor}
+                open={Boolean(notificationsAnchor)}
+                onClose={handleCloseMenu(setNotificationsAnchor)}
+                notifications={notifications}
+                loading={loading}
+                onMarkAsRead={markAsRead}
+                onMarkAllAsRead={markAllAsRead}
+              />
 
               {/* User Menu */}
               <IconButton onClick={handleOpenMenu(setUserMenuAnchor)} sx={{ p: 0 }}>

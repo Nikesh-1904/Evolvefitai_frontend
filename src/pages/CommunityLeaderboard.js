@@ -10,7 +10,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   Avatar,
   Chip,
 } from '@mui/material';
@@ -21,6 +20,7 @@ import TimerIcon from '@mui/icons-material/Timer';
 import { useAuth } from '../contexts/AuthContext';
 import { PageContainer, LoadingSpinner, Alert } from '../components/design-system';
 import { useLeaderboard } from '../hooks';
+import ModernCard from '../components/ModernCard';
 
 const CommunityLeaderboard = () => {
   const { user } = useAuth();
@@ -48,15 +48,7 @@ const CommunityLeaderboard = () => {
 
       {/* Gym Info Card */}
       {leaderboard?.gym && (
-        <Paper sx={{
-          mb: 4,
-          p: 3,
-          background: 'rgba(26, 31, 46, 0.8)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: 3,
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-        }}>
+        <ModernCard variant="glass" sx={{ mb: 4 }}>
           <Box display="flex" alignItems="center" gap={2}>
             <FitnessCenterIcon sx={{ fontSize: 40, color: '#00D4FF' }} />
             <Box>
@@ -68,19 +60,14 @@ const CommunityLeaderboard = () => {
               </Typography>
             </Box>
           </Box>
-        </Paper>
+        </ModernCard>
       )}
 
       {/* Leaderboard Table */}
       {leaderboard?.leaderboard && leaderboard.leaderboard.length > 0 ? (
-        <TableContainer
-            component={Paper}
+        <ModernCard variant="glass" contentSx={{ p: 0 }}>
+          <TableContainer
             sx={{
-              background: 'rgba(26, 31, 46, 0.8)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: 3,
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
               overflow: 'hidden',
             }}
           >
@@ -222,15 +209,9 @@ const CommunityLeaderboard = () => {
               </TableBody>
             </Table>
           </TableContainer>
+        </ModernCard>
         ) : (
-          <Paper sx={{
-            p: 6,
-            textAlign: 'center',
-            background: 'rgba(26, 31, 46, 0.8)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: 3,
-          }}>
+          <ModernCard variant="glass" contentSx={{ textAlign: 'center', py: 6 }}>
             <EmojiEventsIcon sx={{ fontSize: 80, color: '#94A3B8', mb: 2 }} />
             <Typography variant="h6" sx={{ color: 'white', mb: 1 }}>
               No Leaderboard Data Yet
@@ -238,7 +219,7 @@ const CommunityLeaderboard = () => {
             <Typography variant="body2" sx={{ color: '#94A3B8' }}>
               Start working out to appear on the leaderboard!
             </Typography>
-          </Paper>
+          </ModernCard>
         )}
     </PageContainer>
   );

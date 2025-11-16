@@ -1,6 +1,6 @@
 // src/pages/Notifications.js - Notifications Center
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Typography,
   Box,
@@ -26,7 +26,7 @@ import {
 import { PageContainer } from '../components/design-system';
 import { Alert, EmptyState } from '../components/design-system';
 import ModernCard from '../components/ModernCard';
-import authService from '../services/api/authService';
+import { useNotifications } from '../contexts/NotificationContext';
 
 // Notification icon mapping
 const getNotificationIcon = (type) => {
@@ -53,38 +53,13 @@ const getNotificationColor = (type) => {
 };
 
 function Notifications() {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { notifications, unreadCount, loading, markAsRead, markAllAsRead, fetchNotifications } = useNotifications();
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
-
-  const fetchNotifications = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const data = await authService.getNotifications();
-      setNotifications(data.notifications || []);
-    } catch (err) {
-      console.error('Failed to fetch notifications:', err);
-      setError('Failed to load notifications. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await authService.markNotificationAsRead(notificationId);
-      // Update local state
-      setNotifications((prev) =>
-        prev.map((notif) =>
-          notif.id === notificationId ? { ...notif, is_read: true } : notif
-        )
-      );
+      await markAsRead(notificationId);
       setMessage('Notification marked as read');
       setTimeout(() => setMessage(''), 2000);
     } catch (err) {
@@ -96,15 +71,7 @@ function Notifications() {
 
   const handleMarkAllAsRead = async () => {
     try {
-      // Mark all unread notifications as read
-      const unreadNotifications = notifications.filter((n) => !n.is_read);
-      await Promise.all(
-        unreadNotifications.map((notif) =>
-          authService.markNotificationAsRead(notif.id)
-        )
-      );
-      // Update local state
-      setNotifications((prev) => prev.map((notif) => ({ ...notif, is_read: true })));
+      await markAllAsRead();
       setMessage('All notifications marked as read');
       setTimeout(() => setMessage(''), 2000);
     } catch (err) {
@@ -113,8 +80,6 @@ function Notifications() {
       setTimeout(() => setError(''), 3000);
     }
   };
-
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return (
     <PageContainer

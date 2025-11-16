@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { PreferencesProvider } from './contexts/PreferencesContext';
 import { AchievementsProvider } from './contexts/AchievementsContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 
 // Import components
 import NavbarNew from './components/NavbarNew';
@@ -110,11 +111,13 @@ function App() {
       <AuthProvider>
         <PreferencesProvider>
           <AchievementsProvider>
-            <DynamicThemeWrapper> {/* Reads preferences and applies the correct theme */}
-              <Router>
-                <AppRoutes />
-              </Router>
-            </DynamicThemeWrapper>
+            <NotificationProvider>
+              <DynamicThemeWrapper> {/* Reads preferences and applies the correct theme */}
+                <Router>
+                  <AppRoutes />
+                </Router>
+              </DynamicThemeWrapper>
+            </NotificationProvider>
           </AchievementsProvider>
         </PreferencesProvider>
       </AuthProvider>
