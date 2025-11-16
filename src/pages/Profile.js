@@ -757,33 +757,41 @@ function Profile() {
                   </Grid>
                 </Grid>
               ) : (
-                <Box component="form" onSubmit={handleJoinGymSubmit} noValidate>
-                  <Stack spacing={2}>
-                    <Typography variant="body1" sx={{ color: '#CBD5E1' }}>
-                      Enter the unique code provided by your gym to join its community leaderboard.
+                <Stack spacing={2}>
+                  <Typography variant="body1" sx={{ color: '#CBD5E1' }}>
+                    Enter the unique code provided by your gym to join its community leaderboard.
+                  </Typography>
+                  <ModernInput
+                    label="Gym Code"
+                    name="gym_code"
+                    value={gymCodeInput}
+                    onChange={(e) => setGymCodeInput(e.target.value)}
+                    placeholder="Enter gym code"
+                    variant="outlined"
+                    startIcon={<VpnKey />}
+                    error={!!gymCodeError}
+                    helperText={gymCodeError || gymCodeMessage || "Ask your gym administrator for the code."}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleJoinGymSubmit(e);
+                      }
+                    }}
+                  />
+                  <PrimaryButton
+                    onClick={handleJoinGymSubmit}
+                    loading={gymCodeLoading}
+                    disabled={loading || !gymCodeInput}
+                    sx={{ alignSelf: 'flex-start' }}
+                  >
+                    {gymCodeLoading ? 'Joining...' : 'Join Gym'}
+                  </PrimaryButton>
+                  {gymCodeMessage && (
+                    <Typography variant="body2" sx={{ color: '#10B981' }}>
+                      {gymCodeMessage}
                     </Typography>
-                    <ModernInput
-                      label="Gym Code"
-                      name="gym_code"
-                      value={gymCodeInput}
-                      onChange={(e) => setGymCodeInput(e.target.value)}
-                      placeholder="Enter gym code"
-                      required
-                      variant="outlined"
-                      startIcon={<VpnKey />}
-                      error={!!gymCodeError}
-                      helperText={gymCodeError || "Ask your gym administrator for the code."}
-                    />
-                    <PrimaryButton
-                      type="submit"
-                      loading={gymCodeLoading}
-                      disabled={loading}
-                      sx={{ alignSelf: 'flex-start' }}
-                    >
-                      {gymCodeLoading ? 'Joining...' : 'Join Gym'}
-                    </PrimaryButton>
-                  </Stack>
-                </Box>
+                  )}
+                </Stack>
               )}
             </ModernCard>
           </Grid>
