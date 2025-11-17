@@ -2,18 +2,28 @@
 
 // Determine API URL based on environment
 const getApiBaseUrl = () => {
+  let apiUrl = null;
+
   // If env var is set, use it
   if (process.env.REACT_APP_API_URL) {
-    return process.env.REACT_APP_API_URL;
+    apiUrl = process.env.REACT_APP_API_URL;
   }
-
   // Otherwise, detect based on hostname
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return 'http://localhost:8000/api/v1';
+  else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    apiUrl = 'http://localhost:8000/api/v1';
+  }
+  // Production fallback - always use HTTPS for deployed apps
+  else {
+    apiUrl = 'https://evolvefitaibackend-production.up.railway.app/api/v1';
   }
 
-  // Production fallback - always use HTTPS for deployed apps
-  return 'https://evolvefitaibackend-production.up.railway.app/api/v1';
+  // FORCE HTTPS if the URL starts with http:// and is not localhost
+  if (apiUrl.startsWith('http://') && !apiUrl.includes('localhost') && !apiUrl.includes('127.0.0.1')) {
+    console.warn('⚠️ Detected HTTP URL for production, forcing HTTPS:', apiUrl);
+    apiUrl = apiUrl.replace('http://', 'https://');
+  }
+
+  return apiUrl;
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -21,7 +31,7 @@ const API_BASE_URL = getApiBaseUrl();
 // Log API URL for debugging
 console.log('🔧 Environment:', process.env.NODE_ENV);
 console.log('🔧 Hostname:', window.location.hostname);
-console.log('🔧 API Base URL:', API_BASE_URL);
+console.log('🔧 Client Frontend API URL:', API_BASE_URL);
 console.log('🔧 REACT_APP_API_URL env var:', process.env.REACT_APP_API_URL);
 
 /**
