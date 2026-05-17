@@ -110,7 +110,7 @@ function LoginPage() {
           p: PAGE_X,
         }}
       >
-        <Box sx={{ display: 'inline-flex', alignItems: 'baseline', gap: 1, ...monoLabel, color: ev.chalkMute }}>
+        <Box sx={{ display: 'inline-flex', alignItems: 'baseline', gap: 0.75 }}>
           <Box
             component="span"
             sx={{
@@ -118,13 +118,15 @@ function LoginPage() {
               fontSize: 28,
               color: ev.chalk,
               letterSpacing: '-0.01em',
-              textTransform: 'none',
               lineHeight: 1,
             }}
           >
-            evolve
+            Evolvefit
           </Box>
-          <Box component="span" sx={{ fontFamily: ev.mono, fontSize: 10, color: ev.chalkMute, letterSpacing: '0.24em' }}>n.</Box>
+          <Box component="span" sx={{ fontFamily: ev.display, fontSize: 28, color: ev.accent, lineHeight: 1 }}>.</Box>
+          <Box component="span" sx={{ fontFamily: ev.display, fontStyle: 'italic', fontSize: 22, color: ev.chalkDim, lineHeight: 1, ml: 0.5 }}>
+            AI
+          </Box>
         </Box>
 
         <Box>
@@ -177,10 +179,12 @@ function LoginPage() {
         }}
       >
         <Box sx={{ maxWidth: 440, width: '100%', mx: 'auto' }}>
-          <Box sx={{ display: { xs: 'block', md: 'none' }, mb: 4 }}>
-            <Box sx={{ fontFamily: ev.display, fontSize: 32, color: ev.chalk, letterSpacing: '-0.01em' }}>
-              evolve<Box component="span" sx={{ color: ev.accent }}>.</Box>
+          <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'baseline', gap: 0.75, mb: 4 }}>
+            <Box sx={{ fontFamily: ev.display, fontSize: 32, color: ev.chalk, letterSpacing: '-0.01em', lineHeight: 1 }}>
+              Evolvefit
             </Box>
+            <Box sx={{ fontFamily: ev.display, fontSize: 32, color: ev.accent, lineHeight: 1 }}>.</Box>
+            <Box sx={{ fontFamily: ev.display, fontStyle: 'italic', fontSize: 24, color: ev.chalkDim, lineHeight: 1, ml: 0.5 }}>AI</Box>
           </Box>
 
           <Box sx={monoLabel}>

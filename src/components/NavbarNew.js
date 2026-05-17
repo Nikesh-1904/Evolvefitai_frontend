@@ -101,28 +101,28 @@ function NavbarNew() {
           sx={{
             cursor: 'pointer',
             fontFamily: ev.display,
-            fontSize: 20,
+            fontSize: 22,
             letterSpacing: '-0.01em',
             color: ev.chalk,
             lineHeight: 1,
             display: 'inline-flex',
             alignItems: 'baseline',
-            gap: 1,
+            gap: 0.75,
           }}
         >
-          evolve
+          Evolvefit
+          <Box component="span" sx={{ color: ev.accent }}>.</Box>
           <Box
             component="span"
             sx={{
-              fontFamily: ev.mono,
-              fontSize: 9,
-              letterSpacing: '0.22em',
-              color: ev.chalkMute,
-              textTransform: 'uppercase',
-              verticalAlign: 'super',
+              fontFamily: ev.display,
+              fontStyle: 'italic',
+              fontSize: 18,
+              color: ev.chalkDim,
+              ml: 0.25,
             }}
           >
-            n.
+            AI
           </Box>
         </Box>
 

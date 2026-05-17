@@ -121,8 +121,9 @@ function OnboardingPage() {
                   color: ev.chalk,
                 }}
               >
-                Welcome to <Box component="em" sx={{ fontStyle: 'italic', color: ev.chalkDim }}>evolve</Box>
-                <Box component="span" sx={{ color: ev.accent }}>.</Box>
+                Welcome to <Box component="em" sx={{ fontStyle: 'italic', color: ev.chalkDim }}>Evolvefit</Box>
+                <Box component="span" sx={{ color: ev.accent }}>.</Box>{' '}
+                <Box component="em" sx={{ fontStyle: 'italic', color: ev.chalkDim }}>AI</Box>
               </Box>
               <Box sx={{ mt: 4, maxWidth: '54ch', color: ev.chalk, fontSize: 16, lineHeight: 1.55, fontWeight: 500 }}>
                 Three quick steps to set up your profile. We'll use these to tailor what you see — workouts, plans, and the analysis on your dashboard.
@@ -324,8 +325,14 @@ function OnboardingPage() {
         py: 4,
         borderBottom: `1px solid ${ev.rule}`,
       }}>
-        <Box sx={{ ...display, fontSize: 22, color: ev.chalk, letterSpacing: '-0.01em' }}>
-          evolve<Box component="sup" sx={{ ...mono, fontSize: 9, color: ev.chalkMute, letterSpacing: '0.24em', ml: 1, verticalAlign: 'super' }}>n.</Box>
+        <Box sx={{ display: 'inline-flex', alignItems: 'baseline', gap: 0.75 }}>
+          <Box sx={{ ...display, fontSize: 22, color: ev.chalk, letterSpacing: '-0.01em', lineHeight: 1 }}>
+            Evolvefit
+          </Box>
+          <Box sx={{ ...display, fontSize: 22, color: ev.accent, lineHeight: 1 }}>.</Box>
+          <Box sx={{ ...display, fontStyle: 'italic', fontSize: 18, color: ev.chalkDim, lineHeight: 1, ml: 0.25 }}>
+            AI
+          </Box>
         </Box>
         <Box sx={{ display: 'flex', gap: 4 }}>
           {steps.map((s, i) => (

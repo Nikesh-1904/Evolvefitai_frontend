@@ -528,8 +528,9 @@ function Dashboard() {
 
       {/* ============ WORDMARK FOOTER ============ */}
       <Box sx={{ px: PAGE_X, pt: 'clamp(120px, 18vh, 220px)', pb: '64px', borderTop: `1px solid ${ev.rule}` }}>
-        <Box sx={{ ...display, fontSize: 'clamp(140px, 22vw, 320px)', lineHeight: 0.84, letterSpacing: '-0.04em', color: ev.chalk, m: 0 }}>
-          evolve<Box component="span" sx={{ color: ev.accent }}>.</Box>
+        <Box sx={{ ...display, fontSize: 'clamp(120px, 18vw, 260px)', lineHeight: 0.84, letterSpacing: '-0.04em', color: ev.chalk, m: 0 }}>
+          Evolvefit<Box component="span" sx={{ color: ev.accent }}>.</Box>
+          <Box component="span" sx={{ fontStyle: 'italic', color: ev.chalkDim, fontSize: '0.5em', verticalAlign: 'baseline', ml: '0.15em' }}>AI</Box>
         </Box>
         <Box sx={{ mt: '64px', display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: '32px', pt: '28px', borderTop: `1px solid ${ev.rule}`, ...monoLabel, color: ev.chalkMute }}>
           <Box><Box component="b" sx={{ color: ev.chalk, fontWeight: 500 }}>Build 2026.05</Box></Box>
