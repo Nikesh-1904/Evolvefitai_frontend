@@ -33,9 +33,6 @@ const AchievementsPanel = lazy(() => import('./components/AchievementsPanel'));
 const Notifications = lazy(() => import('./pages/Notifications'));
 const ExerciseLibrary = lazy(() => import('./pages/ExerciseLibrary'));
 const WorkoutRecommendations = lazy(() => import('./pages/WorkoutRecommendations'));
-const GymDiscovery = lazy(() => import('./pages/GymDiscovery'));
-const GymBookings = lazy(() => import('./pages/GymBookings'));
-const GymAccess = lazy(() => import('./pages/GymAccess'));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -104,9 +101,6 @@ function AppRoutes() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/exercises" element={<ExerciseLibrary />} />
             <Route path="/workout-recommendations" element={<WorkoutRecommendations />} />
-            <Route path="/gyms" element={<GymDiscovery />} />
-            <Route path="/gym-bookings" element={<GymBookings />} />
-            <Route path="/gym-access" element={<GymAccess />} />
             <Route path="/workout-plan/:planId" element={<WorkoutPlanDetail />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/onboarding" element={<OnboardingPage />} />

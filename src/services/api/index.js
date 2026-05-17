@@ -51,8 +51,6 @@ const api = {
 
   // Community methods
   joinGymByCode: (...args) => communityService.joinGymByCode(...args),
-  joinGym: (...args) => communityService.joinGym(...args),
-  fetchGymOccupancy: (...args) => communityService.fetchGymOccupancy(...args),
   getAchievementStatus: (...args) => communityService.getAchievementStatus(...args),
   unlockAchievement: (...args) => communityService.unlockAchievement(...args),
 };

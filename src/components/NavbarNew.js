@@ -23,15 +23,12 @@ import {
   FitnessCenter,
   Menu as MenuIcon,
   Dashboard,
-  People,
   Person,
   Notifications as NotificationsIcon,
   AutoAwesome,
   Lightbulb,
   LibraryBooks,
   Create,
-  Business,
-  CalendarMonth,
   ExpandMore,
   Settings,
   Logout,
@@ -71,17 +68,6 @@ const navigationConfig = {
       ],
     },
   ],
-  conditional: {
-    community: {
-      label: 'Community',
-      icon: <People />,
-      requiresGym: true,
-      items: [
-        { name: 'Discover Gyms', path: '/gyms', icon: <Business /> },
-        { name: 'My Bookings', path: '/gym-bookings', icon: <CalendarMonth /> },
-      ],
-    },
-  },
 };
 
 function NavbarNew() {
@@ -94,7 +80,6 @@ function NavbarNew() {
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
   const [userMenuAnchor, setUserMenuAnchor] = useState(null);
   const [workoutsMenuAnchor, setWorkoutsMenuAnchor] = useState(null);
-  const [communityMenuAnchor, setCommunityMenuAnchor] = useState(null);
   const [notificationsAnchor, setNotificationsAnchor] = useState(null);
 
   const handleOpenMenu = (setter) => (event) => {
@@ -201,23 +186,6 @@ function NavbarNew() {
                   </MenuItem>
                 ))}
 
-                {/* Community Section (if user has gym) */}
-                {user.gym_id && (
-                  <>
-                    <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', my: 1 }} />
-                    <MenuItem disabled sx={{ opacity: 0.5, py: 0.5 }}>
-                      <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600 }}>
-                        COMMUNITY
-                      </Typography>
-                    </MenuItem>
-                    {navigationConfig.conditional.community.items.map((item) => (
-                      <MenuItem key={item.path} onClick={handleNavigate(item.path, handleCloseMenu(setMobileMenuAnchor))}>
-                        <ListItemIcon>{React.cloneElement(item.icon, { sx: { color: '#00D4FF' } })}</ListItemIcon>
-                        <ListItemText>{item.name}</ListItemText>
-                      </MenuItem>
-                    ))}
-                  </>
-                )}
               </Menu>
             </Box>
 
@@ -308,56 +276,6 @@ function NavbarNew() {
                 ))}
               </Menu>
 
-              {/* Community Dropdown (conditional) */}
-              {user.gym_id && (
-                <>
-                  <Button
-                    onClick={handleOpenMenu(setCommunityMenuAnchor)}
-                    endIcon={<ExpandMore />}
-                    sx={{
-                      color: '#FFFFFF',
-                      textTransform: 'none',
-                      px: 2,
-                      '&:hover': {
-                        background: 'rgba(0, 212, 255, 0.1)',
-                      },
-                    }}
-                  >
-                    <People sx={{ mr: 1, fontSize: 20 }} />
-                    Community
-                  </Button>
-                  <Menu
-                    anchorEl={communityMenuAnchor}
-                    open={Boolean(communityMenuAnchor)}
-                    onClose={handleCloseMenu(setCommunityMenuAnchor)}
-                    PaperProps={{
-                      sx: {
-                        background: 'rgba(26, 31, 46, 0.95)',
-                        backdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        mt: 1,
-                        minWidth: 220,
-                      },
-                    }}
-                  >
-                    {navigationConfig.conditional.community.items.map((item) => (
-                      <MenuItem
-                        key={item.path}
-                        onClick={handleNavigate(item.path, handleCloseMenu(setCommunityMenuAnchor))}
-                        sx={{
-                          color: isActive(item.path) ? '#00D4FF' : '#FFFFFF',
-                          '&:hover': {
-                            background: 'rgba(0, 212, 255, 0.1)',
-                          },
-                        }}
-                      >
-                        <ListItemIcon>{React.cloneElement(item.icon, { sx: { color: isActive(item.path) ? '#00D4FF' : '#CBD5E1' } })}</ListItemIcon>
-                        <ListItemText>{item.name}</ListItemText>
-                      </MenuItem>
-                    ))}
-                  </Menu>
-                </>
-              )}
             </Box>
 
             {/* Right Side Icons */}

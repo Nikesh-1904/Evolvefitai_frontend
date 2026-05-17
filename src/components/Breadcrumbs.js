@@ -13,8 +13,6 @@ const routeNames = {
   '/exercises': 'Exercise Library',
   '/log-workout': 'Log Workout',
   '/workout-history': 'Workout History',
-  '/gyms': 'Discover Gyms',
-  '/gym-bookings': 'My Bookings',
   '/profile': 'Profile',
   '/analytics': 'Analytics',
   '/achievements': 'Achievements',
