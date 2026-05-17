@@ -304,10 +304,8 @@ function Dashboard() {
   const firstName = userName.split(' ')[0];
   const level = stats?.level_progress?.current_level ?? 1;
   const completed = stats?.workouts_completed ?? 0;
-  const todayMinutes = stats?.total_workout_time_hours
-    ? Math.round((stats.total_workout_time_hours) * 60)
-    : 0;
-  const todayCalories = stats?.total_calories_burned ?? 0;
+  const totalHours = stats?.total_workout_time_hours ?? 0;
+  const totalCalories = stats?.total_calories_burned ?? 0;
   const calChange = stats?.calories_change_percent ?? 0;
   const timeChange = stats?.time_change_percent ?? 0;
 
@@ -381,33 +379,37 @@ function Dashboard() {
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' } }}>
           <StatCell
             index={1}
-            label="Workouts done"
+            label="Workouts logged"
             value={completed}
-            sub={completed > 0 ? `Logged in this account` : 'No sessions yet'}
+            sub={completed > 0 ? 'All time' : 'No sessions yet'}
             isFirst
           />
           <StatCell
             index={2}
-            label="Time · today"
-            value={todayMinutes}
-            unit="min"
+            label="Total hours"
+            value={totalHours}
+            unit="hr"
             sub={
-              <>
-                {timeChange >= 0 ? '▲' : '▼'}{' '}
-                <Box component="b" sx={{ color: timeChange >= 0 ? ev.accent : ev.warn, fontWeight: 500 }}>{Math.abs(timeChange).toFixed(0)}%</Box> vs yesterday
-              </>
+              timeChange !== 0 ? (
+                <>
+                  {timeChange >= 0 ? '▲' : '▼'}{' '}
+                  <Box component="b" sx={{ color: timeChange >= 0 ? ev.accent : ev.warn, fontWeight: 500 }}>{Math.abs(timeChange).toFixed(0)}%</Box> vs prior period
+                </>
+              ) : 'All time'
             }
           />
           <StatCell
             index={3}
-            label="Calories · today"
-            value={todayCalories.toLocaleString()}
+            label="Total calories"
+            value={totalCalories.toLocaleString()}
             unit="kcal"
             sub={
-              <>
-                {calChange >= 0 ? '▲' : '▼'}{' '}
-                <Box component="b" sx={{ color: calChange >= 0 ? ev.accent : ev.warn, fontWeight: 500 }}>{Math.abs(calChange).toFixed(0)}%</Box> vs yesterday
-              </>
+              calChange !== 0 ? (
+                <>
+                  {calChange >= 0 ? '▲' : '▼'}{' '}
+                  <Box component="b" sx={{ color: calChange >= 0 ? ev.accent : ev.warn, fontWeight: 500 }}>{Math.abs(calChange).toFixed(0)}%</Box> vs prior period
+                </>
+              ) : 'All time'
             }
           />
           <StatCell

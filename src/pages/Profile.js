@@ -2,13 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { Box, Stack, CircularProgress, Alert } from '@mui/material';
-import { Save, Refresh } from '@mui/icons-material';
+import { Save } from '@mui/icons-material';
 
 import { useAuth } from '../contexts/AuthContext';
 import { usePreferences } from '../contexts/PreferencesContext';
 import { PageContainer } from '../components/design-system';
-import { communityService } from '../services/api';
-import authService from '../services/api/authService';
 import workoutService from '../services/api/workoutService';
 
 import ModernInput, { ModernSelect } from '../components/ModernInput';
@@ -35,26 +33,17 @@ const Section = ({ idx, title, italic, children }) => (
 );
 
 function Profile() {
-  const { user, updateProfile, fetchUserStats } = useAuth();
+  const { user, updateProfile } = useAuth();
   const { preferences } = usePreferences();
 
   const [formData, setFormData] = useState({
     full_name: '', username: '', age: '', weight: '', height: '', gender: '',
     fitness_goal: '', experience_level: '', activity_level: '', dietary_restrictions: [],
   });
-  const [gymCodeInput, setGymCodeInput] = useState('');
-  const [gymCodeLoading, setGymCodeLoading] = useState(false);
-  const [gymCodeMessage, setGymCodeMessage] = useState('');
-  const [gymCodeError, setGymCodeError] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [usernameError, setUsernameError] = useState('');
-
-  const [qrCodeData, setQrCodeData] = useState(null);
-  const [qrCodeLoading, setQrCodeLoading] = useState(false);
-  const [membershipInfo, setMembershipInfo] = useState(null);
-  const [membershipLoading, setMembershipLoading] = useState(false);
 
   const [workoutHistory, setWorkoutHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -77,37 +66,6 @@ function Profile() {
   }, [user]);
 
   useEffect(() => {
-    if (user?.gym_id) {
-      const fetchQRCode = async () => {
-        setQrCodeLoading(true);
-        try {
-          const data = await authService.getUserQRCode();
-          setQrCodeData(data);
-        } catch (err) {
-          console.error(err);
-          setQrCodeData(null);
-        } finally {
-          setQrCodeLoading(false);
-        }
-      };
-      const fetchMembershipInfo = async () => {
-        setMembershipLoading(true);
-        try {
-          const data = await authService.getMembershipInfo();
-          setMembershipInfo(data);
-        } catch (err) {
-          console.error(err);
-          setMembershipInfo(null);
-        } finally {
-          setMembershipLoading(false);
-        }
-      };
-      fetchQRCode();
-      fetchMembershipInfo();
-    }
-  }, [user?.gym_id]);
-
-  useEffect(() => {
     const fetchWorkoutHistory = async () => {
       setHistoryLoading(true);
       try {
@@ -122,32 +80,6 @@ function Profile() {
     };
     fetchWorkoutHistory();
   }, []);
-
-  const refetchQR = async () => {
-    if (!user?.gym_id) return;
-    setQrCodeLoading(true);
-    try {
-      const data = await authService.getUserQRCode();
-      setQrCodeData(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setQrCodeLoading(false);
-    }
-  };
-
-  const handleLeaveGym = async () => {
-    if (!user?.gym_id) return;
-    if (window.confirm('Leave this gym? You can join another later.')) {
-      try {
-        await communityService.leaveGym(user.gym_id);
-        setMessage('Left the gym. Reloading.');
-        setTimeout(() => window.location.reload(), 1500);
-      } catch (err) {
-        setError(err.message || 'Failed to leave gym.');
-      }
-    }
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -179,22 +111,6 @@ function Profile() {
       else setError(err.message || 'Failed to update profile');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleJoinGymSubmit = async (e) => {
-    e.preventDefault(); e.stopPropagation();
-    setGymCodeLoading(true); setGymCodeError(''); setGymCodeMessage('');
-    try {
-      const response = await communityService.joinGymByCode(gymCodeInput);
-      setGymCodeMessage(response.message || 'Joined. Reloading.');
-      setGymCodeInput('');
-      await fetchUserStats();
-      setTimeout(() => window.location.reload(), 1500);
-    } catch (err) {
-      setGymCodeError(err.message || 'Failed to join. Check the code.');
-    } finally {
-      setGymCodeLoading(false);
     }
   };
 
@@ -234,8 +150,6 @@ function Profile() {
     >
       {message && <Alert severity="success" onClose={() => setMessage('')} sx={{ mb: 3 }}>{message}</Alert>}
       {error && <Alert severity="error" onClose={() => setError('')} sx={{ mb: 3 }}>{error}</Alert>}
-      {gymCodeMessage && <Alert severity="success" onClose={() => setGymCodeMessage('')} sx={{ mb: 3 }}>{gymCodeMessage}</Alert>}
-      {gymCodeError && <Alert severity="error" onClose={() => setGymCodeError('')} sx={{ mb: 3 }}>{gymCodeError}</Alert>}
 
       <Box component="form" onSubmit={handleSubmit}>
 
@@ -360,120 +274,8 @@ function Profile() {
           />
         </Section>
 
-        {/* ============ GYM ============ */}
-        <Section idx={5} title="Gym" italic={user?.gym_id ? 'membership' : 'affiliation'}>
-          {user?.gym_id ? (
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 240px' }, gap: 5, alignItems: 'start' }}>
-              <Stack spacing={3} sx={{ ...mono, fontSize: 13, color: ev.chalk, letterSpacing: '0.06em' }}>
-                {membershipLoading ? (
-                  <CircularProgress size={20} />
-                ) : membershipInfo ? (
-                  <>
-                    <Box>
-                      <Box sx={monoLabel}>Gym</Box>
-                      <Box sx={{ ...display, fontSize: 24, letterSpacing: '-0.01em', color: ev.chalk, mt: 1.5 }}>
-                        {membershipInfo.gym_name || '—'}
-                      </Box>
-                    </Box>
-                    <Box>
-                      <Box sx={monoLabel}>Status</Box>
-                      <Box sx={{
-                        ...mono, fontSize: 13, letterSpacing: '0.16em', textTransform: 'uppercase',
-                        color: membershipInfo.membership_status === 'ACTIVE' ? ev.accent : ev.warn,
-                        mt: 1.5,
-                      }}>
-                        {membershipInfo.membership_status || 'ACTIVE'}
-                      </Box>
-                    </Box>
-                    {membershipInfo.membership_expiry && (
-                      <Box>
-                        <Box sx={monoLabel}>Expires</Box>
-                        <Box sx={{ ...mono, fontSize: 13, color: ev.chalk, mt: 1.5 }}>
-                          {new Date(membershipInfo.membership_expiry).toLocaleDateString()}
-                        </Box>
-                      </Box>
-                    )}
-                    <Box sx={{ pt: 2 }}>
-                      <SecondaryButton
-                        onClick={handleLeaveGym}
-                        sx={{ color: ev.warn, '&:hover': { borderColor: ev.warn, color: ev.warn } }}
-                      >
-                        Leave gym
-                      </SecondaryButton>
-                    </Box>
-                  </>
-                ) : (
-                  <Box sx={monoLabel}>Unable to load membership details</Box>
-                )}
-              </Stack>
-
-              <Box sx={{ textAlign: 'center', border: `1px solid ${ev.rule}`, p: 3 }}>
-                <Box sx={{ ...monoLabel, mb: 2 }}>Check-in QR</Box>
-                {qrCodeLoading ? (
-                  <Box sx={{ py: 6 }}><CircularProgress size={32} /></Box>
-                ) : qrCodeData?.qr_code_url ? (
-                  <>
-                    <Box sx={{ p: 1.5, backgroundColor: ev.chalk, display: 'inline-block' }}>
-                      <Box
-                        component="img"
-                        src={qrCodeData.qr_code_url}
-                        alt="User QR code"
-                        sx={{ width: 180, height: 180, display: 'block' }}
-                      />
-                    </Box>
-                    <Box sx={{ ...monoLabel, color: ev.chalkMute, mt: 2 }}>
-                      Scan at gym entrance
-                    </Box>
-                    <Box
-                      onClick={refetchQR}
-                      sx={{
-                        mt: 2,
-                        cursor: 'pointer',
-                        ...mono,
-                        fontSize: 11,
-                        letterSpacing: '0.18em',
-                        textTransform: 'uppercase',
-                        color: ev.chalkDim,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        '&:hover': { color: ev.accent },
-                      }}
-                    >
-                      <Refresh sx={{ fontSize: 14 }} /> Refresh
-                    </Box>
-                  </>
-                ) : (
-                  <Box sx={{ ...monoLabel, color: ev.chalkMute, py: 4 }}>QR not available</Box>
-                )}
-              </Box>
-            </Box>
-          ) : (
-            <Stack spacing={3}>
-              <Box sx={{ color: ev.chalkDim, fontSize: 15, lineHeight: 1.55 }}>
-                Enter your gym's unique code to link your account.
-              </Box>
-              <ModernInput
-                label="Gym code"
-                name="gym_code"
-                value={gymCodeInput}
-                onChange={(e) => setGymCodeInput(e.target.value)}
-                placeholder="e.g. ABC123"
-                error={!!gymCodeError}
-                helperText={gymCodeError || "Ask your gym admin for the code."}
-                onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleJoinGymSubmit(e); } }}
-              />
-              <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
-                <PrimaryButton onClick={handleJoinGymSubmit} loading={gymCodeLoading} disabled={loading || !gymCodeInput}>
-                  {gymCodeLoading ? 'Joining' : 'Join gym'}
-                </PrimaryButton>
-              </Box>
-            </Stack>
-          )}
-        </Section>
-
         {/* ============ RECENT ============ */}
-        <Section idx={6} title="Recent" italic="sessions">
+        <Section idx={5} title="Recent" italic="sessions">
           {historyLoading ? (
             <Box sx={{ display: 'grid', placeItems: 'center', py: 5 }}>
               <CircularProgress size={24} />

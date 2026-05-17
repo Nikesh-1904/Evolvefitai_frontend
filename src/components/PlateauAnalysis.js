@@ -1,37 +1,24 @@
-// src/components/PlateauAnalysis.js - AI-Powered Plateau Detection & Analysis
+// src/components/PlateauAnalysis.js — Evolve / minimal plateau analysis
 
 import React, { useState } from 'react';
-import {
-  Box,
-  Typography,
-  Button,
-  Stack,
-  Chip,
-  Alert as MuiAlert,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Collapse,
-} from '@mui/material';
-import {
-  TrendingFlat,
-  Lightbulb,
-  Warning,
-  CheckCircle,
-  ExpandMore,
-  ExpandLess,
-  AutoAwesome,
-  FitnessCenter,
-} from '@mui/icons-material';
-import ModernCard from './ModernCard';
+import { Box, Stack, Collapse, Alert } from '@mui/material';
 import { PrimaryButton, SecondaryButton } from './ModernButton';
 import analyticsService from '../services/api/analyticsService';
+import { ev } from '../theme/evolveDarkTheme';
 
-/**
- * PlateauAnalysis Component
- * Analyzes user's workout data to detect plateaus and provide AI-powered recommendations
- */
+const mono = { fontFamily: ev.mono };
+const display = { fontFamily: ev.display };
+const monoLabel = { ...mono, fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: ev.chalkDim };
+
+const statusColor = (status) => {
+  switch (status) {
+    case 'improving': return ev.accent;
+    case 'plateau':   return ev.chalkDim;
+    case 'declining': return ev.warn;
+    default:          return ev.chalkMute;
+  }
+};
+
 function PlateauAnalysis() {
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -39,242 +26,196 @@ function PlateauAnalysis() {
   const [expanded, setExpanded] = useState(false);
 
   const analyzeProgress = async () => {
-    setLoading(true);
-    setError('');
+    setLoading(true); setError('');
     try {
       const data = await analyticsService.analyzePlateaus();
       setAnalysis(data);
       setExpanded(true);
     } catch (err) {
-      console.error('Failed to analyze plateau:', err);
-      setError('Failed to analyze your progress. Make sure you have logged enough workouts.');
+      console.error(err);
+      setError('Failed to analyze. Log a few more workouts first.');
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'plateau':
-        return { bg: 'rgba(251, 191, 36, 0.2)', color: '#FBBF24', icon: <TrendingFlat /> };
-      case 'improving':
-        return { bg: 'rgba(16, 185, 129, 0.2)', color: '#10B981', icon: <CheckCircle /> };
-      case 'declining':
-        return { bg: 'rgba(239, 68, 68, 0.2)', color: '#EF4444', icon: <Warning /> };
-      default:
-        return { bg: 'rgba(148, 163, 184, 0.2)', color: '#94A3B8', icon: <FitnessCenter /> };
-    }
-  };
-
   return (
-    <ModernCard
-      title="AI Plateau Analysis"
-      subtitle="Detect plateaus and get personalized recommendations"
-      variant="glass"
-    >
-      {!analysis ? (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Box
-            sx={{
-              width: 80,
-              height: 80,
-              borderRadius: '20px',
-              background: 'linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              mx: 'auto',
-              mb: 3,
-            }}
-          >
-            <AutoAwesome sx={{ fontSize: 40, color: '#00D4FF' }} />
-          </Box>
-
-          <Typography variant="h6" sx={{ color: '#FFFFFF', mb: 1 }}>
-            Analyze Your Progress
-          </Typography>
-          <Typography variant="body2" sx={{ color: '#94A3B8', mb: 3, maxWidth: 400, mx: 'auto' }}>
-            Our AI will analyze your workout history to detect plateaus and provide personalized recommendations to help you break through.
-          </Typography>
-
-          {error && (
-            <MuiAlert severity="error" sx={{ mb: 3, maxWidth: 500, mx: 'auto' }}>
-              {error}
-            </MuiAlert>
-          )}
-
-          <PrimaryButton
-            onClick={analyzeProgress}
-            loading={loading}
-            disabled={loading}
-            startIcon={<AutoAwesome />}
-            size="large"
-          >
-            {loading ? 'Analyzing...' : 'Analyze My Progress'}
-          </PrimaryButton>
-        </Box>
-      ) : (
+    <Box>
+      <Box sx={{ display: { xs: 'block', md: 'grid' }, gridTemplateColumns: '1fr 1fr', alignItems: 'end', mb: '40px' }}>
         <Box>
-          {/* Overall Status */}
-          <Box sx={{ mb: 3 }}>
-            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
-              <Chip
-                icon={getStatusColor(analysis.overall_status).icon}
-                label={analysis.overall_status?.toUpperCase() || 'UNKNOWN'}
-                sx={{
-                  background: getStatusColor(analysis.overall_status).bg,
-                  color: getStatusColor(analysis.overall_status).color,
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                }}
-              />
-              {analysis.plateau_detected && (
-                <Chip
-                  icon={<Warning />}
-                  label="Plateau Detected"
-                  sx={{
-                    background: 'rgba(251, 191, 36, 0.2)',
-                    color: '#FBBF24',
-                    fontWeight: 600,
-                  }}
-                />
-              )}
-            </Stack>
+          <Box sx={monoLabel}>AI · plateau analysis</Box>
+          <Box sx={{ ...display, fontSize: 'clamp(32px, 4vw, 48px)', lineHeight: 1, letterSpacing: '-0.02em', color: ev.chalk, mt: 1.5 }}>
+            Where are you <Box component="em" sx={{ fontStyle: 'italic', color: ev.chalkDim }}>stuck?</Box>
+          </Box>
+        </Box>
+        {!analysis && (
+          <Box sx={{ justifySelf: { md: 'end' }, mt: { xs: 3, md: 0 } }}>
+            <PrimaryButton onClick={analyzeProgress} loading={loading} disabled={loading}>
+              {loading ? 'Analyzing' : 'Run analysis ↗'}
+            </PrimaryButton>
+          </Box>
+        )}
+      </Box>
 
+      {error && <Alert severity="error" sx={{ mb: 4 }}>{error}</Alert>}
+
+      {!analysis && !loading && !error && (
+        <Box sx={{
+          py: '64px',
+          borderTop: `1px solid ${ev.rule}`,
+          borderBottom: `1px solid ${ev.rule}`,
+          textAlign: 'center',
+        }}>
+          <Box sx={{ ...display, fontSize: 28, color: ev.chalk, letterSpacing: '-0.015em' }}>
+            Not analyzed yet<Box component="span" sx={{ color: ev.accent }}>.</Box>
+          </Box>
+          <Box sx={{ ...monoLabel, color: ev.chalkMute, mt: 2, maxWidth: '52ch', mx: 'auto', lineHeight: 1.55 }}>
+            The model will look at your recent training and tell you which lifts are stalling and what to do about it.
+          </Box>
+        </Box>
+      )}
+
+      {analysis && (
+        <Box>
+          {/* Overall status row */}
+          <Box sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: '180px 1fr' },
+            gap: 4,
+            py: 5,
+            borderTop: `1px solid ${ev.rule}`,
+            borderBottom: `1px solid ${ev.rule}`,
+          }}>
+            <Box>
+              <Box sx={monoLabel}>Overall</Box>
+              <Box sx={{
+                ...mono,
+                fontSize: 13,
+                letterSpacing: '0.16em',
+                textTransform: 'uppercase',
+                color: statusColor(analysis.overall_status),
+                mt: 1.5,
+              }}>
+                {analysis.overall_status || 'Unknown'}
+                {analysis.plateau_detected && (
+                  <Box component="span" sx={{ ml: 1.5, color: ev.warn }}>· plateau</Box>
+                )}
+              </Box>
+            </Box>
             {analysis.summary && (
-              <Typography variant="body1" sx={{ color: '#FFFFFF', mb: 2 }}>
+              <Box sx={{ color: ev.chalk, fontSize: 15, lineHeight: 1.55, fontWeight: 400, maxWidth: '60ch' }}>
                 {analysis.summary}
-              </Typography>
+              </Box>
             )}
           </Box>
 
-          {/* AI Recommendations */}
-          {analysis.recommendations && analysis.recommendations.length > 0 && (
-            <Box
-              sx={{
-                p: 3,
-                borderRadius: '16px',
-                background: 'rgba(0, 212, 255, 0.05)',
-                border: '1px solid rgba(0, 212, 255, 0.2)',
-                mb: 3,
-              }}
-            >
-              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-                <Lightbulb sx={{ color: '#00D4FF' }} />
-                <Typography variant="h6" sx={{ color: '#FFFFFF', fontWeight: 600 }}>
-                  AI Recommendations
-                </Typography>
-              </Stack>
-
-              <List sx={{ p: 0 }}>
-                {analysis.recommendations.slice(0, expanded ? undefined : 3).map((rec, index) => (
-                  <ListItem
-                    key={index}
-                    sx={{
-                      px: 0,
-                      py: 1,
-                      alignItems: 'flex-start',
-                    }}
-                  >
-                    <ListItemIcon sx={{ minWidth: 32, mt: 0.5 }}>
-                      <CheckCircle sx={{ color: '#10B981', fontSize: 20 }} />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={rec.title || rec}
-                      secondary={rec.description}
-                      primaryTypographyProps={{
-                        sx: { color: '#FFFFFF', fontWeight: 600, fontSize: '0.875rem' },
-                      }}
-                      secondaryTypographyProps={{
-                        sx: { color: '#CBD5E1', fontSize: '0.8125rem' },
-                      }}
-                    />
-                  </ListItem>
-                ))}
-              </List>
+          {/* Recommendations */}
+          {analysis.recommendations?.length > 0 && (
+            <Box sx={{ py: 5, borderBottom: `1px solid ${ev.rule}` }}>
+              <Box sx={{ ...monoLabel, mb: 3 }}>Recommendations · {analysis.recommendations.length}</Box>
+              <Box>
+                {analysis.recommendations.slice(0, expanded ? undefined : 3).map((rec, i) => {
+                  const title = typeof rec === 'string' ? rec : (rec.title || rec.content);
+                  const description = typeof rec === 'string' ? null : rec.description;
+                  return (
+                    <Box key={i} sx={{
+                      display: 'grid',
+                      gridTemplateColumns: '40px 1fr',
+                      gap: 3,
+                      alignItems: 'baseline',
+                      py: 3,
+                      borderTop: `1px solid ${ev.rule}`,
+                      '&:last-of-type': { borderBottom: `1px solid ${ev.rule}` },
+                    }}>
+                      <Box sx={{ ...mono, fontSize: 11, letterSpacing: '0.1em', color: ev.chalkMute }}>
+                        {String(i + 1).padStart(2, '0')}
+                      </Box>
+                      <Box>
+                        <Box sx={{ ...display, fontSize: 20, color: ev.chalk, letterSpacing: '-0.005em', lineHeight: 1.2 }}>
+                          {title}
+                        </Box>
+                        {description && (
+                          <Box sx={{ mt: 1.5, color: ev.chalkDim, fontSize: 14, lineHeight: 1.55, maxWidth: '60ch' }}>
+                            {description}
+                          </Box>
+                        )}
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Box>
 
               {analysis.recommendations.length > 3 && (
-                <Button
+                <Box
                   onClick={() => setExpanded(!expanded)}
-                  endIcon={expanded ? <ExpandLess /> : <ExpandMore />}
                   sx={{
-                    color: '#00D4FF',
-                    textTransform: 'none',
-                    fontSize: '0.875rem',
-                    mt: 1,
+                    mt: 3,
+                    display: 'inline-flex',
+                    cursor: 'pointer',
+                    ...monoLabel,
+                    color: ev.chalkDim,
+                    '&:hover': { color: ev.accent },
                   }}
                 >
-                  {expanded ? 'Show Less' : `Show ${analysis.recommendations.length - 3} More`}
-                </Button>
+                  {expanded ? '↑ Show less' : `↓ Show ${analysis.recommendations.length - 3} more`}
+                </Box>
               )}
             </Box>
           )}
 
-          {/* Exercise-Specific Analysis */}
-          {analysis.exercise_analysis && analysis.exercise_analysis.length > 0 && (
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" sx={{ color: '#FFFFFF', mb: 2, fontWeight: 600 }}>
-                Exercise Breakdown
-              </Typography>
-
-              <Stack spacing={2}>
-                {analysis.exercise_analysis.map((exercise, index) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      p: 2,
-                      borderRadius: '12px',
-                      background: 'rgba(255, 255, 255, 0.03)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                    }}
-                  >
-                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                      <Typography variant="body1" sx={{ color: '#FFFFFF', fontWeight: 600 }}>
+          {/* Exercise breakdown */}
+          {analysis.exercise_analysis?.length > 0 && (
+            <Box sx={{ py: 5, borderBottom: `1px solid ${ev.rule}` }}>
+              <Box sx={{ ...monoLabel, mb: 3 }}>Exercise breakdown</Box>
+              <Box>
+                {analysis.exercise_analysis.map((exercise, i) => (
+                  <Box key={i} sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '30px 1fr auto', md: '40px 1fr auto' },
+                    gap: 3,
+                    alignItems: 'baseline',
+                    py: 2.5,
+                    borderTop: `1px solid ${ev.rule}`,
+                    '&:last-of-type': { borderBottom: `1px solid ${ev.rule}` },
+                  }}>
+                    <Box sx={{ ...mono, fontSize: 11, letterSpacing: '0.1em', color: ev.chalkMute }}>
+                      {String(i + 1).padStart(2, '0')}
+                    </Box>
+                    <Box>
+                      <Box sx={{ ...display, fontSize: 18, color: ev.chalk, letterSpacing: '-0.005em', lineHeight: 1.2 }}>
                         {exercise.exercise_name}
-                      </Typography>
-                      <Chip
-                        size="small"
-                        label={exercise.status?.toUpperCase() || 'N/A'}
-                        sx={{
-                          background: getStatusColor(exercise.status).bg,
-                          color: getStatusColor(exercise.status).color,
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                        }}
-                      />
-                    </Stack>
-                    {exercise.note && (
-                      <Typography variant="caption" sx={{ color: '#CBD5E1' }}>
-                        {exercise.note}
-                      </Typography>
-                    )}
+                      </Box>
+                      {exercise.note && (
+                        <Box sx={{ ...monoLabel, color: ev.chalkMute, mt: 1 }}>{exercise.note}</Box>
+                      )}
+                    </Box>
+                    <Box sx={{
+                      ...mono,
+                      fontSize: 11,
+                      letterSpacing: '0.16em',
+                      textTransform: 'uppercase',
+                      color: statusColor(exercise.status),
+                    }}>
+                      {exercise.status || 'N/A'}
+                    </Box>
                   </Box>
                 ))}
-              </Stack>
+              </Box>
             </Box>
           )}
 
-          {/* Action Buttons */}
-          <Stack direction="row" spacing={2} justifyContent="center">
-            <SecondaryButton
-              onClick={() => setAnalysis(null)}
-              size="small"
-            >
-              Close
-            </SecondaryButton>
-            <PrimaryButton
-              onClick={analyzeProgress}
-              loading={loading}
-              disabled={loading}
-              startIcon={<AutoAwesome />}
-              size="small"
-            >
-              Re-Analyze
+          {/* Actions */}
+          <Box sx={{ pt: 4, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            <PrimaryButton onClick={analyzeProgress} loading={loading} disabled={loading}>
+              {loading ? 'Analyzing' : 'Re-analyze ↗'}
             </PrimaryButton>
-          </Stack>
+            <SecondaryButton onClick={() => { setAnalysis(null); setExpanded(false); }}>
+              Clear
+            </SecondaryButton>
+          </Box>
         </Box>
       )}
-    </ModernCard>
+    </Box>
   );
 }
 

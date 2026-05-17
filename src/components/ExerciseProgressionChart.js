@@ -1,20 +1,8 @@
-// src/components/ExerciseProgressionChart.js - Exercise Progression Tracking
+// src/components/ExerciseProgressionChart.js — Evolve / minimal exercise progression
 
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  CircularProgress,
-  Chip,
-  Stack,
-} from '@mui/material';
-import {
-  Line
-} from 'react-chartjs-2';
+import { Box, CircularProgress, Alert } from '@mui/material';
+import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -26,30 +14,17 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import {
-  TrendingUp,
-  TrendingDown,
-  Remove as TrendingFlat,
-} from '@mui/icons-material';
+
 import analyticsService from '../services/api/analyticsService';
-import ModernCard from './ModernCard';
+import { ModernSelect } from './ModernInput';
+import { ev } from '../theme/evolveDarkTheme';
 
-// Register Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
-/**
- * ExerciseProgressionChart Component
- * Displays progression chart for a specific exercise over time
- */
+const mono = { fontFamily: ev.mono };
+const display = { fontFamily: ev.display };
+const monoLabel = { ...mono, fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: ev.chalkDim };
+
 function ExerciseProgressionChart() {
   const [selectedExercise, setSelectedExercise] = useState('');
   const [exerciseList, setExerciseList] = useState([]);
@@ -58,40 +33,34 @@ function ExerciseProgressionChart() {
   const [loadingExercises, setLoadingExercises] = useState(true);
   const [error, setError] = useState('');
 
-  // Fetch list of logged exercises on mount
   useEffect(() => {
+    const fetchLoggedExercises = async () => {
+      setLoadingExercises(true);
+      try {
+        const exercises = await analyticsService.getLoggedExercises();
+        setExerciseList(exercises || []);
+        if (exercises && exercises.length > 0) {
+          setSelectedExercise(exercises[0]);
+          fetchProgressionData(exercises[0]);
+        }
+      } catch (err) {
+        console.error(err);
+        setError('Failed to load exercise list');
+      } finally {
+        setLoadingExercises(false);
+      }
+    };
     fetchLoggedExercises();
   }, []);
 
-  const fetchLoggedExercises = async () => {
-    setLoadingExercises(true);
-    try {
-      const exercises = await analyticsService.getLoggedExercises();
-      setExerciseList(exercises || []);
-
-      // Auto-select first exercise if available
-      if (exercises && exercises.length > 0) {
-        setSelectedExercise(exercises[0]);
-        fetchProgressionData(exercises[0]);
-      }
-    } catch (err) {
-      console.error('Failed to fetch logged exercises:', err);
-      setError('Failed to load exercise list');
-    } finally {
-      setLoadingExercises(false);
-    }
-  };
-
   const fetchProgressionData = async (exerciseName) => {
     if (!exerciseName) return;
-
-    setLoading(true);
-    setError('');
+    setLoading(true); setError('');
     try {
       const data = await analyticsService.getExerciseProgression(exerciseName);
       setProgressionData(data);
     } catch (err) {
-      console.error('Failed to fetch progression data:', err);
+      console.error(err);
       setError('Failed to load progression data');
       setProgressionData(null);
     } finally {
@@ -105,93 +74,70 @@ function ExerciseProgressionChart() {
     fetchProgressionData(exercise);
   };
 
-  // Calculate trend
   const calculateTrend = () => {
-    if (!progressionData || !progressionData.progression || progressionData.progression.length < 2) {
+    if (!progressionData?.progression || progressionData.progression.length < 2) {
       return { direction: 'flat', percentage: 0 };
     }
-
     const data = progressionData.progression;
     const firstValue = data[0].max_weight || data[0].max_reps || 0;
     const lastValue = data[data.length - 1].max_weight || data[data.length - 1].max_reps || 0;
-
     if (firstValue === 0) return { direction: 'flat', percentage: 0 };
-
     const percentage = ((lastValue - firstValue) / firstValue) * 100;
     const direction = percentage > 5 ? 'up' : percentage < -5 ? 'down' : 'flat';
-
     return { direction, percentage: Math.abs(percentage).toFixed(1) };
   };
 
   const trend = calculateTrend();
+  const trendColor = trend.direction === 'up' ? ev.accent : trend.direction === 'down' ? ev.warn : ev.chalkMute;
+  const trendArrow = trend.direction === 'up' ? '▲' : trend.direction === 'down' ? '▼' : '·';
 
-  // Prepare chart data
   const prepareChartData = () => {
-    if (!progressionData || !progressionData.progression) {
-      return null;
-    }
-
+    if (!progressionData?.progression) return null;
     const labels = progressionData.progression.map((item) =>
-      new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      new Date(item.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
     );
 
     const datasets = [];
+    const baseDataset = {
+      tension: 0.32,
+      pointRadius: 3,
+      pointBorderColor: ev.ink,
+      pointBorderWidth: 1,
+      borderWidth: 1.5,
+      fill: true,
+    };
 
-    // Weight-based progression
     if (progressionData.progression.some((item) => item.max_weight !== null)) {
       datasets.push({
-        label: 'Max Weight (kg)',
+        ...baseDataset,
+        label: 'Max weight · kg',
         data: progressionData.progression.map((item) => item.max_weight),
-        borderColor: '#00D4FF',
-        backgroundColor: 'rgba(0, 212, 255, 0.1)',
-        tension: 0.4,
-        fill: true,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        pointBackgroundColor: '#00D4FF',
-        pointBorderColor: '#FFFFFF',
-        pointBorderWidth: 2,
+        borderColor: ev.chalk,
+        backgroundColor: 'rgba(236, 233, 226, 0.06)',
+        pointBackgroundColor: ev.chalk,
       });
     }
-
-    // Reps progression
     if (progressionData.progression.some((item) => item.max_reps !== null)) {
       datasets.push({
-        label: 'Max Reps',
+        ...baseDataset,
+        label: 'Max reps',
         data: progressionData.progression.map((item) => item.max_reps),
-        borderColor: '#10B981',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        tension: 0.4,
-        fill: true,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        pointBackgroundColor: '#10B981',
-        pointBorderColor: '#FFFFFF',
-        pointBorderWidth: 2,
+        borderColor: ev.accent,
+        backgroundColor: 'rgba(201, 255, 74, 0.06)',
+        pointBackgroundColor: ev.accent,
       });
     }
-
-    // Volume progression (sets * reps * weight)
     if (progressionData.progression.some((item) => item.total_volume !== null)) {
       datasets.push({
-        label: 'Total Volume',
+        ...baseDataset,
+        label: 'Total volume',
         data: progressionData.progression.map((item) => item.total_volume),
-        borderColor: '#7C3AED',
-        backgroundColor: 'rgba(124, 58, 237, 0.1)',
-        tension: 0.4,
-        fill: true,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        pointBackgroundColor: '#7C3AED',
-        pointBorderColor: '#FFFFFF',
-        pointBorderWidth: 2,
+        borderColor: ev.chalkDim,
+        backgroundColor: 'rgba(163, 160, 154, 0.04)',
+        pointBackgroundColor: ev.chalkDim,
       });
     }
-
-    return {
-      labels,
-      datasets,
-    };
+    return { labels, datasets };
   };
 
   const chartData = prepareChartData();
@@ -203,219 +149,123 @@ function ExerciseProgressionChart() {
       legend: {
         display: true,
         position: 'top',
+        align: 'start',
         labels: {
-          color: '#FFFFFF',
-          font: {
-            size: 12,
-            family: 'Montserrat, sans-serif',
-          },
-          padding: 15,
+          color: ev.chalkDim,
+          font: { family: ev.mono, size: 10 },
           usePointStyle: true,
+          boxWidth: 8,
+          padding: 16,
         },
       },
       tooltip: {
-        backgroundColor: 'rgba(26, 31, 46, 0.95)',
-        titleColor: '#FFFFFF',
-        bodyColor: '#CBD5E1',
-        borderColor: 'rgba(0, 212, 255, 0.3)',
-        borderWidth: 1,
-        padding: 12,
-        displayColors: true,
+        mode: 'index',
+        intersect: false,
+        backgroundColor: ev.chalk,
+        titleColor: ev.ink,
+        bodyColor: ev.ink,
+        borderWidth: 0,
+        cornerRadius: 0,
+        displayColors: false,
+        padding: 10,
+        titleFont: { family: ev.mono, size: 10, weight: '500' },
+        bodyFont: { family: ev.mono, size: 11, weight: '500' },
         callbacks: {
-          label: function (context) {
-            let label = context.dataset.label || '';
-            if (label) {
-              label += ': ';
-            }
-            if (context.parsed.y !== null) {
-              label += context.parsed.y.toFixed(1);
-            }
-            return label;
+          label: (ctx) => {
+            const label = ctx.dataset.label || '';
+            return label ? `${label}: ${ctx.parsed.y?.toFixed(1) ?? ''}` : '';
           },
         },
       },
     },
     scales: {
       x: {
-        grid: {
-          color: 'rgba(255, 255, 255, 0.05)',
-          drawBorder: false,
-        },
-        ticks: {
-          color: '#94A3B8',
-          font: {
-            size: 11,
-          },
-        },
+        grid: { display: false },
+        border: { display: false },
+        ticks: { color: ev.chalkMute, font: { family: ev.mono, size: 10 } },
       },
       y: {
-        grid: {
-          color: 'rgba(255, 255, 255, 0.05)',
-          drawBorder: false,
-        },
-        ticks: {
-          color: '#94A3B8',
-          font: {
-            size: 11,
-          },
-        },
         beginAtZero: true,
+        grid: { color: ev.rule, drawBorder: false },
+        border: { display: false },
+        ticks: { color: ev.chalkMute, font: { family: ev.mono, size: 10 } },
       },
     },
-    interaction: {
-      intersect: false,
-      mode: 'index',
-    },
+    interaction: { intersect: false, mode: 'index' },
   };
 
   return (
-    <ModernCard
-      title="Exercise Progression Tracker"
-      subtitle="Track your strength gains and improvements over time"
-      variant="glass"
-    >
-      {/* Exercise Selector */}
-      <Box sx={{ mb: 3 }}>
-        <FormControl fullWidth>
-          <InputLabel
-            sx={{
-              color: '#94A3B8',
-              '&.Mui-focused': {
-                color: '#00D4FF',
-              },
-            }}
-          >
-            Select Exercise
-          </InputLabel>
-          <Select
-            value={selectedExercise}
-            onChange={handleExerciseChange}
-            disabled={loadingExercises || exerciseList.length === 0}
-            label="Select Exercise"
-            sx={{
-              color: '#FFFFFF',
-              '.MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(255, 255, 255, 0.1)',
-              },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(0, 212, 255, 0.3)',
-              },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#00D4FF',
-              },
-              '.MuiSvgIcon-root': {
-                color: '#94A3B8',
-              },
-            }}
-          >
-            {exerciseList.map((exercise) => (
-              <MenuItem
-                key={exercise}
-                value={exercise}
-                sx={{
-                  color: '#FFFFFF',
-                  '&:hover': {
-                    background: 'rgba(0, 212, 255, 0.1)',
-                  },
-                  '&.Mui-selected': {
-                    background: 'rgba(0, 212, 255, 0.2)',
-                    '&:hover': {
-                      background: 'rgba(0, 212, 255, 0.3)',
-                    },
-                  },
-                }}
-              >
-                {exercise}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+    <Box>
+      <Box sx={{ display: { xs: 'block', md: 'grid' }, gridTemplateColumns: '1fr 1fr', alignItems: 'end', mb: 5 }}>
+        <Box>
+          <Box sx={monoLabel}>Exercise tracker</Box>
+          <Box sx={{ ...display, fontSize: 'clamp(32px, 4vw, 48px)', letterSpacing: '-0.02em', color: ev.chalk, mt: 1.5, lineHeight: 1 }}>
+            Strength <Box component="em" sx={{ fontStyle: 'italic', color: ev.chalkDim }}>over time</Box>
+          </Box>
+        </Box>
+        {progressionData?.progression?.length > 1 && (
+          <Box sx={{ justifySelf: { md: 'end' }, display: 'flex', gap: 4, mt: { xs: 3, md: 0 } }}>
+            <Box sx={{ textAlign: { md: 'right' } }}>
+              <Box sx={monoLabel}>Trend</Box>
+              <Box sx={{ ...mono, fontSize: 14, color: trendColor, letterSpacing: '0.08em', mt: 1 }}>
+                {trendArrow} {trend.direction === 'flat' ? 'flat' : `${trend.percentage}%`}
+              </Box>
+            </Box>
+            <Box sx={{ textAlign: { md: 'right' } }}>
+              <Box sx={monoLabel}>Sessions</Box>
+              <Box sx={{ ...display, fontSize: 24, color: ev.chalk, letterSpacing: '-0.01em', mt: 0.5 }}>
+                {String(progressionData.progression.length).padStart(2, '0')}
+              </Box>
+            </Box>
+          </Box>
+        )}
       </Box>
 
-      {/* Trend Indicator */}
-      {progressionData && progressionData.progression && progressionData.progression.length > 1 && (
-        <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-          <Chip
-            icon={
-              trend.direction === 'up' ? (
-                <TrendingUp />
-              ) : trend.direction === 'down' ? (
-                <TrendingDown />
-              ) : (
-                <TrendingFlat />
-              )
-            }
-            label={`${trend.direction === 'up' ? '+' : trend.direction === 'down' ? '-' : ''}${trend.percentage}%`}
-            sx={{
-              background:
-                trend.direction === 'up'
-                  ? 'rgba(16, 185, 129, 0.2)'
-                  : trend.direction === 'down'
-                  ? 'rgba(239, 68, 68, 0.2)'
-                  : 'rgba(148, 163, 184, 0.2)',
-              color:
-                trend.direction === 'up' ? '#10B981' : trend.direction === 'down' ? '#EF4444' : '#94A3B8',
-              fontWeight: 600,
-            }}
-          />
-          <Chip
-            label={`${progressionData.progression.length} workouts tracked`}
-            sx={{
-              background: 'rgba(0, 212, 255, 0.1)',
-              color: '#00D4FF',
-              fontWeight: 600,
-            }}
-          />
-        </Stack>
-      )}
+      {/* Selector */}
+      <Box sx={{ maxWidth: 480, mb: 5 }}>
+        <ModernSelect
+          label="Select exercise"
+          value={selectedExercise}
+          onChange={handleExerciseChange}
+          disabled={loadingExercises || exerciseList.length === 0}
+          options={exerciseList.map((ex) => ({ value: ex, label: ex }))}
+          placeholder={loadingExercises ? 'Loading' : 'Choose an exercise'}
+        />
+      </Box>
 
-      {/* Loading State */}
-      {loading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress sx={{ color: '#00D4FF' }} />
-        </Box>
-      )}
-
-      {/* Error State */}
-      {error && !loading && (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography variant="body1" sx={{ color: '#EF4444' }}>
-            {error}
-          </Typography>
-        </Box>
-      )}
-
-      {/* Empty State */}
-      {!loading && !error && exerciseList.length === 0 && (
-        <Box sx={{ textAlign: 'center', py: 6 }}>
-          <Typography variant="h6" sx={{ color: '#FFFFFF', mb: 1 }}>
-            No Exercise Data Yet
-          </Typography>
-          <Typography variant="body2" sx={{ color: '#94A3B8' }}>
-            Start logging workouts to track your progression!
-          </Typography>
-        </Box>
-      )}
+      {error && <Alert severity="error" sx={{ mb: 4 }}>{error}</Alert>}
 
       {/* Chart */}
-      {!loading && !error && chartData && chartData.datasets.length > 0 && (
-        <Box sx={{ height: 350 }}>
-          <Line data={chartData} options={chartOptions} />
-        </Box>
-      )}
+      <Box sx={{ height: 360 }}>
+        {loading && (
+          <Box sx={{ display: 'grid', placeItems: 'center', height: '100%' }}>
+            <CircularProgress size={28} />
+          </Box>
+        )}
 
-      {/* No Data for Selected Exercise */}
-      {!loading && !error && selectedExercise && (!progressionData || !progressionData.progression || progressionData.progression.length === 0) && (
-        <Box sx={{ textAlign: 'center', py: 6 }}>
-          <Typography variant="h6" sx={{ color: '#FFFFFF', mb: 1 }}>
-            No Data Available
-          </Typography>
-          <Typography variant="body2" sx={{ color: '#94A3B8' }}>
-            No progression data found for {selectedExercise}
-          </Typography>
-        </Box>
-      )}
-    </ModernCard>
+        {!loading && !error && exerciseList.length === 0 && !loadingExercises && (
+          <Box sx={{ display: 'grid', placeItems: 'center', height: '100%', textAlign: 'center' }}>
+            <Box>
+              <Box sx={{ ...display, fontSize: 28, color: ev.chalk }}>No exercise data yet</Box>
+              <Box sx={{ ...monoLabel, mt: 1.5 }}>Start logging workouts to populate this</Box>
+            </Box>
+          </Box>
+        )}
+
+        {!loading && !error && chartData && chartData.datasets.length > 0 && (
+          <Line data={chartData} options={chartOptions} />
+        )}
+
+        {!loading && !error && selectedExercise && progressionData?.progression?.length === 0 && (
+          <Box sx={{ display: 'grid', placeItems: 'center', height: '100%', textAlign: 'center' }}>
+            <Box>
+              <Box sx={{ ...display, fontSize: 28, color: ev.chalk }}>No data for "{selectedExercise}"</Box>
+              <Box sx={{ ...monoLabel, mt: 1.5 }}>Log this exercise to track progression</Box>
+            </Box>
+          </Box>
+        )}
+      </Box>
+    </Box>
   );
 }
 
