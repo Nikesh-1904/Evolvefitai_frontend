@@ -33,7 +33,6 @@ import {
   Add,
   Remove,
   Mic,
-  Videocam,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { workoutService } from '../services/api';
@@ -44,7 +43,6 @@ import ModernInput from '../components/ModernInput';
 import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
 import { PageContainer, Alert } from '../components/design-system';
 import VoiceWorkoutLogger from '../components/VoiceWorkoutLogger';
-import FormCorrectionAI from '../components/FormCorrectionAI';
 
 const FreestyleLog = () => {
   const navigate = useNavigate();
@@ -61,7 +59,6 @@ const FreestyleLog = () => {
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [isVoiceLoggerOpen, setVoiceLoggerOpen] = useState(false);
-  const [isFormAnalysisOpen, setFormAnalysisOpen] = useState(false);
 
   // All original handlers preserved exactly
   const handleSearchChange = async (event, value) => {
@@ -135,12 +132,6 @@ const FreestyleLog = () => {
         }
       ]);
     }
-  };
-
-  const handleFormAnalyzed = (analysis) => {
-    setError('');
-    console.log('Form analysis:', analysis);
-    // You can display a success message or add the analyzed exercise to the log
   };
 
   const handleAddSet = (exerciseIndex) => {
@@ -491,22 +482,6 @@ const FreestyleLog = () => {
                       <Mic />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="AI Form Check - Analyze your exercise form" arrow>
-                    <IconButton
-                      onClick={() => setFormAnalysisOpen(true)}
-                      sx={{
-                        background: 'linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%)',
-                        color: '#FFFFFF',
-                        '&:hover': {
-                          background: 'linear-gradient(135deg, #6B2FD4 0%, #9673E6 100%)',
-                          transform: 'scale(1.05)',
-                        },
-                        transition: 'all 0.2s ease',
-                      }}
-                    >
-                      <Videocam />
-                    </IconButton>
-                  </Tooltip>
                 </Stack>
               }
             >
@@ -774,13 +749,6 @@ const FreestyleLog = () => {
         isOpen={isVoiceLoggerOpen}
         onClose={() => setVoiceLoggerOpen(false)}
         onExerciseLogged={handleVoiceExerciseLogged}
-      />
-
-      {/* Form Correction AI */}
-      <FormCorrectionAI
-        isOpen={isFormAnalysisOpen}
-        onClose={() => setFormAnalysisOpen(false)}
-        onFormAnalyzed={handleFormAnalyzed}
       />
     </PageContainer>
   );

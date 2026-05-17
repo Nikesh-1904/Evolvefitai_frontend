@@ -25,7 +25,6 @@ import {
   LocalDining,
   Coffee,
   TrendingUp,
-  CameraAlt,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -40,7 +39,6 @@ import { useGenerateMealPlan, useSaveMealPlan } from '../hooks/useMeals';
 import ModernCard, { StatCard } from '../components/ModernCard';
 import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
 import AIModelBadge from '../components/AIModelBadge';
-import MealPhotoRecognition from '../components/MealPhotoRecognition';
 
 const MealPlanGenerator = () => {
   const { user } = useAuth();
@@ -52,7 +50,6 @@ const MealPlanGenerator = () => {
   // State management
   const [mealPlan, setMealPlan] = useState(null);
   const [success, setSuccess] = useState('');
-  const [isPhotoRecognitionOpen, setPhotoRecognitionOpen] = useState(false);
 
   const error = generateError
     ? (generateError.message || 'An unexpected error occurred.')
@@ -101,12 +98,6 @@ const MealPlanGenerator = () => {
       console.error('Failed to save meal plan:', err);
       setSuccess(''); // Clear any previous success message
     }
-  };
-
-  const handleMealAnalyzed = (analysis) => {
-    setSuccess(`✨ Meal analyzed! ${analysis.meal_name} - ${analysis.nutrition?.calories || 0} calories detected.`);
-    console.log('Meal analysis:', analysis);
-    // You can add logic here to save to meal log if needed
   };
 
   // Get meal icon based on type
@@ -261,19 +252,6 @@ const MealPlanGenerator = () => {
               {generating ? 'Generating Your Plan...' : 'Generate My Meal Plan'}
             </PrimaryButton>
 
-            <SecondaryButton
-              onClick={() => setPhotoRecognitionOpen(true)}
-              size="large"
-              startIcon={<CameraAlt />}
-              sx={{
-                minWidth: '280px',
-                height: '60px',
-                fontSize: '1.125rem',
-                fontWeight: 700,
-              }}
-            >
-              Analyze Meal Photo
-            </SecondaryButton>
           </Stack>
 
           {generating && (
@@ -570,12 +548,6 @@ const MealPlanGenerator = () => {
         </Box>
       </ModernCard>
 
-      {/* Meal Photo Recognition Modal */}
-      <MealPhotoRecognition
-        isOpen={isPhotoRecognitionOpen}
-        onClose={() => setPhotoRecognitionOpen(false)}
-        onMealAnalyzed={handleMealAnalyzed}
-      />
     </PageContainer>
   );
 };
