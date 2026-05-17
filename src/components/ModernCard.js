@@ -156,7 +156,7 @@ export const QuickActionCard = ({ icon, title, description, onClick, gradient, .
         }}>
           {title}
         </Box>
-        <Box sx={{ mt: 1.5, fontFamily: ev.body, fontWeight: 300, fontSize: 13, lineHeight: 1.55, color: ev.chalkDim }}>
+        <Box sx={{ mt: 1.5, fontFamily: ev.body, fontWeight: 400, fontSize: 13, lineHeight: 1.55, color: ev.chalkDim }}>
           {description}
         </Box>
       </Box>

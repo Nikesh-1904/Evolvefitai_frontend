@@ -146,7 +146,7 @@ function LoginPage() {
             Train<Box component="span" sx={{ color: ev.accent }}>.</Box><br />
             <Box component="em" sx={{ fontStyle: 'italic', color: ev.chalkDim }}>refined.</Box>
           </Box>
-          <Box sx={{ mt: 5, maxWidth: '42ch', color: ev.chalkDim, fontWeight: 300, fontSize: 15, lineHeight: 1.55 }}>
+          <Box sx={{ mt: 5, maxWidth: '42ch', color: ev.chalkDim, fontWeight: 400, fontSize: 15, lineHeight: 1.55 }}>
             An AI training platform built for athletes who want their programming to actually adapt — to their body, their goals, the rep they just left in the rack.
           </Box>
         </Box>

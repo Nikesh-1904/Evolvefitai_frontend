@@ -239,7 +239,7 @@ function WorkoutGenerator() {
               {workoutPlan.name || 'Your session'}
             </Box>
             {workoutPlan.description && (
-              <Box sx={{ mt: 3, maxWidth: '60ch', color: ev.chalkDim, fontWeight: 300, fontSize: 15, lineHeight: 1.55 }}>
+              <Box sx={{ mt: 3, maxWidth: '60ch', color: ev.chalkDim, fontWeight: 400, fontSize: 15, lineHeight: 1.55 }}>
                 {workoutPlan.description}
               </Box>
             )}
@@ -309,7 +309,7 @@ function WorkoutGenerator() {
                       {exercise.name}
                     </Box>
                     {exercise.instructions && (
-                      <Box sx={{ mt: 1.5, color: ev.chalkDim, fontWeight: 300, fontSize: 13, lineHeight: 1.55, maxWidth: '70ch' }}>
+                      <Box sx={{ mt: 1.5, color: ev.chalkDim, fontWeight: 400, fontSize: 13, lineHeight: 1.55, maxWidth: '70ch' }}>
                         {exercise.instructions}
                       </Box>
                     )}

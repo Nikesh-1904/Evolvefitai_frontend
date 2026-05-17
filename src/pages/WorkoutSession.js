@@ -628,7 +628,7 @@ function WorkoutSession() {
           <Box sx={{ fontFamily: ev.display, fontSize: 36, color: ev.chalk, letterSpacing: '-0.015em', mt: 1 }}>Cancel session?</Box>
         </DialogTitle>
         <DialogContent sx={{ p: 4 }}>
-          <Box sx={{ color: ev.chalkDim, fontSize: 15, lineHeight: 1.55, fontWeight: 300 }}>
+          <Box sx={{ color: ev.chalkDim, fontSize: 15, lineHeight: 1.55, fontWeight: 400 }}>
             Logged data for this session will be lost. This cannot be undone.
           </Box>
         </DialogContent>
@@ -647,7 +647,7 @@ function WorkoutSession() {
         </DialogTitle>
         <DialogContent sx={{ p: 4 }}>
           {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
-          <Box sx={{ color: ev.chalkDim, fontSize: 15, lineHeight: 1.55, fontWeight: 300, mb: 4 }}>
+          <Box sx={{ color: ev.chalkDim, fontSize: 15, lineHeight: 1.55, fontWeight: 400, mb: 4 }}>
             Total session duration in minutes (pre-filled from your live timer).
           </Box>
           <ModernInput

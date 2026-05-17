@@ -1,800 +1,371 @@
-// src/pages/WorkoutHistory.js - Modern AI Fitness Workout History & Progress Tracking
+// src/pages/WorkoutHistory.js — Evolve / minimal history + plans
 
 import React, { useState } from 'react';
 import {
-  Typography,
   Box,
-  Grid,
-  Chip,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Stack,
-  Avatar,
+  IconButton,
   Tabs,
   Tab,
-  IconButton,
-  Fade,
-  Slide,
-  Zoom,
 } from '@mui/material';
-import {
-  CalendarToday,
-  Timer,
-  FitnessCenter,
-  AutoAwesome,
-  PlayArrow,
-  History,
-  Speed,
-  Assessment,
-  Close,
-  Visibility,
-  MonitorWeight,
-  DirectionsRun,
-  SelfImprovement,
-} from '@mui/icons-material';
-import AIModelBadge from '../components/AIModelBadge';
+import { Close } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
-// Import new design system components
 import { PageContainer } from '../components/design-system';
 import { LoadingSpinner } from '../components/design-system/Loading';
-
-// Import new hooks
 import { useWorkoutPlans, useWorkoutLogs } from '../hooks/useWorkouts';
+import { SecondaryButton } from '../components/ModernButton';
+import { ev } from '../theme/evolveDarkTheme';
 
-// Import our modern components
-import ModernCard, { StatCard } from '../components/ModernCard';
-import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
-import ContextualHelp from '../components/ContextualHelp';
+const mono = { fontFamily: ev.mono };
+const display = { fontFamily: ev.display };
 
-function TabPanel({ children, value, index }) {
+const monoLabel = { ...mono, fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: ev.chalkDim };
+const monoMeta  = { ...mono, fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: ev.chalkDim };
+
+const dialogPaper = {
+  sx: {
+    backgroundColor: ev.ink,
+    border: `1px solid ${ev.rule}`,
+    borderRadius: 0,
+    maxHeight: '85vh',
+  },
+};
+
+function StatCell({ index, label, value, unit, isLast, isFirst }) {
   return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`history-tabpanel-${index}`}
-      aria-labelledby={`history-tab-${index}`}
+    <Box
+      sx={{
+        py: '40px',
+        px: { xs: 3, md: '36px' },
+        pl: { md: isFirst ? 0 : '36px' },
+        pr: { md: isLast ? 0 : '36px' },
+        borderRight: { md: isLast ? 'none' : `1px solid ${ev.rule}` },
+        borderBottom: { xs: isLast ? 'none' : `1px solid ${ev.rule}`, md: 'none' },
+      }}
     >
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
-    </div>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <Box sx={monoLabel}>{label}</Box>
+        <Box sx={{ ...monoLabel, color: ev.chalkMute }}>{String(index).padStart(2, '0')}</Box>
+      </Box>
+      <Box sx={{ ...display, fontSize: 'clamp(40px, 4.5vw, 60px)', lineHeight: 0.95, letterSpacing: '-0.025em', color: ev.chalk, mt: '24px' }}>
+        {value}
+        {unit && (
+          <Box component="span" sx={{ ...mono, fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase', color: ev.chalkMute, ml: '6px' }}>
+            {unit}
+          </Box>
+        )}
+      </Box>
+    </Box>
   );
 }
 
-function WorkoutHistory() {
-  const [selectedWorkout, setSelectedWorkout] = useState(null);
-  const [tabValue, setTabValue] = useState(0);
+const formatSetDisplay = (set, exerciseType) => {
+  switch (exerciseType) {
+    case 'WEIGHT_BASED':       return `${set.weight}kg × ${set.reps}`;
+    case 'REPS_ONLY':          return `${set.reps} reps`;
+    case 'DURATION':           return `${set.duration_seconds}s`;
+    case 'DISTANCE_DURATION':  return `${set.distance_km}km in ${set.duration_seconds}s`;
+    case 'QUALITATIVE':        return set.notes || `${set.duration_seconds}s`;
+    default:                   return `${set.weight || 0}kg × ${set.reps || 0}`;
+  }
+};
 
-  // Use new hooks for data fetching
+function WorkoutHistory() {
+  const navigate = useNavigate();
+  const [selectedWorkout, setSelectedWorkout] = useState(null);
+  const [tab, setTab] = useState(0);
+
   const { data: workoutLogs, loading: logsLoading } = useWorkoutLogs();
   const { data: workoutPlans, loading: plansLoading } = useWorkoutPlans();
 
   const loading = logsLoading || plansLoading;
   const workouts = workoutLogs || [];
 
-  const handleWorkoutClick = (workout) => {
-    setSelectedWorkout(workout);
-  };
-
-  const handleCloseDialog = () => {
-    setSelectedWorkout(null);
-  };
-
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
-  };
-
-  // Get exercise type info
-  const getExerciseTypeInfo = (exerciseType) => {
-    switch (exerciseType) {
-      case 'WEIGHT_BASED':
-        return { icon: <MonitorWeight />, color: '#00D4FF', label: 'Weight Based' };
-      case 'REPS_ONLY':
-        return { icon: <FitnessCenter />, color: '#10B981', label: 'Reps Only' };
-      case 'DURATION':
-        return { icon: <Timer />, color: '#7C3AED', label: 'Duration' };
-      case 'DISTANCE_DURATION':
-        return { icon: <DirectionsRun />, color: '#FF3366', label: 'Distance + Time' };
-      case 'QUALITATIVE':
-        return { icon: <SelfImprovement />, color: '#F59E0B', label: 'Qualitative' };
-      default:
-        return { icon: <FitnessCenter />, color: '#94A3B8', label: 'Exercise' };
-    }
-  };
-
-  const formatSetDisplay = (set, exerciseType) => {
-    switch (exerciseType) {
-      case 'WEIGHT_BASED':
-        return `${set.weight}kg × ${set.reps}`;
-      case 'REPS_ONLY':
-        return `${set.reps} reps`;
-      case 'DURATION':
-        return `${set.duration_seconds}s`;
-      case 'DISTANCE_DURATION':
-        return `${set.distance_km}km in ${set.duration_seconds}s`;
-      case 'QUALITATIVE':
-        return set.notes || `${set.duration_seconds}s`;
-      default:
-        return `${set.weight || 0}kg × ${set.reps || 0}`;
-    }
-  };
-
-  // Calculate stats
   const totalHours = Math.round(workouts.reduce((sum, w) => sum + (w.duration_minutes || 0), 0) / 60);
-  const aiGeneratedCount = (workoutPlans || []).filter(p => p.ai_generated).length;
-  const thisWeekWorkouts = workouts.filter(w => {
-    const workoutDate = new Date(w.workout_date);
+  const aiGeneratedCount = (workoutPlans || []).filter((p) => p.ai_generated).length;
+  const thisWeekWorkouts = workouts.filter((w) => {
+    const d = new Date(w.workout_date);
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
-    return workoutDate >= weekAgo;
+    return d >= weekAgo;
   }).length;
 
-  // Sort workouts by date (most recent first)
-  const sortedWorkouts = [...workouts].sort((a, b) =>
-    new Date(b.workout_date) - new Date(a.workout_date)
-  );
+  const sortedWorkouts = [...workouts].sort((a, b) => new Date(b.workout_date) - new Date(a.workout_date));
+  const sortedPlans = [...(workoutPlans || [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-  // Sort plans by creation date (most recent first)
-  const sortedPlans = [...(workoutPlans || [])].sort((a, b) =>
-    new Date(b.created_at) - new Date(a.created_at)
-  );
-
-  if (loading) {
-    return <LoadingSpinner fullScreen message="Loading your workout history..." />;
-  }
+  if (loading) return <LoadingSpinner fullScreen message="Loading history" />;
 
   return (
     <PageContainer
-      title="Your Fitness Journey"
-      subtitle="Track your progress, review your workouts, and celebrate your achievements"
-      icon="📈"
-      maxWidth="lg"
+      title="History"
+      subtitle="Every session you've logged. Every plan you've built. A complete record of what you've actually done."
     >
+      {/* ============ STATS ============ */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, borderTop: `1px solid ${ev.rule}`, borderBottom: `1px solid ${ev.rule}`, mb: 6 }}>
+        <StatCell index={1} label="Sessions logged" value={workouts.length}            isFirst />
+        <StatCell index={2} label="Total time"      value={totalHours}                 unit="hr" />
+        <StatCell index={3} label="Active plans"    value={(workoutPlans || []).length} />
+        <StatCell index={4} label="AI generated"    value={aiGeneratedCount}            isLast />
+      </Box>
 
-        {/* Summary Stats */}
-        <Zoom in timeout={700}>
-          <Box>
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-              <Grid item xs={6} md={3}>
-                <StatCard
-                  icon={<FitnessCenter />}
-                  value={workouts.length}
-                  label="Total Workouts"
-                  variant="stat"
-                  sx={{
-                    background: 'linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%)',
-                    border: '1px solid rgba(0, 212, 255, 0.2)',
-                  }}
-                />
-              </Grid>
-              <Grid item xs={6} md={3}>
-                <StatCard
-                  icon={<Assessment />}
-                  value={workoutPlans.length}
-                  label="Workout Plans"
-                  variant="stat"
-                  sx={{
-                    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)',
-                    border: '1px solid rgba(16, 185, 129, 0.2)',
-                  }}
-                />
-              </Grid>
-              <Grid item xs={6} md={3}>
-                <StatCard
-                  icon={<Timer />}
-                  value={`${totalHours}h`}
-                  label="Total Time"
-                  variant="stat"
-                  sx={{
-                    background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%)',
-                    border: '1px solid rgba(124, 58, 237, 0.2)',
-                  }}
-                />
-              </Grid>
-              <Grid item xs={6} md={3}>
-                <StatCard
-                  icon={<AutoAwesome />}
-                  value={aiGeneratedCount}
-                  label="AI Generated"
-                  variant="stat"
-                  sx={{
-                    background: 'linear-gradient(135deg, rgba(255, 51, 102, 0.1) 0%, rgba(255, 51, 102, 0.05) 100%)',
-                    border: '1px solid rgba(255, 51, 102, 0.2)',
-                  }}
-                />
-              </Grid>
-            </Grid>
+      {/* ============ TABS ============ */}
+      <Tabs
+        value={tab}
+        onChange={(_, v) => setTab(v)}
+        sx={{
+          borderBottom: `1px solid ${ev.rule}`,
+          minHeight: 'auto',
+          mb: 4,
+          '& .MuiTabs-indicator': { backgroundColor: ev.accent, height: '1px' },
+          '& .MuiTab-root': {
+            ...mono,
+            fontSize: 11,
+            letterSpacing: '0.18em',
+            color: ev.chalkMute,
+            minHeight: 'auto',
+            py: 2.5,
+            px: 0,
+            mr: 5,
+            '&.Mui-selected': { color: ev.chalk },
+          },
+        }}
+      >
+        <Tab label="Sessions" />
+        <Tab label="Plans" />
+      </Tabs>
+
+      {/* ============ SESSIONS TAB ============ */}
+      {tab === 0 && (
+        <Box>
+          <Box sx={{ ...monoLabel, mb: 4 }}>
+            {workouts.length} total · <Box component="b" sx={{ color: ev.chalk, fontWeight: 500 }}>{thisWeekWorkouts}</Box> this week
           </Box>
-        </Zoom>
 
-        {/* Navigation Tabs */}
-        <Fade in timeout={900}>
-          <Box>
-            <ModernCard variant="glass" sx={{ mb: 4 }}>
-              <Tabs
-                value={tabValue}
-                onChange={handleTabChange}
+          {sortedWorkouts.length === 0 ? (
+            <Box sx={{ py: '64px', borderTop: `1px solid ${ev.rule}`, borderBottom: `1px solid ${ev.rule}`, textAlign: 'center' }}>
+              <Box sx={{ ...display, fontSize: 28, color: ev.chalk }}>Nothing logged yet</Box>
+              <Box sx={{ ...monoLabel, color: ev.chalkMute, mt: 1.5 }}>Your sessions will appear here once you log them</Box>
+              <Box
+                onClick={() => navigate('/log-workout')}
                 sx={{
-                  '& .MuiTabs-indicator': {
-                    background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
-                    height: 3,
-                    borderRadius: '3px',
-                  },
-                  '& .MuiTab-root': {
-                    color: '#94A3B8',
-                    fontWeight: 600,
-                    textTransform: 'none',
-                    fontSize: '1rem',
-                    minWidth: 120,
-                    '&.Mui-selected': {
-                      color: '#FFFFFF',
-                    },
-                  },
+                  display: 'inline-flex',
+                  mt: 4,
+                  cursor: 'pointer',
+                  ...mono,
+                  fontSize: 11,
+                  letterSpacing: '0.2em',
+                  textTransform: 'uppercase',
+                  color: ev.chalk,
+                  borderBottom: `1px solid ${ev.chalk}`,
+                  pb: '4px',
+                  '&:hover': { color: ev.accent, borderColor: ev.accent },
                 }}
               >
-                <Tab
-                  icon={<History />}
-                  label="Workout History"
-                  iconPosition="start"
-                  sx={{ gap: 1 }}
-                />
-                <Tab
-                  icon={<Assessment />}
-                  label="My Plans"
-                  iconPosition="start"
-                  sx={{ gap: 1 }}
-                />
-              </Tabs>
-            </ModernCard>
-          </Box>
-        </Fade>
-
-        {/* Tab Panels */}
-        <TabPanel value={tabValue} index={0}>
-          {/* Completed Workouts */}
-          <Slide direction="right" in timeout={1100}>
+                Log a workout ↗
+              </Box>
+            </Box>
+          ) : (
             <Box>
-              <ModernCard
-                title="🏋️ Completed Workouts"
-                subtitle={`${workouts.length} total sessions • ${thisWeekWorkouts} this week`}
-                variant="glass"
-                sx={{ mb: 3 }}
-              >
-                {sortedWorkouts.length === 0 ? (
-                  <Box sx={{ 
-                    textAlign: 'center', 
-                    py: 6,
-                    color: '#94A3B8',
-                  }}>
-                    <Box
-                      sx={{
-                        width: 120,
-                        height: 120,
-                        borderRadius: '30px',
-                        background: 'linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#00D4FF',
-                        fontSize: '3rem',
-                        mx: 'auto',
-                        mb: 3,
-                      }}
-                    >
-                      <FitnessCenter sx={{ fontSize: '3rem' }} />
+              {sortedWorkouts.map((w, i) => {
+                const exerciseCount = w.exercises_completed?.length || 0;
+                const setCount = w.exercises_completed?.reduce((s, ex) => s + (ex.sets?.length || 0), 0) || 0;
+                return (
+                  <Box
+                    key={i}
+                    onClick={() => setSelectedWorkout(w)}
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: { xs: '30px 1fr auto', md: '40px 1fr 120px 120px 120px 24px' },
+                      gap: '28px',
+                      alignItems: 'baseline',
+                      py: '28px',
+                      borderTop: `1px solid ${ev.rule}`,
+                      '&:last-of-type': { borderBottom: `1px solid ${ev.rule}` },
+                      cursor: 'pointer',
+                      transition: 'padding-left .2s ease',
+                      '&:hover': { pl: '12px', '& .row-arrow': { color: ev.accent } },
+                    }}
+                  >
+                    <Box sx={{ ...mono, fontSize: 11, letterSpacing: '0.1em', color: ev.chalkMute }}>
+                      {String(i + 1).padStart(2, '0')}
                     </Box>
-                    
-                    <Typography variant="h5" sx={{ color: '#FFFFFF', fontWeight: 600, mb: 1 }}>
-                      No workouts completed yet
-                    </Typography>
-                    
-                    <Typography variant="body1" sx={{ color: '#94A3B8', mb: 3 }}>
-                      Start your fitness journey today and track your progress here
-                    </Typography>
-
-                    <PrimaryButton
-                      onClick={() => window.location.href = '/freestyle-log'}
-                      startIcon={<PlayArrow />}
-                    >
-                      Log Your First Workout
-                    </PrimaryButton>
-                  </Box>
-                ) : (
-                  <Stack spacing={3}>
-                    {sortedWorkouts.map((workout, index) => (
-                      <Box
-                        key={index}
-                        onClick={() => handleWorkoutClick(workout)}
-                        sx={{
-                          p: 3,
-                          borderRadius: '16px',
-                          background: 'rgba(255, 255, 255, 0.03)',
-                          border: '1px solid rgba(255, 255, 255, 0.08)',
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            transform: 'translateY(-2px)',
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            borderColor: 'rgba(0, 212, 255, 0.3)',
-                            boxShadow: '0 8px 32px rgba(0, 212, 255, 0.2)',
-                          }
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Avatar
-                              sx={{
-                                width: 48,
-                                height: 48,
-                                background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
-                              }}
-                            >
-                              <CalendarToday />
-                            </Avatar>
-                            <Box>
-                              <Typography
-                                variant="h6"
-                                sx={{
-                                  color: '#FFFFFF',
-                                  fontWeight: 600,
-                                  mb: 0.5,
-                                }}
-                              >
-                                {new Date(workout.workout_date).toLocaleDateString('en', {
-                                  weekday: 'long',
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric'
-                                })}
-                              </Typography>
-                              <Typography variant="body2" sx={{ color: '#94A3B8' }}>
-                                {new Date(workout.workout_date).toLocaleTimeString('en', {
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </Typography>
-                            </Box>
-                          </Box>
-
-                          <IconButton
-                            sx={{
-                              color: '#00D4FF',
-                              '&:hover': {
-                                background: 'rgba(0, 212, 255, 0.1)',
-                              }
-                            }}
-                          >
-                            <Visibility />
-                          </IconButton>
-                        </Box>
-
-                        {/* Workout Stats */}
-                        <Stack direction="row" spacing={1} sx={{ mb: workout.notes ? 2 : 0, flexWrap: 'wrap', gap: 1 }}>
-                          {workout.duration_minutes && (
-                            <Chip
-                              icon={<Timer />}
-                              label={`${workout.duration_minutes} min`}
-                              size="small"
-                              sx={{ 
-                                background: 'rgba(124, 58, 237, 0.2)',
-                                color: '#7C3AED',
-                                fontWeight: 500,
-                              }}
-                            />
-                          )}
-                          
-                          <Chip
-                            icon={<FitnessCenter />}
-                            label={`${workout.exercises_completed?.length || 0} exercises`}
-                            size="small"
-                            sx={{ 
-                              background: 'rgba(16, 185, 129, 0.2)',
-                              color: '#10B981',
-                              fontWeight: 500,
-                            }}
-                          />
-
-                          {workout.exercises_completed && (
-                            <Chip
-                              icon={<Speed />}
-                              label={`${workout.exercises_completed.reduce((sum, ex) => sum + (ex.sets?.length || 0), 0)} sets`}
-                              size="small"
-                              sx={{ 
-                                background: 'rgba(0, 212, 255, 0.2)',
-                                color: '#00D4FF',
-                                fontWeight: 500,
-                              }}
-                            />
-                          )}
-                        </Stack>
-
-                        {/* Workout Notes */}
-                        {workout.notes && (
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              color: '#CBD5E1',
-                              fontStyle: 'italic',
-                              background: 'rgba(255, 255, 255, 0.03)',
-                              p: 2,
-                              borderRadius: '8px',
-                              border: '1px solid rgba(255, 255, 255, 0.06)',
-                            }}
-                          >
-                            "{workout.notes}"
-                          </Typography>
-                        )}
+                    <Box>
+                      <Box sx={{ ...display, fontSize: 'clamp(22px, 2.2vw, 28px)', letterSpacing: '-0.01em', color: ev.chalk, lineHeight: 1.1 }}>
+                        {new Date(w.workout_date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })}
                       </Box>
-                    ))}
-                  </Stack>
-                )}
-              </ModernCard>
-            </Box>
-          </Slide>
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={1}>
-          {/* Workout Plans */}
-          <Slide direction="left" in timeout={1100}>
-            <Box>
-              <ModernCard
-                title="📋 Your Workout Plans"
-                subtitle={`${workoutPlans.length} total plans • ${aiGeneratedCount} AI-generated`}
-                variant="glass"
-                sx={{ mb: 3 }}
-              >
-                {sortedPlans.length === 0 ? (
-                  <Box sx={{ 
-                    textAlign: 'center', 
-                    py: 6,
-                    color: '#94A3B8',
-                  }}>
-                    <Box
-                      sx={{
-                        width: 120,
-                        height: 120,
-                        borderRadius: '30px',
-                        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#10B981',
-                        fontSize: '3rem',
-                        mx: 'auto',
-                        mb: 3,
-                      }}
-                    >
-                      <Assessment sx={{ fontSize: '3rem' }} />
+                      <Box sx={{ ...monoLabel, color: ev.chalkMute, mt: '8px' }}>
+                        {new Date(w.workout_date).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                      </Box>
                     </Box>
-                    
-                    <Typography variant="h5" sx={{ color: '#FFFFFF', fontWeight: 600, mb: 1 }}>
-                      No workout plans yet
-                    </Typography>
-                    
-                    <Typography variant="body1" sx={{ color: '#94A3B8', mb: 3 }}>
-                      Generate your first AI-powered workout plan to get started
-                    </Typography>
-
-                    <PrimaryButton
-                      onClick={() => window.location.href = '/workout-generator'}
-                      startIcon={<AutoAwesome />}
-                    >
-                      Generate AI Workout
-                    </PrimaryButton>
+                    <Box sx={{ display: { xs: 'none', md: 'block' }, ...mono, fontSize: 13, color: ev.chalkDim, textAlign: 'right' }}>
+                      {w.duration_minutes || '—'} <Box component="span" sx={{ color: ev.chalkMute }}>min</Box>
+                    </Box>
+                    <Box sx={{ display: { xs: 'none', md: 'block' }, ...mono, fontSize: 13, color: ev.chalkDim, textAlign: 'right' }}>
+                      {exerciseCount} <Box component="span" sx={{ color: ev.chalkMute }}>movements</Box>
+                    </Box>
+                    <Box sx={{ display: { xs: 'none', md: 'block' }, ...mono, fontSize: 13, color: ev.chalkDim, textAlign: 'right' }}>
+                      {setCount} <Box component="span" sx={{ color: ev.chalkMute }}>sets</Box>
+                    </Box>
+                    <Box className="row-arrow" sx={{ ...display, fontSize: 18, fontStyle: 'italic', color: ev.chalkMute, justifySelf: 'end' }}>↗</Box>
                   </Box>
-                ) : (
-                  <Grid container spacing={3}>
-                    {sortedPlans.map((plan, index) => (
-                      <Grid item xs={12} sm={6} lg={4} key={index}>
-                        <ModernCard
-                          variant="glass"
-                          sx={{
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                              transform: 'translateY(-4px)',
-                              boxShadow: '0 12px 40px rgba(0, 212, 255, 0.3)',
-                            }
-                          }}
-                          onClick={() => window.location.href = `/workout-plan/${plan.id}`}
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                            <Avatar
-                              sx={{
-                                width: 48,
-                                height: 48,
-                                background: plan.ai_generated 
-                                  ? 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)'
-                                  : 'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
-                              }}
-                            >
-                              {plan.ai_generated ? <AutoAwesome /> : <Assessment />}
-                            </Avatar>
-                            <Box sx={{ flex: 1 }}>
-                              <Typography
-                                variant="h6"
-                                sx={{
-                                  fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                                  fontWeight: 400,
-                                  color: '#FFFFFF',
-                                  mb: 0.5,
-                                  fontSize: '1.125rem',
-                                }}
-                              >
-                                {plan.name}
-                              </Typography>
-                              {plan.ai_generated && (
-                                <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
-                                  <AIModelBadge />
-                                </Box>
-                              )}
-                            </Box>
-                          </Box>
-
-                          {plan.description && (
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                color: '#CBD5E1',
-                                mb: 3,
-                                lineHeight: 1.6,
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden',
-                              }}
-                            >
-                              {plan.description}
-                            </Typography>
-                          )}
-
-                          <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
-                            <Chip
-                              icon={<Timer />}
-                              label={`${plan.estimated_duration || 45} min`}
-                              size="small"
-                              sx={{ 
-                                background: 'rgba(0, 212, 255, 0.2)',
-                                color: '#00D4FF',
-                                fontWeight: 500,
-                              }}
-                            />
-                            
-                            <Chip
-                              icon={<FitnessCenter />}
-                              label={`${plan.exercises?.length || 0} exercises`}
-                              size="small"
-                              sx={{ 
-                                background: 'rgba(16, 185, 129, 0.2)',
-                                color: '#10B981',
-                                fontWeight: 500,
-                              }}
-                            />
-                          </Stack>
-
-                          <Box sx={{ pt: 2, borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                            <Typography variant="caption" sx={{ color: '#94A3B8' }}>
-                              Created: {new Date(plan.created_at).toLocaleDateString()}
-                            </Typography>
-                          </Box>
-                        </ModernCard>
-                      </Grid>
-                    ))}
-                  </Grid>
-                )}
-              </ModernCard>
+                );
+              })}
             </Box>
-          </Slide>
-        </TabPanel>
+          )}
+        </Box>
+      )}
 
-        {/* Workout Detail Dialog */}
-        {selectedWorkout && (
-          <Dialog
-            open={!!selectedWorkout}
-            onClose={handleCloseDialog}
-            fullWidth
-            maxWidth="md"
-            PaperProps={{
-              sx: {
-                background: 'rgba(26, 31, 46, 0.95)',
-                backdropFilter: 'blur(40px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '24px',
-                maxHeight: '80vh',
-              }
-            }}
-          >
-            <DialogTitle
-              sx={{
-                fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                fontWeight: 400,
-                color: '#FFFFFF',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar sx={{ 
-                  width: 48, 
-                  height: 48,
-                  background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
-                }}>
-                  <CalendarToday />
-                </Avatar>
-                <Box>
-                  <Typography variant="h6" sx={{ fontFamily: 'inherit', fontWeight: 'inherit' }}>
-                    Workout Details
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#CBD5E1' }}>
-                    {new Date(selectedWorkout.workout_date).toLocaleDateString('en', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </Typography>
+      {/* ============ PLANS TAB ============ */}
+      {tab === 1 && (
+        <Box>
+          <Box sx={{ ...monoLabel, mb: 4 }}>
+            {(workoutPlans || []).length} total · <Box component="b" sx={{ color: ev.chalk, fontWeight: 500 }}>{aiGeneratedCount}</Box> AI generated
+          </Box>
+
+          {sortedPlans.length === 0 ? (
+            <Box sx={{ py: '64px', borderTop: `1px solid ${ev.rule}`, borderBottom: `1px solid ${ev.rule}`, textAlign: 'center' }}>
+              <Box sx={{ ...display, fontSize: 28, color: ev.chalk }}>No plans yet</Box>
+              <Box sx={{ ...monoLabel, color: ev.chalkMute, mt: 1.5 }}>Generate your first plan to get started</Box>
+              <Box
+                onClick={() => navigate('/generate-workout')}
+                sx={{
+                  display: 'inline-flex',
+                  mt: 4,
+                  cursor: 'pointer',
+                  ...mono,
+                  fontSize: 11,
+                  letterSpacing: '0.2em',
+                  textTransform: 'uppercase',
+                  color: ev.chalk,
+                  borderBottom: `1px solid ${ev.chalk}`,
+                  pb: '4px',
+                  '&:hover': { color: ev.accent, borderColor: ev.accent },
+                }}
+              >
+                Generate plan ↗
+              </Box>
+            </Box>
+          ) : (
+            <Box>
+              {sortedPlans.map((plan, i) => (
+                <Box
+                  key={plan.id}
+                  onClick={() => navigate(`/workout-plan/${plan.id}`)}
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '30px 1fr auto', md: '40px 1fr 120px 120px 24px' },
+                    gap: '28px',
+                    alignItems: 'baseline',
+                    py: '28px',
+                    borderTop: `1px solid ${ev.rule}`,
+                    '&:last-of-type': { borderBottom: `1px solid ${ev.rule}` },
+                    cursor: 'pointer',
+                    transition: 'padding-left .2s ease',
+                    '&:hover': { pl: '12px', '& .row-arrow': { color: ev.accent } },
+                  }}
+                >
+                  <Box sx={{ ...mono, fontSize: 11, letterSpacing: '0.1em', color: ev.chalkMute }}>
+                    {String(i + 1).padStart(2, '0')}
+                  </Box>
+                  <Box>
+                    <Box sx={{ ...display, fontSize: 'clamp(22px, 2.2vw, 28px)', letterSpacing: '-0.01em', color: ev.chalk, lineHeight: 1.1 }}>
+                      {plan.name}
+                    </Box>
+                    <Box sx={{ ...monoLabel, color: ev.chalkMute, mt: '8px' }}>
+                      {plan.ai_generated ? 'AI generated' : 'Manual plan'} · created {new Date(plan.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: { xs: 'none', md: 'block' }, ...mono, fontSize: 13, color: ev.chalkDim, textAlign: 'right' }}>
+                    {plan.estimated_duration || 45} <Box component="span" sx={{ color: ev.chalkMute }}>min</Box>
+                  </Box>
+                  <Box sx={{ display: { xs: 'none', md: 'block' }, ...mono, fontSize: 13, color: ev.chalkDim, textAlign: 'right' }}>
+                    {plan.exercises?.length || 0} <Box component="span" sx={{ color: ev.chalkMute }}>movements</Box>
+                  </Box>
+                  <Box className="row-arrow" sx={{ ...display, fontSize: 18, fontStyle: 'italic', color: ev.chalkMute, justifySelf: 'end' }}>↗</Box>
+                </Box>
+              ))}
+            </Box>
+          )}
+        </Box>
+      )}
+
+      {/* ============ WORKOUT DETAIL DIALOG ============ */}
+      {selectedWorkout && (
+        <Dialog open={!!selectedWorkout} onClose={() => setSelectedWorkout(null)} fullWidth maxWidth="md" PaperProps={dialogPaper}>
+          <DialogTitle sx={{ p: 4, borderBottom: `1px solid ${ev.rule}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Box>
+              <Box sx={monoLabel}>Session log</Box>
+              <Box sx={{ ...display, fontSize: 32, color: ev.chalk, letterSpacing: '-0.015em', mt: 1 }}>
+                {new Date(selectedWorkout.workout_date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
+              </Box>
+              <Box sx={{ ...monoMeta, mt: 1 }}>
+                {new Date(selectedWorkout.workout_date).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                {selectedWorkout.duration_minutes && ` · ${selectedWorkout.duration_minutes} min`}
+              </Box>
+            </Box>
+            <IconButton onClick={() => setSelectedWorkout(null)} sx={{ color: ev.chalkDim }}>
+              <Close />
+            </IconButton>
+          </DialogTitle>
+
+          <DialogContent sx={{ p: 4 }}>
+            {selectedWorkout.exercises_completed?.length > 0 ? (
+              <Box>
+                <Box sx={{ ...monoLabel, mb: 3 }}>Exercises completed</Box>
+                {selectedWorkout.exercises_completed.map((exercise, i) => (
+                  <Box key={i} sx={{
+                    display: 'grid',
+                    gridTemplateColumns: '36px 1fr',
+                    gap: 3,
+                    alignItems: 'baseline',
+                    py: 3,
+                    borderTop: `1px solid ${ev.rule}`,
+                    '&:last-of-type': { borderBottom: `1px solid ${ev.rule}` },
+                  }}>
+                    <Box sx={{ ...mono, fontSize: 11, letterSpacing: '0.1em', color: ev.chalkMute }}>
+                      {String(i + 1).padStart(2, '0')}
+                    </Box>
+                    <Box>
+                      <Box sx={{ ...display, fontSize: 22, letterSpacing: '-0.01em', color: ev.chalk }}>
+                        {exercise.name || `Exercise ${i + 1}`}
+                      </Box>
+                      {exercise.sets?.length > 0 && (
+                        <Box sx={{ mt: 1.5, display: 'flex', flexWrap: 'wrap', gap: 2, ...mono, fontSize: 12, color: ev.chalkDim }}>
+                          {exercise.sets.map((set, si) => (
+                            <Box key={si}>
+                              <Box component="span" sx={{ color: ev.chalkMute }}>{String(si + 1).padStart(2, '0')}</Box>{' '}
+                              <Box component="span" sx={{ color: ev.chalk }}>{formatSetDisplay(set, exercise.exercise_type)}</Box>
+                            </Box>
+                          ))}
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            ) : (
+              <Box sx={{ ...monoLabel, color: ev.chalkMute }}>No exercises recorded</Box>
+            )}
+
+            {selectedWorkout.notes && (
+              <Box sx={{ mt: 5, pt: 4, borderTop: `1px solid ${ev.rule}` }}>
+                <Box sx={{ ...monoLabel, mb: 2 }}>Session notes</Box>
+                <Box sx={{ ...display, fontStyle: 'italic', fontSize: 20, lineHeight: 1.4, color: ev.chalk, maxWidth: '40ch' }}>
+                  "{selectedWorkout.notes}"
                 </Box>
               </Box>
-              <IconButton onClick={handleCloseDialog} sx={{ color: '#94A3B8' }}>
-                <Close />
-              </IconButton>
-            </DialogTitle>
-            
-            <DialogContent sx={{ pt: 3 }}>
-              {/* Workout Summary */}
-              <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={6}>
-                  <Box sx={{ textAlign: 'center', p: 2, borderRadius: '12px', background: 'rgba(124, 58, 237, 0.1)' }}>
-                    <Timer sx={{ color: '#7C3AED', fontSize: '2rem', mb: 1 }} />
-                    <Typography variant="h6" sx={{ color: '#FFFFFF', fontWeight: 600 }}>
-                      {selectedWorkout.duration_minutes || 'N/A'}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#7C3AED' }}>
-                      Minutes
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={6}>
-                  <Box sx={{ textAlign: 'center', p: 2, borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)' }}>
-                    <FitnessCenter sx={{ color: '#10B981', fontSize: '2rem', mb: 1 }} />
-                    <Typography variant="h6" sx={{ color: '#FFFFFF', fontWeight: 600 }}>
-                      {selectedWorkout.exercises_completed?.length || 0}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#10B981' }}>
-                      Exercises
-                    </Typography>
-                  </Box>
-                </Grid>
-              </Grid>
+            )}
+          </DialogContent>
 
-              {/* Exercise Details */}
-              {selectedWorkout.exercises_completed && selectedWorkout.exercises_completed.length > 0 && (
-                <Box sx={{ mb: 4 }}>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                      fontWeight: 400,
-                      color: '#FFFFFF',
-                      mb: 3,
-                    }}
-                  >
-                    Exercises Completed
-                  </Typography>
-                  
-                  <Stack spacing={2}>
-                    {selectedWorkout.exercises_completed.map((exercise, index) => {
-                      const typeInfo = getExerciseTypeInfo(exercise.exercise_type);
-                      
-                      return (
-                        <Box
-                          key={index}
-                          sx={{
-                            p: 3,
-                            borderRadius: '12px',
-                            background: 'rgba(255, 255, 255, 0.03)',
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                            <Avatar sx={{ 
-                              width: 40, 
-                              height: 40,
-                              background: `${typeInfo.color}20`,
-                              border: `2px solid ${typeInfo.color}40`,
-                            }}>
-                              {React.cloneElement(typeInfo.icon, { sx: { color: typeInfo.color, fontSize: '1.25rem' } })}
-                            </Avatar>
-                            <Box>
-                              <Typography variant="h6" sx={{ color: '#FFFFFF', fontWeight: 600 }}>
-                                {exercise.name || `Exercise ${index + 1}`}
-                              </Typography>
-                              <Typography variant="body2" sx={{ color: typeInfo.color }}>
-                                {typeInfo.label}
-                              </Typography>
-                            </Box>
-                          </Box>
-
-                          {/* Sets Display */}
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                            {exercise.sets?.map((set, setIndex) => (
-                              <Chip
-                                key={setIndex}
-                                label={`Set ${setIndex + 1}: ${formatSetDisplay(set, exercise.exercise_type)}`}
-                                size="small"
-                                sx={{
-                                  background: `${typeInfo.color}20`,
-                                  color: typeInfo.color,
-                                  fontWeight: 500,
-                                }}
-                              />
-                            ))}
-                          </Box>
-                        </Box>
-                      );
-                    })}
-                  </Stack>
-                </Box>
-              )}
-
-              {/* Workout Notes */}
-              {selectedWorkout.notes && (
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                      fontWeight: 400,
-                      color: '#FFFFFF',
-                      mb: 2,
-                    }}
-                  >
-                    Session Notes
-                  </Typography>
-                  
-                  <Box
-                    sx={{
-                      p: 3,
-                      borderRadius: '12px',
-                      background: 'rgba(245, 158, 11, 0.1)',
-                      border: '1px solid rgba(245, 158, 11, 0.2)',
-                    }}
-                  >
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        color: '#CBD5E1',
-                        fontStyle: 'italic',
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      "{selectedWorkout.notes}"
-                    </Typography>
-                  </Box>
-                </Box>
-              )}
-            </DialogContent>
-            
-            <DialogActions sx={{ p: 3 }}>
-              <SecondaryButton onClick={handleCloseDialog}>
-                Close
-              </SecondaryButton>
-            </DialogActions>
-          </Dialog>
-        )}
-
-      {/* Footer */}
-      <Box sx={{ textAlign: 'center', mt: 6 }}>
-        <Typography variant="body2" sx={{ color: '#94A3B8', mb: 1 }}>
-          🏆 Keep up the great work on your fitness journey!
-        </Typography>
-        <Typography variant="caption" sx={{ color: '#6B7280' }}>
-          Every workout brings you closer to your goals
-        </Typography>
-      </Box>
-      <ContextualHelp page="workout-history" />
+          <DialogActions sx={{ p: 3, borderTop: `1px solid ${ev.rule}` }}>
+            <SecondaryButton onClick={() => setSelectedWorkout(null)}>Close</SecondaryButton>
+          </DialogActions>
+        </Dialog>
+      )}
     </PageContainer>
   );
 }

@@ -101,7 +101,7 @@ const PageContainer = ({
                   mt: 3,
                   maxWidth: '60ch',
                   fontFamily: ev.body,
-                  fontWeight: 300,
+                  fontWeight: 400,
                   fontSize: 15,
                   lineHeight: 1.55,
                   color: ev.chalkDim,
