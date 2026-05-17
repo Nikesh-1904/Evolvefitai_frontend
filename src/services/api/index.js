@@ -2,7 +2,6 @@
 
 import authService from './authService';
 import workoutService from './workoutService';
-import mealService from './mealService';
 import analyticsService from './analyticsService';
 import communityService from './communityService';
 
@@ -12,7 +11,6 @@ import communityService from './communityService';
 export {
   authService,
   workoutService,
-  mealService,
   analyticsService,
   communityService,
 };
@@ -44,9 +42,6 @@ const api = {
   submitExerciseFeedback: (...args) => workoutService.submitExerciseFeedback(...args),
   submitTipInteraction: (...args) => workoutService.submitTipInteraction(...args),
 
-  // Meal methods
-  generateMealPlan: (...args) => mealService.generateMealPlan(...args),
-
   // Analytics methods
   getDashboardOverview: (...args) => analyticsService.getDashboardOverview(...args),
   getAnalyticsData: (...args) => analyticsService.getAnalyticsData(...args),
@@ -58,7 +53,6 @@ const api = {
   joinGymByCode: (...args) => communityService.joinGymByCode(...args),
   joinGym: (...args) => communityService.joinGym(...args),
   fetchGymOccupancy: (...args) => communityService.fetchGymOccupancy(...args),
-  fetchMyGymLeaderboard: (...args) => communityService.fetchMyGymLeaderboard(...args),
   getAchievementStatus: (...args) => communityService.getAchievementStatus(...args),
   unlockAchievement: (...args) => communityService.unlockAchievement(...args),
 };

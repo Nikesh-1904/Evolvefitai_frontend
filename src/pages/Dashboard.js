@@ -8,26 +8,19 @@ import {
   Box,
   Alert,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   List,
   ListItem,
   ListItemText,
   Divider,
-  IconButton,
   Avatar,
   Stack,
   Skeleton,
 } from '@mui/material';
 import {
-  Restaurant,
   TrendingUp,
   PlayArrow,
   Create,
   AutoAwesome,
-  Close,
   CheckCircle,
   LocalFireDepartment,
   Timer,
@@ -36,7 +29,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { workoutService, analyticsService, mealService } from '../services/api';
+import { workoutService, analyticsService } from '../services/api';
 
 import { usePreferences } from '../contexts/PreferencesContext';
 // Import our modern components
@@ -55,11 +48,6 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
   
-  // Meal plan generation states
-  const [mealPlanLoading, setMealPlanLoading] = useState(false);
-  const [mealPlanDialog, setMealPlanDialog] = useState(false);
-  const [generatedMealPlan, setGeneratedMealPlan] = useState(null);
-  const [mealPlanError, setMealPlanError] = useState('');
   const { convertWeight, convertHeight, getUnitLabel } = usePreferences();
 
   // All useEffect and functions preserved exactly as original
@@ -89,43 +77,9 @@ function Dashboard() {
     navigate('/generate-workout');
   };
 
-  const handleGenerateMealPlan = async () => {
-    setMealPlanLoading(true);
-    setMealPlanError('');
-    
-    try {
-      const requestData = {
-        preferences: {
-          dietary_restrictions: user?.dietary_restrictions || [],
-          calories_goal: user?.calories_goal || 'moderate',
-          meal_count: 4
-        }
-      };
-      
-      const mealPlan = await mealService.generateMealPlan(requestData);
-      setGeneratedMealPlan(mealPlan);
-      setMealPlanDialog(true);
-    } catch (error) {
-      setMealPlanError(error.message || 'Failed to generate meal plan. Please try again.');
-    } finally {
-      setMealPlanLoading(false);
-    }
-  };
-
   const handleStartWorkoutPlan = (planToStart) => {
     if (!planToStart) return;
     navigate('/workout-session', { state: { workoutPlan: planToStart } });
-  };
-
-  const handleViewFullMealPlanner = () => {
-    setMealPlanDialog(false);
-    navigate('/meal-plan-generator');
-  };
-
-  const handleCloseMealPlanDialog = () => {
-    setMealPlanDialog(false);
-    setGeneratedMealPlan(null);
-    setMealPlanError('');
   };
 
   // Loading state with modern skeleton
@@ -309,23 +263,6 @@ function Dashboard() {
             onClick={() => navigate('/log-workout')}
             gradient="linear-gradient(135deg, #FF3366 0%, #FF6B35 100%)"
           />
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={4}>
-          <QuickActionCard
-            icon={<Restaurant />}
-            title="AI Meal Planner"
-            description="Get personalized meal plans that complement your fitness journey and dietary preferences."
-            onClick={handleGenerateMealPlan}
-            gradient="linear-gradient(135deg, #10B981 0%, #34D399 100%)"
-            sx={{ opacity: mealPlanLoading ? 0.7 : 1 }}
-          />
-
-          {mealPlanError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {mealPlanError}
-            </Alert>
-          )}
         </Grid>
 
         <Grid item xs={12} sm={6} md={4}>
@@ -548,91 +485,6 @@ function Dashboard() {
         </Grid>
       </Grid>
 
-      {/* Meal Plan Dialog (preserved functionality) */}
-      <Dialog
-        open={mealPlanDialog}
-        onClose={handleCloseMealPlanDialog}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            background: 'rgba(26, 31, 46, 0.95)',
-            backdropFilter: 'blur(40px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '24px',
-          }
-        }}
-      >
-        <DialogTitle
-          sx={{
-            fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-            fontWeight: 400,
-            color: '#FFFFFF',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          }}
-        >
-          AI Generated Meal Plan
-          <IconButton
-            onClick={handleCloseMealPlanDialog}
-            sx={{ position: 'absolute', right: 8, top: 8, color: '#94A3B8' }}
-          >
-            <Close />
-          </IconButton>
-        </DialogTitle>
-        
-        <DialogContent sx={{ pt: 3 }}>
-          {generatedMealPlan && (
-            <>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                    color: '#FFFFFF',
-                  }}
-                >
-                  {generatedMealPlan.name}
-                </Typography>
-                {generatedMealPlan.ai_generated && (
-                  <AIModelBadge
-                    aiModel={generatedMealPlan.ai_model}
-                    aiGenerated={generatedMealPlan.ai_generated}
-                  />
-                )}
-              </Box>
-              
-              <List>
-                {Object.entries(generatedMealPlan.meals || {}).map(([mealType, meal]) => (
-                  <ListItem key={mealType} sx={{ px: 0 }}>
-                    <ListItemText
-                      primary={`${mealType}: ${meal.name}`}
-                      secondary={
-                        <Box>
-                          <Typography variant="body2" sx={{ color: '#CBD5E1', mb: 1 }}>
-                            {meal.instructions}
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: '#94A3B8' }}>
-                            Ingredients: {meal.ingredients?.join(', ')}
-                          </Typography>
-                        </Box>
-                      }
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </>
-          )}
-        </DialogContent>
-        
-        <DialogActions sx={{ p: 3, gap: 1 }}>
-          <SecondaryButton onClick={handleCloseMealPlanDialog}>
-            Close
-          </SecondaryButton>
-          <PrimaryButton onClick={handleViewFullMealPlanner}>
-            View Full Meal Planner
-          </PrimaryButton>
-        </DialogActions>
-      </Dialog>
       <ContextualHelp page="dashboard" />
     </Container>
   );

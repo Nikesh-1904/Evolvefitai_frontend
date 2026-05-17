@@ -27,13 +27,10 @@ const Profile = lazy(() => import('./pages/Profile'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const WorkoutSession = lazy(() => import('./pages/WorkoutSession'));
 const FreestyleLog = lazy(() => import('./pages/FreestyleLog'));
-const MealPlanGenerator = lazy(() => import('./pages/MealPlanGenerator'));
 const WorkoutPlanDetail = lazy(() => import('./pages/WorkoutPlanDetail'));
 const UserPreferences = lazy(() => import('./components/UserPreferences'));
 const AchievementsPanel = lazy(() => import('./components/AchievementsPanel'));
-const CommunityLeaderboard = lazy(() => import('./pages/CommunityLeaderboard'));
 const Notifications = lazy(() => import('./pages/Notifications'));
-const MealPlanLibrary = lazy(() => import('./pages/MealPlanLibrary'));
 const ExerciseLibrary = lazy(() => import('./pages/ExerciseLibrary'));
 const WorkoutRecommendations = lazy(() => import('./pages/WorkoutRecommendations'));
 const GymDiscovery = lazy(() => import('./pages/GymDiscovery'));
@@ -105,19 +102,16 @@ function AppRoutes() {
             <Route path="/log-workout" element={<FreestyleLog />} />
             <Route path="/workout-history" element={<WorkoutHistory />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />
-            <Route path="/meal-plans" element={<MealPlanLibrary />} />
             <Route path="/exercises" element={<ExerciseLibrary />} />
             <Route path="/workout-recommendations" element={<WorkoutRecommendations />} />
             <Route path="/gyms" element={<GymDiscovery />} />
             <Route path="/gym-bookings" element={<GymBookings />} />
             <Route path="/gym-access" element={<GymAccess />} />
             <Route path="/workout-plan/:planId" element={<WorkoutPlanDetail />} />
-            <Route path="/analytics" element={<Analytics />} /> {/* <-- THIS ROUTE WAS MISSING */}
+            <Route path="/analytics" element={<Analytics />} />
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/settings" element={<UserPreferences />} />
             <Route path="/achievements" element={<AchievementsPanel />} />
-            <Route path="/leaderboard" element={<CommunityLeaderboard />} />
             <Route path="/notifications" element={<Notifications />} />
 
             {/* Fallback route for any other logged-in paths */}

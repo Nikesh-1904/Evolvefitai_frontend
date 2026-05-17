@@ -23,7 +23,6 @@ import {
   FitnessCenter,
   Menu as MenuIcon,
   Dashboard,
-  Restaurant,
   People,
   Person,
   Notifications as NotificationsIcon,
@@ -33,7 +32,6 @@ import {
   Create,
   Business,
   CalendarMonth,
-  EmojiEvents,
   ExpandMore,
   Settings,
   Logout,
@@ -72,14 +70,6 @@ const navigationConfig = {
         { name: 'Log Workout', path: '/log-workout', icon: <Create /> },
       ],
     },
-    {
-      label: 'Nutrition',
-      icon: <Restaurant />,
-      items: [
-        { name: 'Meal Planner', path: '/meal-plan-generator', icon: <Restaurant /> },
-        { name: 'My Meal Plans', path: '/meal-plans', icon: <LibraryBooks /> },
-      ],
-    },
   ],
   conditional: {
     community: {
@@ -89,7 +79,6 @@ const navigationConfig = {
       items: [
         { name: 'Discover Gyms', path: '/gyms', icon: <Business /> },
         { name: 'My Bookings', path: '/gym-bookings', icon: <CalendarMonth /> },
-        { name: 'Leaderboard', path: '/leaderboard', icon: <EmojiEvents /> },
       ],
     },
   },
@@ -105,7 +94,6 @@ function NavbarNew() {
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
   const [userMenuAnchor, setUserMenuAnchor] = useState(null);
   const [workoutsMenuAnchor, setWorkoutsMenuAnchor] = useState(null);
-  const [nutritionMenuAnchor, setNutritionMenuAnchor] = useState(null);
   const [communityMenuAnchor, setCommunityMenuAnchor] = useState(null);
   const [notificationsAnchor, setNotificationsAnchor] = useState(null);
 
@@ -213,21 +201,6 @@ function NavbarNew() {
                   </MenuItem>
                 ))}
 
-                <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', my: 1 }} />
-
-                {/* Nutrition Section */}
-                <MenuItem disabled sx={{ opacity: 0.5, py: 0.5 }}>
-                  <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600 }}>
-                    NUTRITION
-                  </Typography>
-                </MenuItem>
-                {navigationConfig.dropdowns[1].items.map((item) => (
-                  <MenuItem key={item.path} onClick={handleNavigate(item.path, handleCloseMenu(setMobileMenuAnchor))}>
-                    <ListItemIcon>{React.cloneElement(item.icon, { sx: { color: '#00D4FF' } })}</ListItemIcon>
-                    <ListItemText>{item.name}</ListItemText>
-                  </MenuItem>
-                ))}
-
                 {/* Community Section (if user has gym) */}
                 {user.gym_id && (
                   <>
@@ -322,53 +295,6 @@ function NavbarNew() {
                   <MenuItem
                     key={item.path}
                     onClick={handleNavigate(item.path, handleCloseMenu(setWorkoutsMenuAnchor))}
-                    sx={{
-                      color: isActive(item.path) ? '#00D4FF' : '#FFFFFF',
-                      '&:hover': {
-                        background: 'rgba(0, 212, 255, 0.1)',
-                      },
-                    }}
-                  >
-                    <ListItemIcon>{React.cloneElement(item.icon, { sx: { color: isActive(item.path) ? '#00D4FF' : '#CBD5E1' } })}</ListItemIcon>
-                    <ListItemText>{item.name}</ListItemText>
-                  </MenuItem>
-                ))}
-              </Menu>
-
-              {/* Nutrition Dropdown */}
-              <Button
-                onClick={handleOpenMenu(setNutritionMenuAnchor)}
-                endIcon={<ExpandMore />}
-                sx={{
-                  color: '#FFFFFF',
-                  textTransform: 'none',
-                  px: 2,
-                  '&:hover': {
-                    background: 'rgba(0, 212, 255, 0.1)',
-                  },
-                }}
-              >
-                <Restaurant sx={{ mr: 1, fontSize: 20 }} />
-                Nutrition
-              </Button>
-              <Menu
-                anchorEl={nutritionMenuAnchor}
-                open={Boolean(nutritionMenuAnchor)}
-                onClose={handleCloseMenu(setNutritionMenuAnchor)}
-                PaperProps={{
-                  sx: {
-                    background: 'rgba(26, 31, 46, 0.95)',
-                    backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    mt: 1,
-                    minWidth: 220,
-                  },
-                }}
-              >
-                {navigationConfig.dropdowns[1].items.map((item) => (
-                  <MenuItem
-                    key={item.path}
-                    onClick={handleNavigate(item.path, handleCloseMenu(setNutritionMenuAnchor))}
                     sx={{
                       color: isActive(item.path) ? '#00D4FF' : '#FFFFFF',
                       '&:hover': {

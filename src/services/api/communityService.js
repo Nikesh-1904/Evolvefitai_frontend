@@ -48,14 +48,6 @@ class CommunityService extends BaseApiClient {
   }
 
   /**
-   * Get leaderboard for user's gym
-   */
-  async fetchMyGymLeaderboard(limit = 10) {
-    console.log(`🏆 Fetching leaderboard for current user's gym`);
-    return this.get('/gyms/leaderboard/my-gym', { limit });
-  }
-
-  /**
    * Get achievement status
    */
   async getAchievementStatus() {
@@ -101,14 +93,6 @@ class CommunityService extends BaseApiClient {
   async cancelBooking(bookingId) {
     console.log(`❌ Cancelling booking ID: ${bookingId}`);
     return this.delete(`/users/bookings/${bookingId}`);
-  }
-
-  /**
-   * Get gym leaderboard
-   */
-  async getLeaderboard(limit = 10) {
-    console.log(`🏆 Fetching gym leaderboard`);
-    return this.get('/gyms/leaderboard/my-gym', { limit });
   }
 }
 
