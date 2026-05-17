@@ -1,63 +1,64 @@
-// src/pages/WorkoutSession.js - Modern AI Fitness Active Workout Session
+// src/pages/WorkoutSession.js — Evolve / minimal active session
 
 import React, { useState, useEffect } from 'react';
 import {
-  Typography,
   Box,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Grid,
-  Chip,
   IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
   Autocomplete,
   Stack,
-  Avatar,
   LinearProgress,
-  Fade,
-  Slide,
+  Alert,
 } from '@mui/material';
 import {
   SkipNext,
   SkipPrevious,
   CheckCircle,
-  FitnessCenter,
   Delete,
-  Notes,
   Warning,
   PlayArrow,
-  Timer,
-  Speed,
-  MonitorWeight,
-  DirectionsRun,
-  SelfImprovement,
   VideoLibrary,
   Add,
   Remove,
-  OpenInNew,
   Close,
+  OpenInNew,
 } from '@mui/icons-material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { workoutService } from '../services/api';
 
-// Import our modern components
-import ModernCard from '../components/ModernCard';
 import ModernInput from '../components/ModernInput';
 import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
-import ContextualHelp from '../components/ContextualHelp';
-import { PageContainer, Alert } from '../components/design-system';
+import { PageContainer } from '../components/design-system';
+import { ev } from '../theme/evolveDarkTheme';
 
-const WorkoutSession = () => {
+const PAGE_X = 'clamp(28px, 6vw, 96px)';
+
+const monoLabel = {
+  fontFamily: ev.mono,
+  fontSize: 11,
+  letterSpacing: '0.2em',
+  textTransform: 'uppercase',
+  color: ev.chalkDim,
+};
+
+const dialogPaper = {
+  sx: {
+    backgroundColor: ev.ink,
+    border: `1px solid ${ev.rule}`,
+    borderRadius: 0,
+    maxHeight: '85vh',
+  },
+};
+
+function WorkoutSession() {
   const location = useLocation();
   const navigate = useNavigate();
   const workoutPlan = location.state?.workoutPlan;
-  
-  // State management (preserving all original functionality)
+
   const [editablePlan, setEditablePlan] = useState(null);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [loggedData, setLoggedData] = useState({});
@@ -65,46 +66,49 @@ const WorkoutSession = () => {
   const [error, setError] = useState('');
   const [showQuitDialog, setShowQuitDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDurationModalOpen, setDurationModalOpen] = useState(false);
+  const [durationOpen, setDurationOpen] = useState(false);
   const [manualDuration, setManualDuration] = useState(45);
-  const [videoModalOpen, setVideoModalOpen] = useState(false);
-  const [currentExerciseVideos, setCurrentExerciseVideos] = useState([]);
+  const [videoOpen, setVideoOpen] = useState(false);
+  const [currentVideos, setCurrentVideos] = useState([]);
   const [videoLoading, setVideoLoading] = useState(false);
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [searchOptions, setSearchOptions] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchInputValue, setSearchInputValue] = useState('');
 
-  // All original useEffect and handlers preserved exactly
+  // Elapsed session timer
+  const [startedAt] = useState(() => Date.now());
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const elapsed = Math.floor((now - startedAt) / 1000);
+  const hh = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+  const mm = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+  const ss = String(elapsed % 60).padStart(2, '0');
+
   useEffect(() => {
     if (!workoutPlan) {
-      navigate('/workout-generator');
-    } else {
-      setEditablePlan(workoutPlan);
-      const initialData = {};
-      workoutPlan.exercises.forEach((exercise, index) => {
-        let initialSet = {};
-        const reps = parseInt(String(exercise.reps).split('-')[0]) || 8;
-        switch (exercise.exercise_type) {
-          case 'REPS_ONLY':
-            initialSet = { reps };
-            break;
-          case 'DURATION':
-          case 'QUALITATIVE':
-            initialSet = { duration_seconds: 60 };
-            break;
-          case 'DISTANCE_DURATION':
-            initialSet = { distance_km: 1, duration_seconds: 300 };
-            break;
-          case 'WEIGHT_BASED':
-          default:
-            initialSet = { reps: reps, weight: 0 };
-            break;
-        }
-        initialData[index] = [initialSet];
-      });
-      setLoggedData(initialData);
+      navigate('/generate-workout');
+      return;
     }
+    setEditablePlan(workoutPlan);
+    const initialData = {};
+    workoutPlan.exercises.forEach((exercise, index) => {
+      const reps = parseInt(String(exercise.reps).split('-')[0]) || 8;
+      let initialSet = {};
+      switch (exercise.exercise_type) {
+        case 'REPS_ONLY':         initialSet = { reps }; break;
+        case 'DURATION':
+        case 'QUALITATIVE':       initialSet = { duration_seconds: 60 }; break;
+        case 'DISTANCE_DURATION': initialSet = { distance_km: 1, duration_seconds: 300 }; break;
+        case 'WEIGHT_BASED':
+        default:                  initialSet = { reps, weight: 0 }; break;
+      }
+      initialData[index] = [initialSet];
+    });
+    setLoggedData(initialData);
   }, [workoutPlan, navigate]);
 
   const handleSetChange = (exerciseIndex, setIndex, field, value) => {
@@ -132,84 +136,66 @@ const WorkoutSession = () => {
   };
 
   const handleNextExercise = () => {
-    if (currentExerciseIndex < editablePlan.exercises.length - 1) {
-      setCurrentExerciseIndex(currentExerciseIndex + 1);
-    }
+    if (currentExerciseIndex < editablePlan.exercises.length - 1) setCurrentExerciseIndex(currentExerciseIndex + 1);
   };
-
   const handlePrevExercise = () => {
-    if (currentExerciseIndex > 0) {
-      setCurrentExerciseIndex(currentExerciseIndex - 1);
-    }
+    if (currentExerciseIndex > 0) setCurrentExerciseIndex(currentExerciseIndex - 1);
   };
 
   const handleFinishWorkout = () => {
     const exercises_completed = editablePlan.exercises
-      .map((exercise, index) => ({
-        name: exercise.name,
-        sets: loggedData[index] || [],
-      }))
-      .filter(exercise => exercise.sets.length > 0);
+      .map((exercise, index) => ({ name: exercise.name, sets: loggedData[index] || [] }))
+      .filter((e) => e.sets.length > 0);
 
     if (exercises_completed.length === 0) {
-      setError('Please log at least one set to finish the workout.');
+      setError('Log at least one set to finish the workout.');
       return;
     }
-
     setError('');
-    setDurationModalOpen(true);
+    setManualDuration(Math.max(1, Math.round(elapsed / 60)));
+    setDurationOpen(true);
   };
 
   const handleSaveWithDuration = async () => {
-    setIsSubmitting(true);
-    setError('');
-    
+    setIsSubmitting(true); setError('');
     const exercises_completed = editablePlan.exercises
       .map((exercise, index) => ({
         name: exercise.name,
         exercise_type: exercise.exercise_type || 'WEIGHT_BASED',
-        sets: (loggedData[index] || []).map(set => {
+        sets: (loggedData[index] || []).map((set) => {
           const cleanSet = {};
           switch (exercise.exercise_type) {
             case 'WEIGHT_BASED':
               cleanSet.reps = parseInt(set.reps, 10) || 0;
-              cleanSet.weight = parseFloat(set.weight) || 0;
-              break;
+              cleanSet.weight = parseFloat(set.weight) || 0; break;
             case 'REPS_ONLY':
-              cleanSet.reps = parseInt(set.reps, 10) || 0;
-              break;
+              cleanSet.reps = parseInt(set.reps, 10) || 0; break;
             case 'DURATION':
-              cleanSet.duration_seconds = parseInt(set.duration_seconds, 10) || 0;
-              break;
+              cleanSet.duration_seconds = parseInt(set.duration_seconds, 10) || 0; break;
             case 'DISTANCE_DURATION':
               cleanSet.duration_seconds = parseInt(set.duration_seconds, 10) || 0;
-              cleanSet.distance_km = parseFloat(set.distance_km) || 0;
-              break;
+              cleanSet.distance_km = parseFloat(set.distance_km) || 0; break;
             case 'QUALITATIVE':
               cleanSet.duration_seconds = parseInt(set.duration_seconds, 10) || 0;
-              cleanSet.notes = set.notes || '';
-              break;
+              cleanSet.notes = set.notes || ''; break;
             default:
               cleanSet.reps = parseInt(set.reps, 10) || 0;
-              cleanSet.weight = parseFloat(set.weight) || 0;
-              break;
+              cleanSet.weight = parseFloat(set.weight) || 0; break;
           }
           return cleanSet;
         }),
       }))
-      .filter(exercise => exercise.sets.length > 0);
-
-    const logPayload = {
-      workout_plan_id: editablePlan.id,
-      duration_minutes: manualDuration,
-      notes,
-      exercises_completed,
-      workout_date: new Date().toISOString(),
-    };
+      .filter((e) => e.sets.length > 0);
 
     try {
-      await workoutService.logWorkout(logPayload);
-      setDurationModalOpen(false);
+      await workoutService.logWorkout({
+        workout_plan_id: editablePlan.id,
+        duration_minutes: manualDuration,
+        notes,
+        exercises_completed,
+        workout_date: new Date().toISOString(),
+      });
+      setDurationOpen(false);
       navigate('/workout-history');
     } catch (err) {
       setError(err.message || 'Failed to save workout log.');
@@ -220,39 +206,38 @@ const WorkoutSession = () => {
 
   const handleRemoveExercise = (indexToRemove) => {
     if (!editablePlan) return;
-    const newExercises = editablePlan.exercises.filter((_, index) => index !== indexToRemove);
-    setEditablePlan(prev => ({ ...prev, exercises: newExercises }));
+    const newExercises = editablePlan.exercises.filter((_, i) => i !== indexToRemove);
+    setEditablePlan((prev) => ({ ...prev, exercises: newExercises }));
     if (currentExerciseIndex >= newExercises.length) {
       setCurrentExerciseIndex(Math.max(0, newExercises.length - 1));
     }
   };
 
   const handleWatchVideo = async (exerciseName) => {
-    setVideoModalOpen(true);
-    setVideoLoading(true);
+    setVideoOpen(true); setVideoLoading(true);
     try {
       const details = await workoutService.getExerciseDetails(exerciseName);
-      setCurrentExerciseVideos(details.videos || []);
-    } catch (error) {
-      console.error("Failed to fetch video details:", error);
-      setCurrentExerciseVideos([]);
+      setCurrentVideos(details.videos || []);
+    } catch (err) {
+      console.error(err);
+      setCurrentVideos([]);
     } finally {
       setVideoLoading(false);
     }
   };
 
-  const handleSearchChange = async (event, value) => {
+  const handleSearchChange = async (_, value) => {
     setSearchInputValue(value);
     if (value && value.length > 2) {
       setSearchLoading(true);
       try {
         const results = await workoutService.getExerciseDetails(value);
-        const formattedOptions = Array.isArray(results)
-          ? results.map(r => r.exercise).filter(Boolean)
+        const formatted = Array.isArray(results)
+          ? results.map((r) => r.exercise).filter(Boolean)
           : (results.exercise ? [results.exercise] : []);
-        setSearchOptions(formattedOptions);
+        setSearchOptions(formatted);
       } catch (err) {
-        console.error("Search failed:", err);
+        console.error(err);
         setSearchOptions([]);
       }
       setSearchLoading(false);
@@ -263,38 +248,23 @@ const WorkoutSession = () => {
 
   const handleSelectNewExercise = (exercise) => {
     if (exercise && exercise.name) {
-      const newExerciseObject = {
-        ...exercise,
-        sets: exercise.sets || 1,
-        reps: exercise.reps || '8-12',
-      };
-      setEditablePlan(prev => ({ ...prev, exercises: [...prev.exercises, newExerciseObject] }));
+      const newExerciseObject = { ...exercise, sets: exercise.sets || 1, reps: exercise.reps || '8-12' };
+      setEditablePlan((prev) => ({ ...prev, exercises: [...prev.exercises, newExerciseObject] }));
       const newIndex = editablePlan.exercises.length;
-      const initialSet = { reps: 8, weight: 0 };
-      setLoggedData(prev => ({ ...prev, [newIndex]: [initialSet] }));
+      setLoggedData((prev) => ({ ...prev, [newIndex]: [{ reps: 8, weight: 0 }] }));
       setIsAddingExercise(false);
       setSearchInputValue('');
       setSearchOptions([]);
     }
   };
 
-  // Get exercise type info
-  const getExerciseTypeInfo = (exerciseType) => {
-    switch (exerciseType) {
-      case 'WEIGHT_BASED':
-        return { icon: <MonitorWeight />, color: '#00D4FF', label: 'Weight Based' };
-      case 'REPS_ONLY':
-        return { icon: <FitnessCenter />, color: '#10B981', label: 'Reps Only' };
-      case 'DURATION':
-        return { icon: <Timer />, color: '#7C3AED', label: 'Duration' };
-      case 'DISTANCE_DURATION':
-        return { icon: <DirectionsRun />, color: '#FF3366', label: 'Distance + Time' };
-      case 'QUALITATIVE':
-        return { icon: <SelfImprovement />, color: '#F59E0B', label: 'Qualitative' };
-      default:
-        return { icon: <FitnessCenter />, color: '#94A3B8', label: 'Exercise' };
-    }
-  };
+  const exerciseTypeLabel = (t) => ({
+    WEIGHT_BASED: 'Weighted',
+    REPS_ONLY: 'Reps only',
+    DURATION: 'Duration',
+    DISTANCE_DURATION: 'Distance · time',
+    QUALITATIVE: 'Qualitative',
+  })[t] || 'Exercise';
 
   const renderSetInputs = (exercise, exIndex, set, setIndex) => {
     switch (exercise.exercise_type) {
@@ -305,783 +275,453 @@ const WorkoutSession = () => {
             type="number"
             value={set.reps || ''}
             onChange={(e) => handleSetChange(exIndex, setIndex, 'reps', e.target.value)}
-            fullWidth
-            size="small"
-            variant="outlined"
           />
         );
-
       case 'DURATION':
         return (
           <ModernInput
-            label="Duration (seconds)"
+            label="Duration · seconds"
             type="number"
             value={set.duration_seconds || ''}
             onChange={(e) => handleSetChange(exIndex, setIndex, 'duration_seconds', e.target.value)}
-            fullWidth
-            size="small"
-            variant="outlined"
-            endText="sec"
           />
         );
-
       case 'DISTANCE_DURATION':
         return (
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3 }}>
             <ModernInput
-              label="Distance (km)"
+              label="Distance · km"
               type="number"
               value={set.distance_km || ''}
               onChange={(e) => handleSetChange(exIndex, setIndex, 'distance_km', e.target.value)}
-              fullWidth
-              size="small"
-              variant="outlined"
-              endText="km"
             />
             <ModernInput
-              label="Duration (sec)"
+              label="Duration · seconds"
               type="number"
               value={set.duration_seconds || ''}
               onChange={(e) => handleSetChange(exIndex, setIndex, 'duration_seconds', e.target.value)}
-              fullWidth
-              size="small"
-              variant="outlined"
-              endText="sec"
             />
           </Box>
         );
-
       case 'QUALITATIVE':
         return (
           <ModernInput
             label="Notes"
             value={set.notes || ''}
             onChange={(e) => handleSetChange(exIndex, setIndex, 'notes', e.target.value)}
-            fullWidth
-            size="small"
-            variant="outlined"
-            placeholder="e.g., Vinyasa flow, focused on hips"
+            placeholder="e.g. vinyasa flow, focused on hips"
           />
         );
-
       case 'WEIGHT_BASED':
       default:
         return (
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3 }}>
             <ModernInput
-              label="Weight (kg)"
+              label="Weight · kg"
               type="number"
               value={set.weight || ''}
               onChange={(e) => handleSetChange(exIndex, setIndex, 'weight', e.target.value)}
-              fullWidth
-              size="small"
-              variant="outlined"
-              endText="kg"
             />
             <ModernInput
               label="Reps"
               type="number"
               value={set.reps || ''}
               onChange={(e) => handleSetChange(exIndex, setIndex, 'reps', e.target.value)}
-              fullWidth
-              size="small"
-              variant="outlined"
             />
           </Box>
         );
     }
   };
 
-  if (!editablePlan) {
-    return null;
-  }
+  if (!editablePlan) return null;
 
   const currentExercise = editablePlan.exercises[currentExerciseIndex];
   const currentLoggedSets = loggedData[currentExerciseIndex] || [];
-  const currentTypeInfo = getExerciseTypeInfo(currentExercise.exercise_type);
   const progress = ((currentExerciseIndex + 1) / editablePlan.exercises.length) * 100;
   const totalSets = Object.values(loggedData).flat().length;
 
   return (
-    <PageContainer
-      title={editablePlan.name}
-      subtitle="Active Workout Session"
-      icon="🏋️"
-      maxWidth="lg"
-    >
-      {/* Progress Indicators */}
-      <Stack direction="row" spacing={2} sx={{ justifyContent: 'center', mb: 3 }}>
-        <Chip
-          icon={<FitnessCenter />}
-          label={`Exercise ${currentExerciseIndex + 1}/${editablePlan.exercises.length}`}
-          sx={{
-            background: 'rgba(0, 212, 255, 0.1)',
-            color: '#00D4FF',
-            fontWeight: 600,
-          }}
-        />
-        <Chip
-          icon={<Speed />}
-          label={`${totalSets} sets logged`}
-          sx={{
-            background: 'rgba(16, 185, 129, 0.1)',
-            color: '#10B981',
-            fontWeight: 600,
-          }}
-        />
-      </Stack>
+    <Box sx={{ animation: 'ev-rise .45s ease both' }}>
 
-      {/* Progress Bar */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="body2" sx={{ color: '#94A3B8', mb: 1, textAlign: 'center' }}>
-          Workout Progress: {Math.round(progress)}%
-        </Typography>
+      {/* ============ HERO ============ */}
+      <Box sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) auto' },
+        alignItems: 'end',
+        gap: 6,
+        px: PAGE_X,
+        pt: 'clamp(64px, 10vh, 120px)',
+        pb: 'clamp(48px, 8vh, 96px)',
+        borderBottom: `1px solid ${ev.rule}`,
+      }}>
+        <Box sx={{ minWidth: 0 }}>
+          <Box sx={{ ...monoLabel }}>Active session · live</Box>
+          <Box component="h1" sx={{
+            m: 0, mt: 2,
+            fontFamily: ev.display,
+            fontWeight: 400,
+            fontSize: 'clamp(48px, 6.5vw, 96px)',
+            lineHeight: 0.92,
+            letterSpacing: '-0.025em',
+            color: ev.chalk,
+          }}>
+            {editablePlan.name}<Box component="span" sx={{ color: ev.accent }}>.</Box>
+          </Box>
+        </Box>
+
+        {/* Right — live timer */}
+        <Box sx={{ textAlign: { md: 'right' } }}>
+          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1.25, ...monoLabel, color: ev.chalkDim, letterSpacing: '0.24em' }}>
+            <Box sx={{
+              width: 7, height: 7, borderRadius: '50%',
+              backgroundColor: ev.accent,
+              animation: 'ev-breathe 2.4s ease-in-out infinite',
+            }} />
+            Elapsed
+          </Box>
+          <Box sx={{
+            fontFamily: ev.display,
+            fontSize: 'clamp(56px, 6.5vw, 96px)',
+            lineHeight: 1,
+            letterSpacing: '-0.03em',
+            color: ev.chalk,
+            mt: 2,
+            fontVariantNumeric: 'tabular-nums',
+          }}>
+            {hh}
+            <Box component="span" sx={{ color: ev.chalkMute, animation: 'ev-blink 1s steps(2,end) infinite' }}>:</Box>
+            {mm}
+            <Box component="span" sx={{ color: ev.chalkMute, animation: 'ev-blink 1s steps(2,end) infinite' }}>:</Box>
+            {ss}
+          </Box>
+        </Box>
+      </Box>
+
+      {/* ============ PROGRESS STRIP ============ */}
+      <Box sx={{ px: PAGE_X, pt: 5, pb: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', ...monoLabel, color: ev.chalkMute, mb: 2 }}>
+          <Box>Exercise <Box component="b" sx={{ color: ev.chalk, fontWeight: 500 }}>{String(currentExerciseIndex + 1).padStart(2, '0')}</Box> / {String(editablePlan.exercises.length).padStart(2, '0')}</Box>
+          <Box>{totalSets} sets logged · {Math.round(progress)}%</Box>
+        </Box>
         <LinearProgress
           variant="determinate"
           value={progress}
           sx={{
-            height: 8,
-            borderRadius: 4,
-            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-            '& .MuiLinearProgress-bar': {
-              background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
-              borderRadius: 4,
-            },
+            height: '1px',
+            backgroundColor: ev.rule,
+            '& .MuiLinearProgress-bar': { backgroundColor: ev.accent },
           }}
         />
       </Box>
 
-      {/* Error Alert */}
       {error && (
-        <Alert severity="error" closable sx={{ mb: 3 }}>
-          {error}
-        </Alert>
+        <Box sx={{ px: PAGE_X, pb: 3 }}>
+          <Alert severity="error" onClose={() => setError('')}>{error}</Alert>
+        </Box>
       )}
 
-      <Grid container spacing={4}>
-        {/* Current Exercise Panel */}
-        <Grid item xs={12} lg={8}>
-          <Fade in timeout={700}>
-            <Box>
-                <ModernCard variant="glass" sx={{ mb: 3 }}>
-                  {/* Exercise Header */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                      <Avatar sx={{ 
-                        width: 64, 
-                        height: 64,
-                        background: `linear-gradient(135deg, ${currentTypeInfo.color} 0%, ${currentTypeInfo.color}80 100%)`,
-                      }}>
-                        {currentTypeInfo.icon}
-                      </Avatar>
-                      <Box>
-                        <Typography
-                          variant="h4"
-                          sx={{
-                            fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                            fontWeight: 400,
-                            color: '#FFFFFF',
-                            mb: 1,
-                          }}
-                        >
-                          {currentExercise.name}
-                        </Typography>
-                        <Stack direction="row" spacing={1}>
-                          <Chip
-                            label={currentTypeInfo.label}
-                            size="small"
-                            sx={{ 
-                              background: `${currentTypeInfo.color}20`,
-                              color: currentTypeInfo.color,
-                              fontWeight: 500,
-                            }}
-                          />
-                          {currentExercise.reps && (
-                            <Chip
-                              label={`Target: ${currentExercise.reps} reps`}
-                              size="small"
-                              sx={{ 
-                                background: 'rgba(255, 255, 255, 0.05)',
-                                color: '#CBD5E1',
-                                fontWeight: 500,
-                              }}
-                            />
-                          )}
-                        </Stack>
-                      </Box>
-                    </Box>
+      {/* ============ MAIN ============ */}
+      <Box sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', lg: '1.6fr 1fr' },
+        borderTop: `1px solid ${ev.rule}`,
+      }}>
+        {/* LEFT — current exercise */}
+        <Box sx={{
+          px: PAGE_X,
+          py: 6,
+          borderRight: { lg: `1px solid ${ev.rule}` },
+          borderBottom: { xs: `1px solid ${ev.rule}`, lg: 'none' },
+        }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <Box sx={{ ...monoLabel }}>
+              {String(currentExerciseIndex + 1).padStart(2, '0')} · {exerciseTypeLabel(currentExercise.exercise_type)}
+            </Box>
+            <SecondaryButton size="small" onClick={() => handleWatchVideo(currentExercise.name)} startIcon={<VideoLibrary />}>
+              Watch demo
+            </SecondaryButton>
+          </Box>
+          <Box sx={{
+            mt: 2,
+            fontFamily: ev.display,
+            fontSize: 'clamp(36px, 4.5vw, 64px)',
+            lineHeight: 1,
+            letterSpacing: '-0.02em',
+            color: ev.chalk,
+          }}>
+            {currentExercise.name}
+          </Box>
+          {currentExercise.reps && (
+            <Box sx={{ ...monoLabel, mt: 2 }}>
+              Target · {currentExercise.reps} reps
+            </Box>
+          )}
 
-                    <SecondaryButton
-                      onClick={() => handleWatchVideo(currentExercise.name)}
-                      startIcon={<VideoLibrary />}
-                    >
-                      Watch Demo
-                    </SecondaryButton>
+          {/* Sets */}
+          <Box sx={{ mt: 6 }}>
+            <Box sx={{ ...monoLabel, mb: 3 }}>Performance</Box>
+            <Stack spacing={0}>
+              {currentLoggedSets.map((set, setIndex) => (
+                <Box key={setIndex} sx={{
+                  display: 'grid',
+                  gridTemplateColumns: '60px 1fr auto',
+                  gap: 4,
+                  alignItems: 'center',
+                  py: 3.5,
+                  borderTop: `1px solid ${ev.rule}`,
+                  '&:last-of-type': { borderBottom: `1px solid ${ev.rule}` },
+                }}>
+                  <Box sx={{
+                    fontFamily: ev.display,
+                    fontSize: 28,
+                    color: ev.chalk,
+                    letterSpacing: '-0.01em',
+                    lineHeight: 1,
+                  }}>
+                    {String(setIndex + 1).padStart(2, '0')}
                   </Box>
+                  {renderSetInputs(currentExercise, currentExerciseIndex, set, setIndex)}
+                  <IconButton size="small" onClick={() => handleRemoveSet(currentExerciseIndex, setIndex)} sx={{ color: ev.chalkMute, '&:hover': { color: ev.warn } }}>
+                    <Remove fontSize="small" />
+                  </IconButton>
+                </Box>
+              ))}
 
-                  {/* Sets Logging */}
-                  <Box>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                        fontWeight: 400,
-                        color: '#FFFFFF',
-                        mb: 3,
-                      }}
-                    >
-                      Your Performance
-                    </Typography>
+              {currentLoggedSets.length === 0 && (
+                <Box sx={{ py: 6, textAlign: 'center', borderTop: `1px solid ${ev.rule}`, borderBottom: `1px solid ${ev.rule}` }}>
+                  <Box sx={{ fontFamily: ev.display, fontSize: 24, color: ev.chalk }}>No sets logged</Box>
+                  <Box sx={{ ...monoLabel, mt: 1.5 }}>Tap "Add set" to begin</Box>
+                </Box>
+              )}
+            </Stack>
 
-                    <Stack spacing={2}>
-                      {currentLoggedSets.map((set, setIndex) => (
-                        <Box
-                          key={setIndex}
-                          sx={{
-                            p: 3,
-                            borderRadius: '16px',
-                            background: 'rgba(255, 255, 255, 0.03)',
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                            <Typography variant="body1" sx={{ color: '#CBD5E1', fontWeight: 600 }}>
-                              Set {setIndex + 1}
-                            </Typography>
-                            <IconButton 
-                              onClick={() => handleRemoveSet(currentExerciseIndex, setIndex)} 
-                              size="small"
-                              sx={{ 
-                                color: '#FF3366',
-                                '&:hover': {
-                                  background: 'rgba(255, 51, 102, 0.1)',
-                                }
-                              }}
-                            >
-                              <Remove />
-                            </IconButton>
-                          </Box>
-                          
-                          {renderSetInputs(currentExercise, currentExerciseIndex, set, setIndex)}
-                        </Box>
-                      ))}
-                      
-                      {/* Empty State */}
-                      {currentLoggedSets.length === 0 && (
-                        <Box sx={{ 
-                          textAlign: 'center', 
-                          py: 4,
-                          color: '#94A3B8',
-                          background: 'rgba(255, 255, 255, 0.02)',
-                          borderRadius: '12px',
-                          border: '1px dashed rgba(255, 255, 255, 0.1)',
-                        }}>
-                          <Typography variant="body1" sx={{ mb: 1 }}>
-                            No sets logged yet
-                          </Typography>
-                          <Typography variant="body2">
-                            Click "Add Set" below to start logging your performance
-                          </Typography>
-                        </Box>
-                      )}
-                      
-                      {/* Add Set Button */}
-                      <PrimaryButton
-                        onClick={() => handleAddSet(currentExerciseIndex)}
-                        startIcon={<Add />}
-                        fullWidth
-                        sx={{ mt: 2 }}
-                      >
-                        Add Set
-                      </PrimaryButton>
-                    </Stack>
+            <Box sx={{ mt: 4 }}>
+              <PrimaryButton onClick={() => handleAddSet(currentExerciseIndex)} startIcon={<Add />} fullWidth>
+                Add set
+              </PrimaryButton>
+            </Box>
+          </Box>
+
+          {/* Navigation */}
+          <Box sx={{ mt: 6, pt: 5, borderTop: `1px solid ${ev.rule}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+            <SecondaryButton onClick={handlePrevExercise} disabled={currentExerciseIndex === 0} startIcon={<SkipPrevious />}>
+              Previous
+            </SecondaryButton>
+            <Box sx={monoLabel}>{currentExerciseIndex + 1} of {editablePlan.exercises.length}</Box>
+            <SecondaryButton onClick={handleNextExercise} disabled={currentExerciseIndex === editablePlan.exercises.length - 1} endIcon={<SkipNext />}>
+              Next
+            </SecondaryButton>
+          </Box>
+        </Box>
+
+        {/* RIGHT — plan + notes + actions */}
+        <Box sx={{ px: PAGE_X, py: 6 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 4 }}>
+            <Box sx={monoLabel}>Plan · all movements</Box>
+            <Box
+              onClick={() => setIsAddingExercise((v) => !v)}
+              sx={{ cursor: 'pointer', ...monoLabel, color: ev.chalkDim, '&:hover': { color: ev.accent } }}
+            >
+              {isAddingExercise ? 'Cancel' : '+ Add exercise'}
+            </Box>
+          </Box>
+
+          {isAddingExercise && (
+            <Box sx={{ mb: 4 }}>
+              <Autocomplete
+                options={searchOptions}
+                loading={searchLoading}
+                inputValue={searchInputValue}
+                getOptionLabel={(o) => o.name || ''}
+                onInputChange={handleSearchChange}
+                onChange={(_, v) => handleSelectNewExercise(v)}
+                renderInput={(params) => (
+                  <ModernInput
+                    {...params}
+                    label="Search exercise library"
+                    placeholder="Type to search"
+                  />
+                )}
+              />
+            </Box>
+          )}
+
+          <Stack spacing={0}>
+            {editablePlan.exercises.map((exercise, index) => {
+              const active = index === currentExerciseIndex;
+              const hasLogged = (loggedData[index] || []).length > 0;
+              return (
+                <Box
+                  key={index}
+                  onClick={() => setCurrentExerciseIndex(index)}
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: '36px 1fr auto auto',
+                    gap: 2,
+                    alignItems: 'baseline',
+                    py: 2.5,
+                    borderTop: `1px solid ${ev.rule}`,
+                    '&:last-of-type': { borderBottom: `1px solid ${ev.rule}` },
+                    cursor: 'pointer',
+                    transition: 'background-color .15s ease',
+                    backgroundColor: active ? ev.ink2 : 'transparent',
+                    '&:hover': { backgroundColor: ev.ruleSoft },
+                  }}
+                >
+                  <Box sx={{ ...monoLabel, color: active ? ev.accent : ev.chalkMute }}>
+                    {String(index + 1).padStart(2, '0')}
                   </Box>
-                </ModernCard>
-
-                {/* Exercise Navigation */}
-                <ModernCard variant="glass">
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <SecondaryButton
-                      onClick={handlePrevExercise}
-                      disabled={currentExerciseIndex === 0}
-                      startIcon={<SkipPrevious />}
-                    >
-                      Previous
-                    </SecondaryButton>
-
-                    <Typography variant="body1" sx={{ color: '#CBD5E1', fontWeight: 600 }}>
-                      Exercise {currentExerciseIndex + 1} of {editablePlan.exercises.length}
-                    </Typography>
-
-                    <SecondaryButton
-                      onClick={handleNextExercise}
-                      disabled={currentExerciseIndex === editablePlan.exercises.length - 1}
-                      endIcon={<SkipNext />}
-                    >
-                      Next
-                    </SecondaryButton>
+                  <Box sx={{
+                    fontFamily: ev.display,
+                    fontSize: 16,
+                    color: active ? ev.chalk : (hasLogged ? ev.chalkDim : ev.chalk),
+                    letterSpacing: '-0.005em',
+                    textDecoration: hasLogged && !active ? 'line-through' : 'none',
+                    textDecorationColor: ev.chalkMute,
+                  }}>
+                    {exercise.name}
                   </Box>
-                </ModernCard>
-              </Box>
-            </Fade>
-          </Grid>
-
-          {/* Sidebar */}
-          <Grid item xs={12} lg={4}>
-            <Stack spacing={3}>
-              {/* Workout Plan Overview */}
-              <Slide direction="left" in timeout={900}>
-                <Box>
-                  <ModernCard
-                    title="Workout Plan"
-                    subtitle="All exercises in this session"
-                    variant="glass"
-                    headerAction={
-                      <SecondaryButton
-                        onClick={() => setIsAddingExercise(!isAddingExercise)}
-                        size="small"
-                        startIcon={<Add />}
-                      >
-                        {isAddingExercise ? 'Cancel' : 'Add Exercise'}
-                      </SecondaryButton>
-                    }
+                  <Box sx={{ ...monoLabel, color: hasLogged ? ev.accent : ev.chalkMute }}>
+                    {hasLogged ? '✓' : '·'}
+                  </Box>
+                  <IconButton
+                    size="small"
+                    onClick={(e) => { e.stopPropagation(); handleRemoveExercise(index); }}
+                    sx={{ color: ev.chalkMute, '&:hover': { color: ev.warn } }}
                   >
-                    {/* Add Exercise Search */}
-                    {isAddingExercise && (
-                      <Box sx={{ mb: 3 }}>
-                        <Autocomplete
-                          options={searchOptions}
-                          loading={searchLoading}
-                          inputValue={searchInputValue}
-                          getOptionLabel={(option) => option.name || ""}
-                          onInputChange={handleSearchChange}
-                          onChange={(event, newValue) => {
-                            handleSelectNewExercise(newValue);
-                          }}
-                          renderInput={(params) => (
-                            <ModernInput
-                              {...params}
-                              label="Search exercises"
-                              placeholder="Type to search..."
-                              variant="outlined"
-                              fullWidth
-                              InputProps={{
-                                ...params.InputProps,
-                                endAdornment: (
-                                  <>
-                                    {searchLoading && <LinearProgress sx={{ position: 'absolute', bottom: 0, left: 0, right: 0 }} />}
-                                    {params.InputProps.endAdornment}
-                                  </>
-                                ),
-                              }}
-                            />
-                          )}
-                        />
+                    <Delete sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </Box>
+              );
+            })}
+          </Stack>
+
+          <Box sx={{ mt: 6 }}>
+            <Box sx={{ ...monoLabel, mb: 3 }}>Session notes</Box>
+            <ModernInput
+              label="Notes (optional)"
+              multiline
+              rows={3}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="How did it feel? Anything to remember next time?"
+            />
+          </Box>
+
+          <Box sx={{ mt: 6, pt: 5, borderTop: `1px solid ${ev.rule}` }}>
+            <Stack spacing={2}>
+              <PrimaryButton onClick={handleFinishWorkout} disabled={isSubmitting} startIcon={<CheckCircle />} size="large" fullWidth>
+                {isSubmitting ? 'Saving' : 'Finish & log workout'}
+              </PrimaryButton>
+              <SecondaryButton onClick={() => setShowQuitDialog(true)} startIcon={<Warning />} fullWidth sx={{ color: ev.warn, borderColor: ev.rule, '&:hover': { color: ev.warn, borderColor: ev.warn } }}>
+                Cancel session
+              </SecondaryButton>
+            </Stack>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* ============ DIALOGS ============ */}
+      <Dialog open={showQuitDialog} onClose={() => setShowQuitDialog(false)} maxWidth="sm" fullWidth PaperProps={dialogPaper}>
+        <DialogTitle sx={{ p: 4, borderBottom: `1px solid ${ev.rule}` }}>
+          <Box sx={monoLabel}>Confirm</Box>
+          <Box sx={{ fontFamily: ev.display, fontSize: 36, color: ev.chalk, letterSpacing: '-0.015em', mt: 1 }}>Cancel session?</Box>
+        </DialogTitle>
+        <DialogContent sx={{ p: 4 }}>
+          <Box sx={{ color: ev.chalkDim, fontSize: 15, lineHeight: 1.55, fontWeight: 300 }}>
+            Logged data for this session will be lost. This cannot be undone.
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, borderTop: `1px solid ${ev.rule}`, gap: 1.5 }}>
+          <SecondaryButton onClick={() => setShowQuitDialog(false)}>Continue session</SecondaryButton>
+          <PrimaryButton onClick={() => navigate('/')} sx={{ backgroundColor: ev.warn, borderColor: ev.warn, color: ev.ink, '&:hover': { backgroundColor: ev.warn, opacity: 0.85 } }}>
+            Yes, cancel
+          </PrimaryButton>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={durationOpen} onClose={() => setDurationOpen(false)} maxWidth="sm" fullWidth PaperProps={dialogPaper}>
+        <DialogTitle sx={{ p: 4, borderBottom: `1px solid ${ev.rule}` }}>
+          <Box sx={monoLabel}>Step 02 · final</Box>
+          <Box sx={{ fontFamily: ev.display, fontSize: 36, color: ev.chalk, letterSpacing: '-0.015em', mt: 1 }}>Confirm duration</Box>
+        </DialogTitle>
+        <DialogContent sx={{ p: 4 }}>
+          {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+          <Box sx={{ color: ev.chalkDim, fontSize: 15, lineHeight: 1.55, fontWeight: 300, mb: 4 }}>
+            Total session duration in minutes (pre-filled from your live timer).
+          </Box>
+          <ModernInput
+            label="Duration · minutes"
+            type="number"
+            value={manualDuration}
+            onChange={(e) => setManualDuration(parseInt(e.target.value, 10) || 0)}
+            inputProps={{ min: 1 }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 3, borderTop: `1px solid ${ev.rule}`, gap: 1.5 }}>
+          <SecondaryButton onClick={() => setDurationOpen(false)}>Back</SecondaryButton>
+          <PrimaryButton onClick={handleSaveWithDuration} loading={isSubmitting} disabled={isSubmitting}>
+            {isSubmitting ? 'Saving' : 'Save workout'}
+          </PrimaryButton>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={videoOpen} onClose={() => setVideoOpen(false)} fullWidth maxWidth="md" PaperProps={dialogPaper}>
+        <DialogTitle sx={{ p: 4, borderBottom: `1px solid ${ev.rule}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <Box>
+            <Box sx={monoLabel}>Demonstrations</Box>
+            <Box sx={{ fontFamily: ev.display, fontSize: 28, color: ev.chalk, letterSpacing: '-0.015em', mt: 1 }}>
+              {currentExercise?.name}
+            </Box>
+          </Box>
+          <IconButton onClick={() => setVideoOpen(false)} sx={{ color: ev.chalkDim }}><Close /></IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 4 }}>
+          {videoLoading ? (
+            <Box sx={{ py: 6 }}>
+              <LinearProgress sx={{ height: '1px', backgroundColor: ev.rule, '& .MuiLinearProgress-bar': { backgroundColor: ev.accent } }} />
+            </Box>
+          ) : currentVideos.length > 0 ? (
+            <Grid container spacing={2}>
+              {currentVideos.map((video, index) => (
+                <Grid item xs={12} sm={6} key={index}>
+                  <Box
+                    onClick={() => (video.youtube_url || video.url) && window.open(video.youtube_url || video.url, '_blank')}
+                    sx={{
+                      cursor: 'pointer',
+                      border: `1px solid ${ev.rule}`,
+                      transition: 'border-color .2s ease',
+                      '&:hover': { borderColor: ev.chalkMute, '& .play-overlay': { opacity: 1 } },
+                    }}
+                  >
+                    {video.thumbnail_url && (
+                      <Box sx={{ position: 'relative' }}>
+                        <Box component="img" src={video.thumbnail_url} alt={video.title || `Video ${index + 1}`} sx={{ width: '100%', height: 140, objectFit: 'cover', display: 'block' }} />
+                        <Box className="play-overlay" sx={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'grid', placeItems: 'center', opacity: 0, transition: 'opacity .2s ease' }}>
+                          <PlayArrow sx={{ fontSize: 48, color: ev.accent }} />
+                        </Box>
                       </Box>
                     )}
-
-                    {/* Exercise List */}
-                    <List sx={{ p: 0 }}>
-                      {editablePlan.exercises.map((exercise, index) => {
-                        const typeInfo = getExerciseTypeInfo(exercise.exercise_type);
-                        const hasLoggedSets = loggedData[index] && loggedData[index].length > 0;
-                        
-                        return (
-                          <ListItem
-                            key={index}
-                            onClick={() => setCurrentExerciseIndex(index)}
-                            sx={{
-                              borderRadius: '12px',
-                              mb: 1,
-                              cursor: 'pointer',
-                              background: index === currentExerciseIndex 
-                                ? 'rgba(0, 212, 255, 0.1)' 
-                                : 'transparent',
-                              border: index === currentExerciseIndex 
-                                ? '1px solid rgba(0, 212, 255, 0.2)' 
-                                : '1px solid transparent',
-                              '&:hover': {
-                                background: 'rgba(255, 255, 255, 0.05)',
-                              }
-                            }}
-                          >
-                            <ListItemIcon>
-                              <Avatar sx={{ 
-                                width: 40, 
-                                height: 40,
-                                background: `linear-gradient(135deg, ${typeInfo.color} 0%, ${typeInfo.color}80 100%)`,
-                              }}>
-                                {typeInfo.icon}
-                              </Avatar>
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={
-                                <Typography variant="body1" sx={{ color: '#FFFFFF', fontWeight: 600 }}>
-                                  {exercise.name}
-                                </Typography>
-                              }
-                              secondary={
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                                  <Chip
-                                    size="small"
-                                    label={typeInfo.label}
-                                    sx={{ 
-                                      background: `${typeInfo.color}20`,
-                                      color: typeInfo.color,
-                                      fontSize: '0.75rem',
-                                    }}
-                                  />
-                                  {hasLoggedSets ? (
-                                    <CheckCircle sx={{ color: '#10B981', fontSize: '1rem' }} />
-                                  ) : (
-                                    <Timer sx={{ color: '#94A3B8', fontSize: '1rem' }} />
-                                  )}
-                                </Box>
-                              }
-                            />
-                            <IconButton 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveExercise(index);
-                              }}
-                              size="small"
-                              sx={{ 
-                                color: '#FF3366',
-                                '&:hover': {
-                                  background: 'rgba(255, 51, 102, 0.1)',
-                                }
-                              }}
-                            >
-                              <Delete />
-                            </IconButton>
-                          </ListItem>
-                        );
-                      })}
-                    </List>
-                  </ModernCard>
-                </Box>
-              </Slide>
-
-              {/* Workout Notes */}
-              <Slide direction="left" in timeout={1100}>
-                <Box>
-                  <ModernCard
-                    title="Workout Notes"
-                    subtitle="Add notes about your session"
-                    variant="glass"
-                  >
-                    <ModernInput
-                      label="Session Notes (optional)"
-                      multiline
-                      rows={3}
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="How did the workout feel? Any observations..."
-                      variant="outlined"
-                      fullWidth
-                      startIcon={<Notes />}
-                    />
-                  </ModernCard>
-                </Box>
-              </Slide>
-
-              {/* Action Buttons */}
-              <Slide direction="left" in timeout={1300}>
-                <Box>
-                  <Stack spacing={2}>
-                    <PrimaryButton
-                      onClick={handleFinishWorkout}
-                      disabled={isSubmitting}
-                      size="large"
-                      startIcon={<CheckCircle />}
-                      fullWidth
-                    >
-                      {isSubmitting ? 'Saving...' : 'Finish & Log Workout'}
-                    </PrimaryButton>
-
-                    <SecondaryButton
-                      onClick={() => setShowQuitDialog(true)}
-                      startIcon={<Warning />}
-                      fullWidth
-                      sx={{ color: '#FF3366', borderColor: '#FF3366' }}
-                    >
-                      Cancel Workout
-                    </SecondaryButton>
-                  </Stack>
-                </Box>
-              </Slide>
-            </Stack>
-          </Grid>
-        </Grid>
-
-        {/* Quit Confirmation Dialog */}
-        <Dialog
-          open={showQuitDialog}
-          onClose={() => setShowQuitDialog(false)}
-          maxWidth="sm"
-          fullWidth
-          PaperProps={{
-            sx: {
-              background: 'rgba(26, 31, 46, 0.95)',
-              backdropFilter: 'blur(40px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '24px',
-            }
-          }}
-        >
-          <DialogTitle sx={{ 
-            fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-            fontWeight: 400,
-            color: '#FFFFFF',
-            textAlign: 'center',
-          }}>
-            <Avatar sx={{ 
-              width: 60, 
-              height: 60,
-              mx: 'auto',
-              mb: 2,
-              background: 'linear-gradient(135deg, #FF3366 0%, #FF6B35 100%)',
-            }}>
-              <Warning />
-            </Avatar>
-            Cancel Workout?
-          </DialogTitle>
-          
-          <DialogContent sx={{ textAlign: 'center' }}>
-            <Typography variant="body1" sx={{ color: '#CBD5E1' }}>
-              Are you sure you want to cancel this session? Any logged data for this workout will be lost.
-            </Typography>
-          </DialogContent>
-          
-          <DialogActions sx={{ p: 3, gap: 2, justifyContent: 'center' }}>
-            <SecondaryButton onClick={() => setShowQuitDialog(false)}>
-              Continue Workout
-            </SecondaryButton>
-            <PrimaryButton 
-              onClick={() => navigate('/dashboard')}
-              sx={{ 
-                background: 'linear-gradient(135deg, #FF3366 0%, #FF6B35 100%)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #FF6B35 0%, #FF3366 100%)',
-                }
-              }}
-            >
-              Yes, Cancel
-            </PrimaryButton>
-          </DialogActions>
-        </Dialog>
-
-        {/* Duration Modal */}
-        <Dialog
-          open={isDurationModalOpen}
-          onClose={() => setDurationModalOpen(false)}
-          maxWidth="sm"
-          fullWidth
-          PaperProps={{
-            sx: {
-              background: 'rgba(26, 31, 46, 0.95)',
-              backdropFilter: 'blur(40px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '24px',
-            }
-          }}
-        >
-          <DialogTitle sx={{ 
-            fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-            fontWeight: 400,
-            color: '#FFFFFF',
-            textAlign: 'center',
-          }}>
-            <Avatar sx={{ 
-              width: 60, 
-              height: 60,
-              mx: 'auto',
-              mb: 2,
-              background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
-            }}>
-              <Timer />
-            </Avatar>
-            Confirm Workout Duration
-          </DialogTitle>
-          
-          <DialogContent sx={{ textAlign: 'center' }}>
-            {error && (
-              <Alert severity="error" sx={{ mb: 3 }}>
-                {error}
-              </Alert>
-            )}
-            
-            <Typography variant="body1" sx={{ color: '#CBD5E1', mb: 3 }}>
-              What was the total duration of your workout in minutes?
-            </Typography>
-            
-            <ModernInput
-              label="Duration (minutes)"
-              type="number"
-              value={manualDuration}
-              onChange={(e) => setManualDuration(parseInt(e.target.value, 10) || 0)}
-              fullWidth
-              variant="outlined"
-              inputProps={{ min: 1 }}
-            />
-          </DialogContent>
-          
-          <DialogActions sx={{ p: 3, gap: 2, justifyContent: 'center' }}>
-            <SecondaryButton onClick={() => setDurationModalOpen(false)}>
-              Cancel
-            </SecondaryButton>
-            <PrimaryButton 
-              onClick={handleSaveWithDuration}
-              loading={isSubmitting}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Saving...' : 'Save Workout'}
-            </PrimaryButton>
-          </DialogActions>
-        </Dialog>
-
-        {/* Video Modal */}
-        <Dialog
-          open={videoModalOpen}
-          onClose={() => setVideoModalOpen(false)}
-          fullWidth
-          maxWidth="md"
-          PaperProps={{
-            sx: {
-              background: 'rgba(26, 31, 46, 0.95)',
-              backdropFilter: 'blur(40px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '24px',
-              maxHeight: '80vh',
-            }
-          }}
-        >
-          <DialogTitle
-            sx={{
-              fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-              fontWeight: 400,
-              color: '#FFFFFF',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar sx={{ 
-                width: 48, 
-                height: 48,
-                background: 'linear-gradient(135deg, #FF3366 0%, #FF6B35 100%)',
-              }}>
-                <VideoLibrary />
-              </Avatar>
-              <Box>
-                <Typography variant="h6" sx={{ fontFamily: 'inherit', fontWeight: 'inherit' }}>
-                  Exercise Demonstrations
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#CBD5E1' }}>
-                  {currentExercise?.name}
-                </Typography>
-              </Box>
+                    <Box sx={{ p: 2 }}>
+                      <Box sx={{ fontFamily: ev.body, fontSize: 14, color: ev.chalk, fontWeight: 500 }}>{video.title || `Video ${index + 1}`}</Box>
+                    </Box>
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+          ) : (
+            <Box sx={{ py: 6, textAlign: 'center' }}>
+              <Box sx={{ fontFamily: ev.display, fontSize: 24, color: ev.chalk }}>No videos found</Box>
+              <Box sx={{ ...monoLabel, mt: 1.5 }}>Demonstrations are not available for this exercise</Box>
             </Box>
-            <IconButton onClick={() => setVideoModalOpen(false)} sx={{ color: '#94A3B8' }}>
-              <Close />
-            </IconButton>
-          </DialogTitle>
-          
-          <DialogContent sx={{ pt: 3 }}>
-            {videoLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                <LinearProgress sx={{ width: '100%' }} />
-              </Box>
-            ) : currentExerciseVideos.length > 0 ? (
-              <Grid container spacing={2}>
-                {currentExerciseVideos.map((video, index) => (
-                  <Grid item xs={12} sm={6} key={index}>
-                    <ModernCard variant="glass" sx={{ cursor: 'pointer' }}>
-                      <Box
-                        onClick={() => {
-                          if (video.youtube_url || video.url) {
-                            window.open(video.youtube_url || video.url, '_blank');
-                          }
-                        }}
-                        sx={{
-                          textAlign: 'center',
-                          '&:hover .video-overlay': {
-                            opacity: 1,
-                          }
-                        }}
-                      >
-                        {video.thumbnail_url && (
-                          <Box sx={{ position: 'relative', mb: 2 }}>
-                            <img
-                              src={video.thumbnail_url}
-                              alt={video.title || `Video ${index + 1}`}
-                              style={{
-                                width: '100%',
-                                height: '120px',
-                                objectFit: 'cover',
-                                borderRadius: '8px',
-                              }}
-                            />
-                            <Box
-                              className="video-overlay"
-                              sx={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                background: 'rgba(0, 0, 0, 0.7)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                borderRadius: '8px',
-                                opacity: 0,
-                                transition: 'opacity 0.3s ease',
-                              }}
-                            >
-                              <PlayArrow sx={{ fontSize: '3rem', color: '#00D4FF' }} />
-                            </Box>
-                          </Box>
-                        )}
-                        <Typography variant="body1" sx={{ color: '#FFFFFF', fontWeight: 600, mb: 1 }}>
-                          {video.title || `Video ${index + 1}`}
-                        </Typography>
-                        <SecondaryButton
-                          size="small"
-                          endIcon={<OpenInNew />}
-                          fullWidth
-                        >
-                          Watch Video
-                        </SecondaryButton>
-                      </Box>
-                    </ModernCard>
-                  </Grid>
-                ))}
-              </Grid>
-            ) : (
-              <Box sx={{ textAlign: 'center', py: 6, color: '#94A3B8' }}>
-                <VideoLibrary sx={{ fontSize: '4rem', mb: 2, opacity: 0.3 }} />
-                <Typography variant="h6" sx={{ mb: 1 }}>
-                  No videos found
-                </Typography>
-                <Typography variant="body2">
-                  Video demonstrations are not available for this exercise
-                </Typography>
-              </Box>
-            )}
-          </DialogContent>
-          
-          <DialogActions sx={{ p: 3 }}>
-            <SecondaryButton onClick={() => setVideoModalOpen(false)}>
-              Close
-            </SecondaryButton>
-          </DialogActions>
-        </Dialog>
-      <ContextualHelp page="workout-session" />
-    </PageContainer>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 3, borderTop: `1px solid ${ev.rule}` }}>
+          <SecondaryButton onClick={() => setVideoOpen(false)} endIcon={<OpenInNew sx={{ fontSize: 14 }} />}>Close</SecondaryButton>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
-};
+}
 
 export default WorkoutSession;

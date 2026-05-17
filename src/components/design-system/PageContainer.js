@@ -1,127 +1,130 @@
-// src/components/design-system/PageContainer.js - Standardized Page Layout Container
+// src/components/design-system/PageContainer.js — ev page shell. API preserved.
 
 import React from 'react';
-import { Container, Box, Typography, Breadcrumbs, Link } from '@mui/material';
-import { NavigateNext as NavigateNextIcon } from '@mui/icons-material';
+import { Box } from '@mui/material';
+import { ev } from '../../theme/evolveDarkTheme';
 
-/**
- * Standardized Page Container for consistent layout across all pages
- *
- * @param {Object} props
- * @param {string} props.title - Page title
- * @param {string} props.subtitle - Optional page subtitle/description
- * @param {React.ReactNode} props.children - Page content
- * @param {Array} props.breadcrumbs - Optional breadcrumb navigation [{label, href}]
- * @param {React.ReactNode} props.actions - Optional action buttons in header
- * @param {string} props.maxWidth - Container max width ('xs' | 'sm' | 'md' | 'lg' | 'xl')
- * @param {boolean} props.disableGutters - Remove container padding
- * @param {Object} props.sx - Additional MUI sx styling
- */
+const PAGE_X = 'clamp(28px, 6vw, 96px)';
+
+const monoLabel = {
+  fontFamily: ev.mono,
+  fontSize: 11,
+  letterSpacing: '0.18em',
+  textTransform: 'uppercase',
+  color: ev.chalkDim,
+};
+
 const PageContainer = ({
   title,
   subtitle,
   children,
   breadcrumbs,
   actions,
-  maxWidth = 'lg',
+  maxWidth, // kept for API parity but ignored
   disableGutters = false,
   sx = {},
   ...props
 }) => {
-  return (
-    <Container
-      maxWidth={maxWidth}
-      disableGutters={disableGutters}
-      sx={{
-        py: { xs: 3, sm: 4, md: 5 },
-        px: { xs: 2, sm: 3 },
-        ...sx,
-      }}
-      {...props}
-    >
-      {/* Breadcrumbs */}
-      {breadcrumbs && breadcrumbs.length > 0 && (
-        <Breadcrumbs
-          separator={<NavigateNextIcon fontSize="small" />}
-          aria-label="breadcrumb"
-          sx={{ mb: 2 }}
-        >
-          {breadcrumbs.map((crumb, index) => {
-            const isLast = index === breadcrumbs.length - 1;
-            return isLast ? (
-              <Typography key={index} color="text.primary" variant="body2">
-                {crumb.label}
-              </Typography>
-            ) : (
-              <Link
-                key={index}
-                underline="hover"
-                color="text.secondary"
-                href={crumb.href}
-                variant="body2"
-              >
-                {crumb.label}
-              </Link>
-            );
-          })}
-        </Breadcrumbs>
-      )}
+  const px = disableGutters ? 0 : PAGE_X;
 
-      {/* Page Header */}
-      {(title || actions) && (
+  return (
+    <Box component="section" sx={{ animation: 'ev-rise .45s ease both', ...sx }} {...props}>
+
+      {breadcrumbs && breadcrumbs.length > 0 && (
         <Box
           sx={{
             display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            mb: 4,
-            flexWrap: 'wrap',
-            gap: 2,
+            alignItems: 'center',
+            gap: 1.5,
+            px,
+            pt: 4,
+            ...monoLabel,
+            color: ev.chalkMute,
           }}
         >
-          <Box sx={{ flex: 1, minWidth: 0 }}>
+          {breadcrumbs.map((c, i) => {
+            const last = i === breadcrumbs.length - 1;
+            return (
+              <React.Fragment key={i}>
+                {i > 0 && <Box component="span" sx={{ color: ev.chalkMute }}>/</Box>}
+                {last ? (
+                  <Box component="span" sx={{ color: ev.chalk }}>{c.label}</Box>
+                ) : (
+                  <Box
+                    component="a"
+                    href={c.href}
+                    sx={{ color: ev.chalkMute, cursor: 'pointer', '&:hover': { color: ev.chalk } }}
+                  >
+                    {c.label}
+                  </Box>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </Box>
+      )}
+
+      {(title || actions) && (
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) auto' },
+            alignItems: 'end',
+            gap: 4,
+            px,
+            pt: 'clamp(64px, 10vh, 120px)',
+            pb: 'clamp(48px, 8vh, 96px)',
+            borderBottom: `1px solid ${ev.rule}`,
+          }}
+        >
+          <Box sx={{ minWidth: 0 }}>
             {title && (
-              <Typography
-                variant="h3"
+              <Box
                 component="h1"
-                gutterBottom
                 sx={{
-                  fontWeight: 600,
-                  mb: subtitle ? 1 : 0,
+                  m: 0,
+                  fontFamily: ev.display,
+                  fontWeight: 400,
+                  fontSize: 'clamp(48px, 7vw, 96px)',
+                  lineHeight: 0.92,
+                  letterSpacing: '-0.025em',
+                  color: ev.chalk,
                 }}
               >
                 {title}
-              </Typography>
+                <Box component="span" sx={{ color: ev.accent }}>.</Box>
+              </Box>
             )}
             {subtitle && (
-              <Typography
-                variant="body1"
-                color="text.secondary"
-                sx={{ maxWidth: '800px' }}
+              <Box
+                sx={{
+                  mt: 3,
+                  maxWidth: '60ch',
+                  fontFamily: ev.body,
+                  fontWeight: 300,
+                  fontSize: 15,
+                  lineHeight: 1.55,
+                  color: ev.chalkDim,
+                }}
               >
                 {subtitle}
-              </Typography>
+              </Box>
             )}
           </Box>
 
           {actions && (
-            <Box
-              sx={{
-                display: 'flex',
-                gap: 2,
-                alignItems: 'center',
-                flexShrink: 0,
-              }}
-            >
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap', justifySelf: { md: 'end' } }}>
               {actions}
             </Box>
           )}
         </Box>
       )}
 
-      {/* Page Content */}
-      <Box>{children}</Box>
-    </Container>
+      <Box sx={{ px, py: 'clamp(48px, 8vh, 96px)' }}>
+        {children}
+      </Box>
+
+    </Box>
   );
 };
 

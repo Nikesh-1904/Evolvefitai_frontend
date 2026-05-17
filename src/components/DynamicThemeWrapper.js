@@ -5,30 +5,26 @@ import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { usePreferences } from '../contexts/PreferencesContext';
 
-// Import your themes
-import modernFitnessTheme from '../theme/modernFitnessTheme'; // Your Dark Theme
-import modernFitnessThemeLight from '../theme/lightTheme'; // Your Light Theme (using the filename you provided)
+import evolveDarkTheme from '../theme/evolveDarkTheme';
+import modernFitnessThemeLight from '../theme/lightTheme';
 
 export default function DynamicThemeWrapper({ children }) {
   const { preferences } = usePreferences();
 
-  // useMemo ensures the theme object is only recalculated when the preference changes
   const theme = useMemo(() => {
-    console.log("Applying theme:", preferences.theme); // Add log to check
     switch (preferences.theme) {
       case 'light':
         return modernFitnessThemeLight;
       case 'dark':
-        return modernFitnessTheme;
-      case 'auto':
-        // Basic check for system preference (you can enhance this)
+        return evolveDarkTheme;
+      case 'auto': {
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        return prefersDark ? modernFitnessTheme : modernFitnessThemeLight;
+        return prefersDark ? evolveDarkTheme : modernFitnessThemeLight;
+      }
       default:
-        // Default to dark if the setting is somehow invalid
-        return modernFitnessTheme;
+        return evolveDarkTheme;
     }
-  }, [preferences.theme]); // Dependency array: only re-run when theme preference changes
+  }, [preferences.theme]);
 
   return (
     <ThemeProvider theme={theme}>

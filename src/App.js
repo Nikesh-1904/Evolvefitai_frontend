@@ -12,7 +12,7 @@ import NavbarNew from './components/NavbarNew';
 import Breadcrumbs from './components/Breadcrumbs';
 import DynamicThemeWrapper from './components/DynamicThemeWrapper';
 import ErrorBoundary from './components/ErrorBoundary';
-import { Container, CircularProgress, Box } from '@mui/material';
+import { CircularProgress, Box } from '@mui/material';
 
 // Eager load critical pages (for faster first render)
 import LoginPage from './pages/LoginPage';
@@ -46,20 +46,17 @@ const PageLoader = () => (
       gap: 2,
     }}
   >
-    <CircularProgress
-      size={48}
-      sx={{
-        color: '#00D4FF',
-      }}
-    />
+    <CircularProgress size={32} />
     <Box
       sx={{
-        color: '#94A3B8',
-        fontSize: '0.875rem',
-        fontWeight: 500,
+        color: 'var(--ev-chalk-mute)',
+        fontFamily: 'var(--ev-mono)',
+        fontSize: 11,
+        letterSpacing: '0.22em',
+        textTransform: 'uppercase',
       }}
     >
-      Loading...
+      Loading
     </Box>
   </Box>
 );
@@ -71,9 +68,21 @@ function AppRoutes() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#0A0E1A' }}>
-        {/* You can replace this with a more sophisticated spinner component if you like */}
-        <p style={{ color: 'white' }}>Loading Application...</p>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          backgroundColor: 'var(--ev-ink)',
+          color: 'var(--ev-chalk-mute)',
+          fontFamily: 'var(--ev-mono)',
+          fontSize: 11,
+          letterSpacing: '0.22em',
+          textTransform: 'uppercase',
+        }}
+      >
+        Loading
       </div>
     );
   }
@@ -88,11 +97,12 @@ function AppRoutes() {
     return (
       <>
         <NavbarNew />
-        <div style={{ paddingTop: '80px' }}>
-          <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Box component="main" sx={{ pt: '64px', minHeight: '100vh', backgroundColor: 'var(--ev-ink)' }}>
+          <Box sx={{ px: 'clamp(28px, 6vw, 96px)', pt: 2 }}>
             <Breadcrumbs />
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
+          </Box>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/generate-workout" element={<WorkoutGenerator />} />
             <Route path="/workout-session" element={<WorkoutSession />} />
@@ -110,10 +120,9 @@ function AppRoutes() {
 
             {/* Fallback route for any other logged-in paths */}
             <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Suspense>
-          </Container>
-        </div>
+            </Routes>
+          </Suspense>
+        </Box>
       </>
     );
   }

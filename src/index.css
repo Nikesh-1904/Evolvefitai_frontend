@@ -1,9 +1,23 @@
 /*
- * Global Styles - Simplified to work with MUI Theme System
- * All design tokens are managed through MUI themes now
+ * EvolveFit AI — global stylesheet
+ * Jet-black, minimal, gallery-grade. Design tokens live in the MUI theme.
  */
 
-/* CSS Reset */
+:root {
+  --ev-ink:        #050505;
+  --ev-ink-2:      #0c0c0c;
+  --ev-rule:       #1a1a1a;
+  --ev-rule-soft:  #141414;
+  --ev-chalk:      #ece9e2;
+  --ev-chalk-dim:  #6e6c66;
+  --ev-chalk-mute: #3f3e3a;
+  --ev-accent:     #c9ff4a;
+
+  --ev-display: "DM Serif Display", "Times New Roman", serif;
+  --ev-body:    "Inter Tight", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ev-mono:    "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
 *,
 *::before,
 *::after {
@@ -16,6 +30,7 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: geometricPrecision;
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
 }
@@ -23,18 +38,33 @@ html {
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
-               'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
-               'Helvetica Neue', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--ev-ink);
+  color: var(--ev-chalk);
+  font-family: var(--ev-body);
+  font-weight: 400;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--ev-mono);
 }
 
-/* Accessibility */
+::selection {
+  background: var(--ev-accent);
+  color: var(--ev-ink);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ev-rule) var(--ev-ink);
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: var(--ev-ink); }
+*::-webkit-scrollbar-thumb { background: var(--ev-rule); }
+*::-webkit-scrollbar-thumb:hover { background: var(--ev-chalk-mute); }
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -47,13 +77,11 @@ code {
   border-width: 0;
 }
 
-/* Focus visible for accessibility */
 :focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 2px;
+  outline: 1px solid var(--ev-accent);
+  outline-offset: 3px;
 }
 
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -65,14 +93,23 @@ code {
   }
 }
 
-/* Print styles */
-@media print {
-  body {
-    background: white !important;
-  }
+@keyframes ev-breathe {
+  0%, 100% { transform: scale(1);    opacity: 1;    box-shadow: 0 0 0 0   rgba(201, 255, 74, 0.45); }
+  50%      { transform: scale(1.15); opacity: 0.85; box-shadow: 0 0 0 8px rgba(201, 255, 74, 0);    }
+}
+@keyframes ev-blink {
+  50% { opacity: 0.25; }
+}
+@keyframes ev-draw {
+  from { width: 0; }
+  to   { width: 220px; }
+}
+@keyframes ev-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
-  * {
-    box-shadow: none !important;
-    text-shadow: none !important;
-  }
+@media print {
+  body { background: white !important; color: black !important; }
+  * { box-shadow: none !important; text-shadow: none !important; }
 }

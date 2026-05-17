@@ -1,70 +1,64 @@
-// src/pages/WorkoutGenerator.js - Fixed Exercise Details Display
+// src/pages/WorkoutGenerator.js — Evolve / minimal generator
 
 import React, { useState } from 'react';
 import {
-  Typography,
   Box,
-  CircularProgress,
   Grid,
-  Chip,
-  List,
-  ListItem,
-  IconButton,
-  Divider,
   Stack,
+  CircularProgress,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  IconButton,
+  Alert,
 } from '@mui/material';
 import {
   PlayArrow,
-  AutoAwesome,
-  Timer,
-  FitnessCenter,
   VideoLibrary,
-  Lightbulb,
   ThumbUp,
   ThumbDown,
   Save,
-  LocalFireDepartment,
-  TrendingUp,
-  Psychology,
   Close,
   OpenInNew,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-// Import new design system components
 import { PageContainer } from '../components/design-system';
-import { Alert } from '../components/design-system';
-
-// Import API services
 import { workoutService } from '../services/api';
-
-// Import new hooks
 import { useGenerateWorkout, useExerciseDetails, useSaveWorkoutPlan } from '../hooks/useWorkouts';
-
-// Import our modern components
-import ModernCard, { StatCard } from '../components/ModernCard';
 import ModernInput, { ModernSelect } from '../components/ModernInput';
 import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
-import AIModelBadge from '../components/AIModelBadge';
+import { ev } from '../theme/evolveDarkTheme';
 
 const muscleGroups = ['Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core', 'Full Body'];
 const workoutTypes = ['Gym', 'Home Workout', 'Yoga', 'Cardio', 'HIIT'];
+
+const monoLabel = {
+  fontFamily: ev.mono,
+  fontSize: 10,
+  letterSpacing: '0.22em',
+  textTransform: 'uppercase',
+  color: ev.chalkDim,
+};
+
+const sectionHead = {
+  fontFamily: ev.display,
+  fontSize: 'clamp(28px, 3vw, 40px)',
+  letterSpacing: '-0.015em',
+  color: ev.chalk,
+  lineHeight: 1,
+};
 
 function WorkoutGenerator() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Use new hooks
   const { execute: generateWorkout, loading: generating, error: generateError } = useGenerateWorkout();
   const { execute: saveWorkoutPlan } = useSaveWorkoutPlan();
   const { execute: getExerciseDetails } = useExerciseDetails();
 
-  // State management
   const [workoutPlan, setWorkoutPlan] = useState(null);
   const [duration, setDuration] = useState(45);
   const [success, setSuccess] = useState('');
@@ -73,30 +67,21 @@ function WorkoutGenerator() {
   const [selectedMuscles, setSelectedMuscles] = useState([]);
   const [numExercises, setNumExercises] = useState('');
   const [workoutType, setWorkoutType] = useState('');
-
-  // New state for exercise details display
   const [loadingExerciseDetails, setLoadingExerciseDetails] = useState({});
-  const [exerciseDetailsDialog, setExerciseDetailsDialog] = useState(null);
+  const [detailsDialog, setDetailsDialog] = useState(null);
 
   const error = generateError ? 'Failed to generate workout. Please try again.' : '';
 
-  // All functions preserved exactly as original
-  const handleMuscleToggle = (muscle) => {
+  const handleMuscleToggle = (muscle) =>
     setSelectedMuscles((prev) =>
-      prev.includes(muscle)
-        ? prev.filter((m) => m !== muscle)
-        : [...prev, muscle]
+      prev.includes(muscle) ? prev.filter((m) => m !== muscle) : [...prev, muscle]
     );
-  };
 
-  const handleGenerateWorkout = async () => {
-    setSuccess('');
-    setWorkoutPlan(null);
-    setGenerationTime(null);
+  const handleGenerate = async () => {
+    setSuccess(''); setWorkoutPlan(null); setGenerationTime(null);
     const startTime = Date.now();
-
     try {
-      const requestData = {
+      const response = await generateWorkout({
         user_preferences: {
           fitness_goal: user?.fitness_goal || 'general_fitness',
           experience_level: user?.experience_level || 'intermediate',
@@ -105,688 +90,400 @@ function WorkoutGenerator() {
         target_muscle_groups: selectedMuscles,
         num_exercises: numExercises ? parseInt(numExercises, 10) : null,
         workout_type: workoutType || null,
-      };
-
-      const response = await generateWorkout(requestData);
-      const endTime = Date.now();
-      const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
-
+      });
+      const timeTaken = ((Date.now() - startTime) / 1000).toFixed(2);
       setGenerationTime(timeTaken);
       setWorkoutPlan(response);
-      setSuccess(`Workout generated in ${timeTaken}s by ${response.ai_model || 'AI'}!`);
-    } catch (err) {
-      // Error handled by hook
-    }
+      setSuccess(`Workout generated in ${timeTaken}s by ${response.ai_model || 'AI'}.`);
+    } catch (_) { /* hook surfaces error */ }
   };
 
-  // Enhanced fetchExerciseDetails function
-  const fetchExerciseDetails = async (exerciseName) => {
-    if (exerciseDetails[exerciseName]) {
-      // If already loaded, just toggle display
-      setExerciseDetailsDialog(exerciseName);
-      return;
-    }
-
-    setLoadingExerciseDetails(prev => ({ ...prev, [exerciseName]: true }));
-
+  const fetchExerciseDetails = async (name) => {
+    if (exerciseDetails[name]) { setDetailsDialog(name); return; }
+    setLoadingExerciseDetails((p) => ({ ...p, [name]: true }));
     try {
-      const details = await getExerciseDetails(exerciseName);
-      setExerciseDetails(prev => ({ ...prev, [exerciseName]: details }));
-      setExerciseDetailsDialog(exerciseName);
-    } catch (error) {
-      console.error('Failed to fetch exercise details:', error);
+      const details = await getExerciseDetails(name);
+      setExerciseDetails((p) => ({ ...p, [name]: details }));
+      setDetailsDialog(name);
+    } catch (err) {
+      console.error('Failed to fetch exercise details:', err);
     } finally {
-      setLoadingExerciseDetails(prev => ({ ...prev, [exerciseName]: false }));
+      setLoadingExerciseDetails((p) => ({ ...p, [name]: false }));
     }
   };
 
-  const handleStartWorkout = () => {
-    if (!workoutPlan) return;
-    navigate('/workout-session', { state: { workoutPlan: workoutPlan } });
-  };
-
+  const handleStartWorkout = () => workoutPlan && navigate('/workout-session', { state: { workoutPlan } });
   const handleSaveWorkout = async () => {
     if (!workoutPlan) return;
-    try {
-      await saveWorkoutPlan(workoutPlan);
-      setSuccess('Workout saved successfully!');
-    } catch (error) {
-      // Error handled by hook
-    }
+    try { await saveWorkoutPlan(workoutPlan); setSuccess('Plan saved.'); } catch (_) {}
+  };
+  const handleFeedback = async (name, kind) => {
+    try { await workoutService.submitExerciseFeedback(name, kind); setSuccess('Feedback noted. Coach updated.'); }
+    catch (err) { console.error(err); }
   };
 
-  const handleExerciseFeedback = async (exerciseName, feedback) => {
-    try {
-      await workoutService.submitExerciseFeedback(exerciseName, feedback);
-      setSuccess(`Feedback submitted! This helps improve AI recommendations.`);
-    } catch (error) {
-      console.error('Failed to submit feedback:', error);
-    }
-  };
-
-  // Options for select fields
   const numExerciseOptions = [
-    { value: '', label: 'AI Decides' },
-    ...Array.from({ length: 8 }, (_, i) => ({ value: i + 3, label: `${i + 3}` }))
+    { value: '', label: 'AI decides' },
+    ...Array.from({ length: 8 }, (_, i) => ({ value: i + 3, label: `${i + 3}` })),
   ];
-
-  const workoutTypeOptions = [
-    { value: '', label: 'Any' },
-    ...workoutTypes.map(type => ({ value: type, label: type }))
-  ];
+  const workoutTypeOptions = [{ value: '', label: 'Any' }, ...workoutTypes.map((t) => ({ value: t, label: t }))];
 
   return (
     <PageContainer
-      title="AI Workout Generator"
-      subtitle="Get personalized workouts powered by advanced AI models, tailored to your goals and preferences"
-      icon="💪"
-      maxWidth="lg"
+      title="Generate"
+      subtitle="Personalized programming built from your profile, recent training, and the constraints you set below."
     >
-      {/* Success/Error Messages */}
-      {success && (
-        <Alert severity="success" closable onClose={() => setSuccess('')} sx={{ mb: 3 }}>
-          {success}
-        </Alert>
-      )}
+      {success && <Alert severity="success" onClose={() => setSuccess('')} sx={{ mb: 4 }}>{success}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 4 }}>{error}</Alert>}
 
-      {error && (
-        <Alert severity="error" closable onClose={() => {}} sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
+      {/* ============ PARAMETERS ============ */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, borderTop: `1px solid ${ev.rule}`, borderBottom: `1px solid ${ev.rule}` }}>
+        {/* Left — parameters */}
+        <Box sx={{ p: { xs: 3, md: 5 }, borderRight: { md: `1px solid ${ev.rule}` }, borderBottom: { xs: `1px solid ${ev.rule}`, md: 'none' } }}>
+          <Box sx={{ ...monoLabel, mb: 4 }}>01 · Parameters</Box>
+          <Stack spacing={5}>
+            <ModernInput
+              label="Duration (minutes)"
+              type="number"
+              value={duration}
+              onChange={(e) => setDuration(Math.max(15, Math.min(120, parseInt(e.target.value) || 45)))}
+              helperText="15 – 120"
+            />
+            <ModernSelect
+              label="Number of exercises"
+              value={numExercises}
+              onChange={(e) => setNumExercises(e.target.value)}
+              options={numExerciseOptions}
+              helperText="Let the model decide, or set a specific count"
+            />
+            <ModernSelect
+              label="Environment"
+              value={workoutType}
+              onChange={(e) => setWorkoutType(e.target.value)}
+              options={workoutTypeOptions}
+              helperText="Where you'll train today"
+            />
+          </Stack>
+        </Box>
 
-      <Grid container spacing={4}>
-        {/* Workout Preferences Section */}
-        <Grid item xs={12} md={6}>
-          <ModernCard
-            title="Workout Preferences"
-            subtitle="Customize your AI-generated workout"
-            variant="glass"
-            headerAction={<FitnessCenter sx={{ color: '#00D4FF' }} />}
-          >
-            <Stack spacing={3}>
-              <ModernInput
-                label="Duration (minutes)"
-                type="number"
-                value={duration}
-                onChange={(e) => setDuration(Math.max(15, Math.min(120, parseInt(e.target.value) || 45)))}
-                variant="outlined"
-                helperText="15-120 minutes"
-                startIcon={<Timer />}
-              />
+        {/* Right — muscle groups */}
+        <Box sx={{ p: { xs: 3, md: 5 } }}>
+          <Box sx={{ ...monoLabel, mb: 4 }}>02 · Target muscles</Box>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+            {muscleGroups.map((muscle) => {
+              const active = selectedMuscles.includes(muscle);
+              return (
+                <Box
+                  key={muscle}
+                  onClick={() => handleMuscleToggle(muscle)}
+                  sx={{
+                    cursor: 'pointer',
+                    px: 2.5,
+                    py: 1.25,
+                    border: `1px solid ${active ? ev.chalk : ev.rule}`,
+                    backgroundColor: active ? ev.chalk : 'transparent',
+                    color: active ? ev.ink : ev.chalkDim,
+                    fontFamily: ev.mono,
+                    fontSize: 11,
+                    letterSpacing: '0.16em',
+                    textTransform: 'uppercase',
+                    transition: 'color .15s ease, border-color .15s ease, background-color .15s ease',
+                    '&:hover': { borderColor: active ? ev.chalk : ev.chalkMute, color: active ? ev.ink : ev.chalk },
+                  }}
+                >
+                  {muscle}
+                </Box>
+              );
+            })}
+          </Box>
 
-              <ModernSelect
-                label="Number of Exercises"
-                value={numExercises}
-                onChange={(e) => setNumExercises(e.target.value)}
-                options={numExerciseOptions}
-                variant="outlined"
-                helperText="Let AI decide or set a specific number"
-              />
-
-              <ModernSelect
-                label="Workout Type"
-                value={workoutType}
-                onChange={(e) => setWorkoutType(e.target.value)}
-                options={workoutTypeOptions}
-                variant="outlined"
-                helperText="Choose your preferred workout environment"
-              />
-            </Stack>
-          </ModernCard>
-        </Grid>
-
-        {/* Muscle Groups Section */}
-        <Grid item xs={12} md={6}>
-          <ModernCard
-            title="Target Muscle Groups"
-            subtitle="Select specific areas to focus on (optional)"
-            variant="glass"
-            headerAction={<Psychology sx={{ color: '#7C3AED' }} />}
-          >
-            <Stack spacing={2}>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {muscleGroups.map((muscle) => (
-                  <Chip
-                    key={muscle}
-                    label={muscle}
-                    onClick={() => handleMuscleToggle(muscle)}
-                    color={selectedMuscles.includes(muscle) ? 'primary' : 'default'}
-                    variant={selectedMuscles.includes(muscle) ? 'filled' : 'outlined'}
-                    sx={{
-                      borderRadius: '12px',
-                      fontWeight: 600,
-                      ...(selectedMuscles.includes(muscle) && {
-                        background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
-                        color: '#FFFFFF',
-                      }),
-                      '&:hover': {
-                        transform: 'translateY(-1px)',
-                        boxShadow: '0 4px 12px rgba(0, 212, 255, 0.3)',
-                      }
-                    }}
-                  />
-                ))}
+          {user && (user.fitness_goal || user.experience_level) && (
+            <Box sx={{ mt: 5, pt: 4, borderTop: `1px solid ${ev.rule}` }}>
+              <Box sx={{ ...monoLabel, mb: 2 }}>Inferred from your profile</Box>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, ...monoLabel, color: ev.chalk }}>
+                {user.fitness_goal && <Box>Goal · <Box component="span" sx={{ color: ev.chalkMute }}>{user.fitness_goal.replace('_', ' ')}</Box></Box>}
+                {user.experience_level && <Box>Level · <Box component="span" sx={{ color: ev.chalkMute }}>{user.experience_level}</Box></Box>}
               </Box>
+            </Box>
+          )}
+        </Box>
+      </Box>
 
-              {/* User Profile Info */}
-              {user && (
-                <Box sx={{ mt: 2, p: 2, borderRadius: '12px', background: 'rgba(0, 212, 255, 0.05)' }}>
-                  <Typography variant="body2" sx={{ color: '#CBD5E1', mb: 1, fontWeight: 600 }}>
-                    💪 Based on your profile:
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    {user.fitness_goal && (
-                      <Chip 
-                        label={`Goal: ${user.fitness_goal.replace('_', ' ')}`} 
-                        size="small" 
-                        variant="outlined"
-                        sx={{ color: '#00D4FF', borderColor: '#00D4FF' }}
-                      />
-                    )}
-                    {user.experience_level && (
-                      <Chip 
-                        label={`Level: ${user.experience_level}`} 
-                        size="small" 
-                        variant="outlined"
-                        sx={{ color: '#7C3AED', borderColor: '#7C3AED' }}
-                      />
-                    )}
+      {/* ============ GENERATE STRIP ============ */}
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 3, py: 6, flexWrap: 'wrap' }}>
+        <Box>
+          <Box sx={{ ...monoLabel }}>{generating ? 'Working' : 'Ready'}</Box>
+          <Box sx={{ ...sectionHead, mt: 2 }}>
+            {generating ? 'Generating…' : 'Compose this workout.'}
+          </Box>
+        </Box>
+        <PrimaryButton onClick={handleGenerate} disabled={generating} loading={generating} size="large">
+          {generating ? 'Generating' : 'Generate ↗'}
+        </PrimaryButton>
+      </Box>
+
+      {/* ============ RESULT ============ */}
+      {workoutPlan && (
+        <Box sx={{ borderTop: `1px solid ${ev.rule}` }}>
+          {/* Summary */}
+          <Box sx={{ py: 6 }}>
+            <Box sx={{ ...monoLabel }}>The plan</Box>
+            <Box sx={{
+              fontFamily: ev.display,
+              fontSize: 'clamp(40px, 5vw, 64px)',
+              letterSpacing: '-0.02em',
+              color: ev.chalk,
+              mt: 2,
+              lineHeight: 1,
+            }}>
+              {workoutPlan.name || 'Your session'}
+            </Box>
+            {workoutPlan.description && (
+              <Box sx={{ mt: 3, maxWidth: '60ch', color: ev.chalkDim, fontWeight: 300, fontSize: 15, lineHeight: 1.55 }}>
+                {workoutPlan.description}
+              </Box>
+            )}
+
+            <Box sx={{
+              mt: 6,
+              display: 'grid',
+              gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+              borderTop: `1px solid ${ev.rule}`,
+              borderBottom: `1px solid ${ev.rule}`,
+            }}>
+              {[
+                { label: 'Duration',   value: `${workoutPlan.estimated_duration || duration}`, unit: 'min' },
+                { label: 'Exercises',  value: workoutPlan.exercises?.length || 0 },
+                { label: 'Difficulty', value: workoutPlan.difficulty_level || 'Moderate' },
+                { label: 'Calories',   value: workoutPlan.estimated_calories ? `~${workoutPlan.estimated_calories}` : '—', unit: 'kcal' },
+              ].map((s, i, arr) => (
+                <Box key={s.label} sx={{
+                  py: 4,
+                  px: 3,
+                  borderRight: { md: i < arr.length - 1 ? `1px solid ${ev.rule}` : 'none' },
+                  borderBottom: { xs: i < arr.length - 1 ? `1px solid ${ev.rule}` : 'none', md: 'none' },
+                }}>
+                  <Box sx={monoLabel}>{s.label}</Box>
+                  <Box sx={{ fontFamily: ev.display, fontSize: 'clamp(36px, 4vw, 48px)', color: ev.chalk, letterSpacing: '-0.02em', mt: 2 }}>
+                    {s.value}
+                    {s.unit && <Box component="span" sx={{ fontFamily: ev.mono, fontSize: 12, color: ev.chalkMute, ml: 0.75, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{s.unit}</Box>}
                   </Box>
                 </Box>
+              ))}
+            </Box>
+
+            <Box sx={{ mt: 4, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              <PrimaryButton onClick={handleStartWorkout} startIcon={<PlayArrow />}>Begin session</PrimaryButton>
+              <SecondaryButton onClick={handleSaveWorkout} startIcon={<Save />}>Save plan</SecondaryButton>
+              {generationTime && (
+                <Box sx={{ ...monoLabel, alignSelf: 'center', color: ev.accent }}>
+                  ⚡ {generationTime}s
+                </Box>
               )}
-            </Stack>
-          </ModernCard>
-        </Grid>
-
-        {/* Generate Button Section */}
-        <Grid item xs={12}>
-          <Box sx={{ textAlign: 'center' }}>
-            <PrimaryButton
-              onClick={handleGenerateWorkout}
-              disabled={generating}
-              loading={generating}
-              size="large"
-              startIcon={generating ? undefined : <AutoAwesome />}
-              sx={{ 
-                minWidth: '280px',
-                height: '60px',
-                fontSize: '1.125rem',
-                fontWeight: 700,
-              }}
-            >
-              {generating ? 'Generating AI Workout...' : '🚀 Generate AI Workout'}
-            </PrimaryButton>
-
-            {generating && (
-              <Typography variant="body2" sx={{ color: '#CBD5E1', mt: 2 }}>
-                🧠 AI is analyzing your profile and preferences...
-              </Typography>
-            )}
+            </Box>
           </Box>
-        </Grid>
 
-        {/* Generated Workout Results */}
-        {workoutPlan && (
-          <>
-            {/* Workout Summary */}
-            <Grid item xs={12}>
-              <ModernCard
-                title={workoutPlan.name || 'Your Personalized Workout'}
-                subtitle={workoutPlan.description}
-                variant="feature"
-                headerAction={
-                  workoutPlan.ai_generated && (
-                    <AIModelBadge
-                      aiModel={workoutPlan.ai_model}
-                      aiGenerated={workoutPlan.ai_generated}
-                    />
-                  )
-                }
-              >
-                <Grid container spacing={2} sx={{ mb: 3 }}>
-                  <Grid item xs={6} sm={3}>
-                    <StatCard
-                      icon={<Timer />}
-                      value={`${workoutPlan.estimated_duration || duration} min`}
-                      label="Duration"
-                      variant="stat"
-                    />
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <StatCard
-                      icon={<FitnessCenter />}
-                      value={workoutPlan.exercises?.length || 0}
-                      label="Exercises"
-                      variant="stat"
-                    />
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <StatCard
-                      icon={<TrendingUp />}
-                      value={workoutPlan.difficulty_level || 'Moderate'}
-                      label="Difficulty"
-                      variant="stat"
-                    />
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <StatCard
-                      icon={<LocalFireDepartment />}
-                      value={workoutPlan.estimated_calories ? `~${workoutPlan.estimated_calories}` : 'N/A'}
-                      label="Calories"
-                      variant="stat"
-                    />
-                  </Grid>
-                </Grid>
-
-                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-                  <SecondaryButton
-                    onClick={handleSaveWorkout}
-                    startIcon={<Save />}
-                  >
-                    Save Plan
-                  </SecondaryButton>
-                  
-                  <PrimaryButton
-                    onClick={handleStartWorkout}
-                    startIcon={<PlayArrow />}
-                    size="large"
-                  >
-                    Start Workout
-                  </PrimaryButton>
-                </Box>
-
-                {generationTime && (
-                  <Typography variant="caption" sx={{ 
-                    color: '#10B981', 
-                    fontWeight: 600,
-                    textAlign: 'center',
-                    display: 'block',
-                    mt: 2 
-                  }}>
-                    ⚡ Generated in {generationTime}s
-                  </Typography>
-                )}
-              </ModernCard>
-            </Grid>
-
-            {/* Exercise List */}
-            <Grid item xs={12}>
-              <ModernCard
-                title={`Exercises (${workoutPlan.exercises?.length || 0})`}
-                subtitle="Your personalized workout routine"
-                variant="glass"
-              >
-                <List sx={{ p: 0 }}>
-                  {workoutPlan.exercises?.map((exercise, index) => (
-                    <React.Fragment key={index}>
-                      <ListItem
-                        sx={{
-                          px: 0,
-                          py: 3,
-                          flexDirection: 'column',
-                          alignItems: 'stretch',
-                        }}
-                      >
-                        {/* Exercise Header */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, width: '100%' }}>
-                          <Box
-                            sx={{
-                              width: 40,
-                              height: 40,
-                              borderRadius: '10px',
-                              background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: '#FFFFFF',
-                              fontWeight: 700,
-                              fontSize: '1.125rem',
-                            }}
-                          >
-                            {index + 1}
-                          </Box>
-                          
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                              fontWeight: 400,
-                              color: '#FFFFFF',
-                              flex: 1,
-                            }}
-                          >
-                            {exercise.name}
-                          </Typography>
-                        </Box>
-
-                        {/* Exercise Details */}
-                        {exercise.instructions && (
-                          <Typography variant="body2" sx={{ color: '#CBD5E1', mb: 2, lineHeight: 1.6 }}>
-                            📝 {exercise.instructions}
-                          </Typography>
-                        )}
-
-                        {/* Muscle Groups */}
-                        {exercise.muscle_groups && exercise.muscle_groups.length > 0 && (
-                          <Box sx={{ mb: 2 }}>
-                            <Typography variant="body2" sx={{ color: '#94A3B8', mb: 1 }}>
-                              🎯 Target Muscles:
-                            </Typography>
-                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                              {exercise.muscle_groups.map((muscle, idx) => (
-                                <Chip
-                                  key={idx}
-                                  label={muscle}
-                                  size="small"
-                                  sx={{
-                                    background: 'rgba(0, 212, 255, 0.1)',
-                                    color: '#00D4FF',
-                                    fontSize: '0.75rem',
-                                  }}
-                                />
-                              ))}
-                            </Box>
-                          </Box>
-                        )}
-
-                        {/* Action Buttons */}
-                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
-                          <SecondaryButton
-                            size="small"
-                            onClick={() => fetchExerciseDetails(exercise.name)}
-                            startIcon={loadingExerciseDetails[exercise.name] ? <CircularProgress size={16} /> : <VideoLibrary />}
-                            disabled={loadingExerciseDetails[exercise.name]}
-                          >
-                            {loadingExerciseDetails[exercise.name] ? 'Loading...' : 'Watch Videos'}
-                          </SecondaryButton>
-
-                          {/* Feedback Buttons */}
-                          <Box sx={{ ml: 'auto', display: 'flex', gap: 0.5 }}>
-                            <Typography variant="caption" sx={{ color: '#94A3B8', mr: 1 }}>
-                              Help improve AI:
-                            </Typography>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleExerciseFeedback(exercise.name, 'like')}
-                              sx={{ color: '#10B981' }}
-                            >
-                              <ThumbUp fontSize="small" />
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleExerciseFeedback(exercise.name, 'dislike')}
-                              sx={{ color: '#EF4444' }}
-                            >
-                              <ThumbDown fontSize="small" />
-                            </IconButton>
-                          </Box>
-                        </Box>
-                      </ListItem>
-                      
-                      {index < (workoutPlan.exercises?.length || 0) - 1 && (
-                        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-                      )}
-                    </React.Fragment>
-                  ))}
-                </List>
-              </ModernCard>
-            </Grid>
-
-            {/* Workout Tips */}
-            <Grid item xs={12}>
-              <ModernCard
-                title="Workout Summary & Tips"
-                variant="default"
-              >
-                <Typography variant="body1" sx={{ color: '#CBD5E1', mb: 2, lineHeight: 1.6 }}>
-                  This {workoutPlan.estimated_duration || duration}-minute {workoutPlan.difficulty_level || 'moderate'} workout 
-                  targets {workoutPlan.exercises?.length || 0} different exercises.
-                  {workoutPlan.estimated_calories && ` You'll burn approximately ${workoutPlan.estimated_calories} calories.`}
-                </Typography>
-                
-                <Typography variant="body2" sx={{ color: '#94A3B8', lineHeight: 1.6 }}>
-                  💪 Remember to warm up before starting, stay hydrated throughout, and listen to your body!
-                </Typography>
-
-                <Box sx={{ textAlign: 'center', mt: 3 }}>
-                  <PrimaryButton
-                    onClick={handleStartWorkout}
-                    startIcon={<PlayArrow />}
-                    size="large"
-                    sx={{ minWidth: '240px' }}
-                  >
-                    🚀 Start This Workout Now
-                  </PrimaryButton>
-                </Box>
-              </ModernCard>
-            </Grid>
-          </>
-        )}
-
-        {/* AI Info Footer */}
-        <Grid item xs={12}>
-          <ModernCard variant="glass">
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="body2" sx={{ color: '#CBD5E1', mb: 1 }}>
-                🤖 Powered by advanced AI models including Groq Llama3, Ollama, and rule-based systems
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#94A3B8' }}>
-                💪 Every workout is personalized based on your fitness profile and goals
-              </Typography>
+          {/* Exercise list */}
+          <Box sx={{ py: 6, borderTop: `1px solid ${ev.rule}` }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, alignItems: 'end', mb: 6 }}>
+              <Box sx={sectionHead}>The <Box component="em" sx={{ fontStyle: 'italic', color: ev.chalkDim }}>movements</Box></Box>
+              <Box sx={{ justifySelf: { md: 'end' }, ...monoLabel }}>{workoutPlan.exercises?.length || 0} total</Box>
             </Box>
-          </ModernCard>
-        </Grid>
-      </Grid>
 
-    <Dialog
-      open={!!exerciseDetailsDialog}
-      onClose={() => setExerciseDetailsDialog(null)}
-      maxWidth="md"
-      fullWidth
-      PaperProps={{
-        sx: {
-          background: 'rgba(26, 31, 46, 0.95)',
-          backdropFilter: 'blur(40px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: '24px',
-          maxHeight: '80vh',
-        }
-      }}
-    >
-      {exerciseDetailsDialog && exerciseDetails[exerciseDetailsDialog] && (
-        <>
-          <DialogTitle
-            sx={{
-              fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-              fontWeight: 400,
-              color: '#FFFFFF',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
             <Box>
-              <Typography variant="h5" sx={{ fontFamily: 'inherit', fontWeight: 'inherit' }}>
-                {exerciseDetailsDialog}
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#CBD5E1', mt: 0.5 }}>
-                Exercise details, videos, and tips
-              </Typography>
+              {workoutPlan.exercises?.map((exercise, index) => (
+                <Box key={index} sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '30px 1fr', md: '40px 1fr auto' },
+                  gap: 4,
+                  alignItems: 'baseline',
+                  py: 4,
+                  borderTop: `1px solid ${ev.rule}`,
+                  '&:last-of-type': { borderBottom: `1px solid ${ev.rule}` },
+                }}>
+                  <Box sx={{ fontFamily: ev.mono, fontSize: 11, letterSpacing: '0.1em', color: ev.chalkMute }}>
+                    {String(index + 1).padStart(2, '0')}
+                  </Box>
+                  <Box>
+                    <Box sx={{ fontFamily: ev.display, fontSize: 'clamp(22px, 2.4vw, 28px)', letterSpacing: '-0.01em', color: ev.chalk, lineHeight: 1.1 }}>
+                      {exercise.name}
+                    </Box>
+                    {exercise.instructions && (
+                      <Box sx={{ mt: 1.5, color: ev.chalkDim, fontWeight: 300, fontSize: 13, lineHeight: 1.55, maxWidth: '70ch' }}>
+                        {exercise.instructions}
+                      </Box>
+                    )}
+                    {exercise.muscle_groups?.length > 0 && (
+                      <Box sx={{ mt: 2, display: 'flex', gap: 1.5, flexWrap: 'wrap', ...monoLabel }}>
+                        {exercise.muscle_groups.map((m, i) => (
+                          <Box key={i} component="span" sx={{ color: ev.chalkDim }}>· {m}</Box>
+                        ))}
+                      </Box>
+                    )}
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box
+                      onClick={() => fetchExerciseDetails(exercise.name)}
+                      sx={{
+                        cursor: 'pointer',
+                        ...monoLabel,
+                        color: ev.chalkDim,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        '&:hover': { color: ev.accent },
+                      }}
+                    >
+                      {loadingExerciseDetails[exercise.name] ? <CircularProgress size={12} /> : <VideoLibrary sx={{ fontSize: 14 }} />}
+                      {loadingExerciseDetails[exercise.name] ? 'Loading' : 'Videos'}
+                    </Box>
+                    <IconButton size="small" onClick={() => handleFeedback(exercise.name, 'like')} sx={{ color: ev.chalkMute, '&:hover': { color: ev.accent } }}>
+                      <ThumbUp sx={{ fontSize: 16 }} />
+                    </IconButton>
+                    <IconButton size="small" onClick={() => handleFeedback(exercise.name, 'dislike')} sx={{ color: ev.chalkMute, '&:hover': { color: ev.warn } }}>
+                      <ThumbDown sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  </Box>
+                </Box>
+              ))}
             </Box>
-            <IconButton onClick={() => setExerciseDetailsDialog(null)} sx={{ color: '#94A3B8' }}>
-              <Close />
-            </IconButton>
-          </DialogTitle>
-          <DialogContent sx={{ pt: 3 }}>
-            <Stack spacing={3}>
-              {/* Exercise Videos */}
-              {Array.isArray(exerciseDetails[exerciseDetailsDialog]?.videos) &&
-                exerciseDetails[exerciseDetailsDialog].videos.length > 0 && (
-                <Box>
-                  <Typography variant="h6" sx={{
-                    color: '#00D4FF',
-                    fontWeight: 600,
-                    mb: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                  }}>
-                    <VideoLibrary /> Video Demonstrations
-                  </Typography>
-                  <Grid container spacing={2}>
-                    {exerciseDetails[exerciseDetailsDialog].videos.map((video, idx) => (
-                      <Grid item xs={12} sm={6} key={idx}>
-                        <ModernCard variant="glass" sx={{ cursor: 'pointer' }}>
+          </Box>
+
+          <Box sx={{ py: 6, borderTop: `1px solid ${ev.rule}` }}>
+            <Box sx={{ ...monoLabel }}>Reminder</Box>
+            <Box sx={{ mt: 2, ...sectionHead, fontStyle: 'italic', color: ev.chalkDim, maxWidth: '22ch' }}>
+              Warm up. Hydrate. Listen to the body.
+            </Box>
+            <Box sx={{ mt: 4 }}>
+              <PrimaryButton onClick={handleStartWorkout} startIcon={<PlayArrow />} size="large">
+                Begin session ↗
+              </PrimaryButton>
+            </Box>
+          </Box>
+        </Box>
+      )}
+
+      {/* ============ EXERCISE DETAILS DIALOG ============ */}
+      <Dialog
+        open={!!detailsDialog}
+        onClose={() => setDetailsDialog(null)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{ sx: { backgroundColor: ev.ink, border: `1px solid ${ev.rule}`, borderRadius: 0, maxHeight: '85vh' } }}
+      >
+        {detailsDialog && exerciseDetails[detailsDialog] && (
+          <>
+            <DialogTitle sx={{ p: 4, borderBottom: `1px solid ${ev.rule}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <Box>
+                <Box sx={monoLabel}>Exercise</Box>
+                <Box sx={{ fontFamily: ev.display, fontSize: 32, color: ev.chalk, letterSpacing: '-0.015em', mt: 1 }}>{detailsDialog}</Box>
+              </Box>
+              <IconButton onClick={() => setDetailsDialog(null)} sx={{ color: ev.chalkDim }}>
+                <Close />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent sx={{ p: 4 }}>
+              <Stack spacing={5}>
+                {Array.isArray(exerciseDetails[detailsDialog]?.videos) && exerciseDetails[detailsDialog].videos.length > 0 && (
+                  <Box>
+                    <Box sx={{ ...monoLabel, mb: 3 }}>Demonstrations</Box>
+                    <Grid container spacing={2}>
+                      {exerciseDetails[detailsDialog].videos.map((video, idx) => (
+                        <Grid item xs={12} sm={6} key={idx}>
                           <Box
-                            onClick={() => {
-                              if (video.youtube_url) {
-                                window.open(video.youtube_url, '_blank');
-                              } else if (video.url) {
-                                window.open(video.url, '_blank');
-                              }
-                            }}
+                            onClick={() => (video.youtube_url || video.url) && window.open(video.youtube_url || video.url, '_blank')}
                             sx={{
-                              textAlign: 'center',
-                              '&:hover .video-overlay': {
-                                opacity: 1,
-                              }
+                              cursor: 'pointer',
+                              border: `1px solid ${ev.rule}`,
+                              p: 0,
+                              transition: 'border-color .2s ease',
+                              '&:hover': { borderColor: ev.chalkMute, '& .play-overlay': { opacity: 1 } },
                             }}
                           >
                             {(video.thumbnail_url || video.thumbnail) && (
-                              <Box sx={{ position: 'relative', mb: 2 }}>
-                                <img
+                              <Box sx={{ position: 'relative' }}>
+                                <Box
+                                  component="img"
                                   src={video.thumbnail_url || video.thumbnail}
                                   alt={video.title || `Video ${idx + 1}`}
-                                  style={{
-                                    width: '100%',
-                                    height: '120px',
-                                    objectFit: 'cover',
-                                    borderRadius: '8px',
-                                  }}
+                                  sx={{ width: '100%', height: 140, objectFit: 'cover', display: 'block' }}
                                 />
                                 <Box
-                                  className="video-overlay"
+                                  className="play-overlay"
                                   sx={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                    bottom: 0,
-                                    background: 'rgba(0, 0, 0, 0.7)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    borderRadius: '8px',
-                                    opacity: 0,
-                                    transition: 'opacity 0.3s ease',
+                                    position: 'absolute', inset: 0,
+                                    background: 'rgba(0,0,0,0.6)',
+                                    display: 'grid', placeItems: 'center',
+                                    opacity: 0, transition: 'opacity .2s ease',
                                   }}
                                 >
-                                  <PlayArrow sx={{ fontSize: '3rem', color: '#00D4FF' }} />
+                                  <PlayArrow sx={{ fontSize: 48, color: ev.accent }} />
                                 </Box>
                               </Box>
                             )}
-                            <Typography variant="body1" sx={{
-                              color: '#FFFFFF',
-                              fontWeight: 600,
-                              mb: 1,
-                            }}>
-                              {video.title || `Video ${idx + 1}`}
-                            </Typography>
-                            {video.duration && (
-                              <Typography variant="caption" sx={{ color: '#94A3B8' }}>
-                                Duration: {video.duration}
-                              </Typography>
-                            )}
-                            <Box sx={{ mt: 2 }}>
-                              <SecondaryButton
-                                size="small"
-                                endIcon={<OpenInNew />}
-                                fullWidth
-                              >
-                                Watch Video
-                              </SecondaryButton>
+                            <Box sx={{ p: 2 }}>
+                              <Box sx={{ fontFamily: ev.body, fontSize: 14, color: ev.chalk, fontWeight: 500 }}>
+                                {video.title || `Video ${idx + 1}`}
+                              </Box>
+                              {video.duration && (
+                                <Box sx={{ ...monoLabel, mt: 1 }}>{video.duration}</Box>
+                              )}
                             </Box>
                           </Box>
-                        </ModernCard>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </Box>
-              )}
-
-              {/* Exercise Tips */}
-              {Array.isArray(exerciseDetails[exerciseDetailsDialog]?.tips) &&
-                exerciseDetails[exerciseDetailsDialog].tips.length > 0 && (
-                <Box>
-                  <Typography variant="h6" sx={{
-                    color: '#7C3AED',
-                    fontWeight: 600,
-                    mb: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                  }}>
-                    <Lightbulb /> Exercise Tips
-                  </Typography>
-                  <Grid container spacing={1}>
-                    {exerciseDetails[exerciseDetailsDialog].tips.map((tip, idx) => (
-                      <Grid item xs={12} sm={6} md={4} key={idx}>
-                        <Box sx={{
-                          p: 2,
-                          borderRadius: '12px',
-                          background: 'rgba(124, 58, 237, 0.1)',
-                          border: '1px solid rgba(124, 58, 237, 0.2)',
-                        }}>
-                          <Typography variant="body2" sx={{
-                            color: '#FFFFFF',
-                            fontWeight: 500,
-                            lineHeight: 1.5,
-                          }}>
-                            💡 {tip.content || tip.title || tip}
-                          </Typography>
-                        </Box>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </Box>
-              )}
-
-              {/* Equipment Requirements */}
-              {Array.isArray(exerciseDetails[exerciseDetailsDialog]?.equipment) &&
-                exerciseDetails[exerciseDetailsDialog].equipment.length > 0 && (
-                <Box>
-                  <Typography variant="body2" sx={{ color: '#CBD5E1', mb: 1, fontWeight: 600 }}>
-                    🏋️ Equipment Needed:
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {exerciseDetails[exerciseDetailsDialog].equipment.map((item, idx) => (
-                      <Chip
-                        key={idx}
-                        label={item}
-                        size="small"
-                        sx={{
-                          background: 'rgba(0, 212, 255, 0.1)',
-                          color: '#00D4FF',
-                          fontSize: '0.75rem',
-                        }}
-                      />
-                    ))}
+                        </Grid>
+                      ))}
+                    </Grid>
                   </Box>
-                </Box>
-              )}
-            </Stack>
-          </DialogContent>
-          <DialogActions sx={{ p: 3, gap: 1 }}>
-            <SecondaryButton onClick={() => setExerciseDetailsDialog(null)}>
-              Close
-            </SecondaryButton>
-          </DialogActions>
-        </>
-      )}
-    </Dialog>
+                )}
 
+                {Array.isArray(exerciseDetails[detailsDialog]?.tips) && exerciseDetails[detailsDialog].tips.length > 0 && (
+                  <Box>
+                    <Box sx={{ ...monoLabel, mb: 3 }}>Form tips</Box>
+                    <Stack spacing={0}>
+                      {exerciseDetails[detailsDialog].tips.map((tip, idx) => (
+                        <Box key={idx} sx={{
+                          py: 2.5,
+                          borderTop: `1px solid ${ev.rule}`,
+                          '&:last-of-type': { borderBottom: `1px solid ${ev.rule}` },
+                          color: ev.chalk,
+                          fontSize: 14,
+                          lineHeight: 1.6,
+                        }}>
+                          {tip.content || tip.title || tip}
+                        </Box>
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
+
+                {Array.isArray(exerciseDetails[detailsDialog]?.equipment) && exerciseDetails[detailsDialog].equipment.length > 0 && (
+                  <Box>
+                    <Box sx={{ ...monoLabel, mb: 2 }}>Equipment</Box>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+                      {exerciseDetails[detailsDialog].equipment.map((item, idx) => (
+                        <Box key={idx} sx={{
+                          ...monoLabel,
+                          color: ev.chalk,
+                          px: 2,
+                          py: 1,
+                          border: `1px solid ${ev.rule}`,
+                        }}>
+                          {item}
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+              </Stack>
+            </DialogContent>
+            <DialogActions sx={{ p: 3, borderTop: `1px solid ${ev.rule}` }}>
+              <SecondaryButton onClick={() => setDetailsDialog(null)} endIcon={<OpenInNew sx={{ fontSize: 14 }} />}>
+                Close
+              </SecondaryButton>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
     </PageContainer>
   );
 }

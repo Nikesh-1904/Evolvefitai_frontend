@@ -1,18 +1,17 @@
-// src/components/Breadcrumbs.js - Premium Breadcrumb Navigation
+// src/components/Breadcrumbs.js — mono crumbs, hairline rule
 
 import React from 'react';
-import { Breadcrumbs as MuiBreadcrumbs, Typography, Box, Link } from '@mui/material';
-import { NavigateNext, Home } from '@mui/icons-material';
+import { Box } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { ev } from '../theme/evolveDarkTheme';
 
-// Route name mapping
 const routeNames = {
-  '/': 'Dashboard',
-  '/generate-workout': 'Generate Workout',
-  '/workout-recommendations': 'AI Recommendations',
-  '/exercises': 'Exercise Library',
-  '/log-workout': 'Log Workout',
-  '/workout-history': 'Workout History',
+  '/': 'Today',
+  '/generate-workout': 'Generate workout',
+  '/workout-recommendations': 'AI recommendations',
+  '/exercises': 'Exercise library',
+  '/log-workout': 'Log workout',
+  '/workout-history': 'Workout history',
   '/profile': 'Profile',
   '/analytics': 'Analytics',
   '/achievements': 'Achievements',
@@ -20,96 +19,67 @@ const routeNames = {
   '/notifications': 'Notifications',
 };
 
+const baseCrumb = {
+  fontFamily: ev.mono,
+  fontSize: 11,
+  letterSpacing: '0.18em',
+  textTransform: 'uppercase',
+  cursor: 'pointer',
+  background: 'none',
+  border: 'none',
+  padding: 0,
+  transition: 'color .2s ease',
+};
+
 function Breadcrumbs() {
   const navigate = useNavigate();
   const location = useLocation();
-
   const pathnames = location.pathname.split('/').filter((x) => x);
 
-  // Don't show breadcrumbs on dashboard
-  if (location.pathname === '/') {
-    return null;
-  }
+  if (location.pathname === '/') return null;
 
   return (
-    <Box sx={{ mb: 3 }}>
-      <MuiBreadcrumbs
-        separator={<NavigateNext fontSize="small" sx={{ color: '#94A3B8' }} />}
-        aria-label="breadcrumb"
-        sx={{
-          '& .MuiBreadcrumbs-separator': {
-            mx: 1,
-          },
-        }}
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1.5,
+        color: ev.chalkMute,
+        py: 1,
+      }}
+    >
+      <Box
+        component="button"
+        onClick={() => navigate('/')}
+        sx={{ ...baseCrumb, color: ev.chalkMute, '&:hover': { color: ev.chalk } }}
       >
-        {/* Home link */}
-        <Link
-          component="button"
-          onClick={() => navigate('/')}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 0.5,
-            color: '#94A3B8',
-            textDecoration: 'none',
-            fontSize: '0.875rem',
-            fontWeight: 500,
-            cursor: 'pointer',
-            background: 'none',
-            border: 'none',
-            padding: 0,
-            '&:hover': {
-              color: '#00D4FF',
-            },
-            transition: 'color 0.2s',
-          }}
-        >
-          <Home sx={{ fontSize: 18 }} />
-          Home
-        </Link>
+        Today
+      </Box>
 
-        {/* Current page(s) */}
-        {pathnames.map((value, index) => {
-          const last = index === pathnames.length - 1;
-          const to = `/${pathnames.slice(0, index + 1).join('/')}`;
-          const name = routeNames[to] || value.charAt(0).toUpperCase() + value.slice(1);
+      {pathnames.map((value, index) => {
+        const last = index === pathnames.length - 1;
+        const to = `/${pathnames.slice(0, index + 1).join('/')}`;
+        const name = routeNames[to] || value.charAt(0).toUpperCase() + value.slice(1);
 
-          return last ? (
-            <Typography
-              key={to}
-              sx={{
-                color: '#00D4FF',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-              }}
-            >
-              {name}
-            </Typography>
-          ) : (
-            <Link
-              key={to}
-              component="button"
-              onClick={() => navigate(to)}
-              sx={{
-                color: '#94A3B8',
-                textDecoration: 'none',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-                background: 'none',
-                border: 'none',
-                padding: 0,
-                '&:hover': {
-                  color: '#00D4FF',
-                },
-                transition: 'color 0.2s',
-              }}
-            >
-              {name}
-            </Link>
-          );
-        })}
-      </MuiBreadcrumbs>
+        return (
+          <React.Fragment key={to}>
+            <Box component="span" sx={{ color: ev.chalkMute, fontFamily: ev.mono, fontSize: 11 }}>/</Box>
+            {last ? (
+              <Box component="span" sx={{ ...baseCrumb, cursor: 'default', color: ev.chalk }}>
+                {name}
+              </Box>
+            ) : (
+              <Box
+                component="button"
+                onClick={() => navigate(to)}
+                sx={{ ...baseCrumb, color: ev.chalkMute, '&:hover': { color: ev.chalk } }}
+              >
+                {name}
+              </Box>
+            )}
+          </React.Fragment>
+        );
+      })}
     </Box>
   );
 }
