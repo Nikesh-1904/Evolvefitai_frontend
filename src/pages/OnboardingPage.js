@@ -1,62 +1,47 @@
-// src/pages/OnboardingPage.js - Modern AI Fitness Onboarding Experience
+// src/pages/OnboardingPage.js — Evolve / minimal 3-step onboarding
 
 import React, { useState } from 'react';
-import {
-  Box,
-  Typography,
-  Stepper,
-  Step,
-  StepLabel,
-  Chip,
-  Grid,
-  Stack,
-  Avatar,
-  LinearProgress,
-  Fade,
-  Slide,
-} from '@mui/material';
-import {
-  Person,
-  MonitorWeight,
-  FitnessCenter,
-  CheckCircle,
-  AutoAwesome,
-  TrendingUp,
-  Restaurant,
-  EmojiEvents,
-} from '@mui/icons-material';
+import { Box, Stack, Alert } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-// Import our modern components
-import ModernCard from '../components/ModernCard';
 import ModernInput from '../components/ModernInput';
 import { PrimaryButton, SecondaryButton } from '../components/ModernButton';
-import { PageContainer, Alert } from '../components/design-system';
+import { ev } from '../theme/evolveDarkTheme';
 
-const steps = ['Welcome', 'Your Stats', 'Fitness Goals'];
+const PAGE_X = 'clamp(28px, 6vw, 96px)';
 
-const commonDietaryRestrictions = [
-  { value: 'vegetarian', label: 'Vegetarian', emoji: '🥬' },
-  { value: 'vegan', label: 'Vegan', emoji: '🌱' },
-  { value: 'gluten_free', label: 'Gluten Free', emoji: '🌾' },
-  { value: 'dairy_free', label: 'Dairy Free', emoji: '🥛' },
-  { value: 'keto', label: 'Keto', emoji: '🥑' },
-  { value: 'paleo', label: 'Paleo', emoji: '🥩' },
+const mono = { fontFamily: ev.mono };
+const display = { fontFamily: ev.display };
+const monoLabel = { ...mono, fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: ev.chalkDim };
+
+const steps = [
+  { num: '01', name: 'Identity' },
+  { num: '02', name: 'Body' },
+  { num: '03', name: 'Goals' },
 ];
 
 const fitnessGoals = [
-  { value: 'weight_loss', label: 'Weight Loss', icon: <TrendingUp />, color: '#FF3366' },
-  { value: 'muscle_gain', label: 'Muscle Gain', icon: <FitnessCenter />, color: '#00D4FF' },
-  { value: 'strength', label: 'Strength', icon: <EmojiEvents />, color: '#7C3AED' },
-  { value: 'endurance', label: 'Endurance', icon: <AutoAwesome />, color: '#10B981' },
-  { value: 'general_fitness', label: 'General Fitness', icon: <CheckCircle />, color: '#F59E0B' },
+  { value: 'weight_loss',      label: 'Weight loss' },
+  { value: 'muscle_gain',      label: 'Muscle gain' },
+  { value: 'strength',         label: 'Strength' },
+  { value: 'endurance',        label: 'Endurance' },
+  { value: 'general_fitness',  label: 'General fitness' },
+];
+
+const dietaryRestrictions = [
+  { value: 'vegetarian',  label: 'Vegetarian' },
+  { value: 'vegan',       label: 'Vegan' },
+  { value: 'gluten_free', label: 'Gluten free' },
+  { value: 'dairy_free',  label: 'Dairy free' },
+  { value: 'keto',        label: 'Keto' },
+  { value: 'paleo',       label: 'Paleo' },
 ];
 
 function OnboardingPage() {
   const { user, updateProfile } = useAuth();
   const navigate = useNavigate();
-  
+
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
     username: user?.username || '',
@@ -66,668 +51,357 @@ function OnboardingPage() {
     fitness_goal: user?.fitness_goal || '',
     dietary_restrictions: user?.dietary_restrictions || [],
   });
-  
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleNext = () => {
-    if (validateStep()) {
-      setActiveStep((prevActiveStep) => prevActiveStep + 1);
-    }
-  };
-
-  const handleBack = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep - 1);
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear field error when user starts typing
-    if (fieldErrors[name]) {
-      setFieldErrors(prev => ({ ...prev, [name]: '' }));
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (fieldErrors[name]) setFieldErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
-  const handleDietaryRestrictionToggle = (restriction) => {
-    setFormData(prev => ({
+  const toggleRestriction = (value) => {
+    setFormData((prev) => ({
       ...prev,
-      dietary_restrictions: prev.dietary_restrictions.includes(restriction)
-        ? prev.dietary_restrictions.filter(r => r !== restriction)
-        : [...prev.dietary_restrictions, restriction]
+      dietary_restrictions: prev.dietary_restrictions.includes(value)
+        ? prev.dietary_restrictions.filter((r) => r !== value)
+        : [...prev.dietary_restrictions, value],
     }));
   };
 
   const validateStep = () => {
-    const newErrors = {};
-    
+    const errs = {};
     if (activeStep === 0 && (!formData.username || formData.username.trim().length < 3)) {
-      newErrors.username = 'Username must be at least 3 characters long.';
+      errs.username = 'Username must be at least 3 characters';
     }
-    
     if (activeStep === 1) {
-      if (!formData.age || formData.age < 13) newErrors.age = 'You must be at least 13 years old.';
-      if (!formData.weight || formData.weight < 30) newErrors.weight = 'Please enter a valid weight.';
-      if (!formData.height || formData.height < 100) newErrors.height = 'Please enter a valid height in cm.';
+      if (!formData.age || formData.age < 13) errs.age = 'Must be at least 13';
+      if (!formData.weight || formData.weight < 30) errs.weight = 'Enter a valid weight';
+      if (!formData.height || formData.height < 100) errs.height = 'Enter a valid height in cm';
     }
-    
     if (activeStep === 2 && !formData.fitness_goal) {
-      newErrors.fitness_goal = 'Please select a fitness goal.';
+      errs.fitness_goal = 'Pick a primary goal';
     }
-    
-    setFieldErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
   };
+
+  const handleNext = () => { if (validateStep()) setActiveStep((s) => s + 1); };
+  const handleBack = () => setActiveStep((s) => Math.max(0, s - 1));
 
   const handleFinish = async () => {
-    if (validateStep()) {
-      setIsSubmitting(true);
-      setSubmitError('');
-      try {
-        await updateProfile({ ...formData, has_completed_onboarding: true });
-        navigate('/dashboard');
-      } catch (err) {
-        setSubmitError(err.message || "Failed to save profile. Please try again.");
-      } finally {
-        setIsSubmitting(false);
-      }
+    if (!validateStep()) return;
+    setIsSubmitting(true); setSubmitError('');
+    try {
+      await updateProfile({ ...formData, has_completed_onboarding: true });
+      navigate('/');
+    } catch (err) {
+      setSubmitError(err.message || 'Failed to save profile. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const getStepIcon = (step) => {
-    switch (step) {
-      case 0: return <Person />;
-      case 1: return <MonitorWeight />;
-      case 2: return <FitnessCenter />;
-      default: return <CheckCircle />;
-    }
-  };
-
-  const getStepContent = (step) => {
-    switch (step) {
+  const renderStepContent = () => {
+    switch (activeStep) {
       case 0:
         return (
-          <Fade in timeout={500}>
+          <Stack spacing={5}>
             <Box>
-              {/* Welcome Hero */}
-              <Box sx={{ textAlign: 'center', mb: 6 }}>
-                <Box
-                  sx={{
-                    width: 120,
-                    height: 120,
-                    borderRadius: '30px',
-                    background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#FFFFFF',
-                    fontSize: '3rem',
-                    mx: 'auto',
-                    mb: 4,
-                    animation: 'pulse 2s infinite',
-                  }}
-                >
-                  🚀
-                </Box>
-                
-                <Typography
-                  variant="h3"
-                  sx={{
-                    fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                    fontWeight: 400,
-                    fontSize: { xs: '2rem', sm: '2.5rem' },
-                    color: '#FFFFFF',
-                    lineHeight: 1.2,
-                    mb: 2,
-                  }}
-                >
-                  Welcome to EvolveFit AI!
-                </Typography>
-                
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: '#CBD5E1',
-                    fontWeight: 500,
-                    fontSize: '1.25rem',
-                    maxWidth: '600px',
-                    mx: 'auto',
-                    mb: 4,
-                    lineHeight: 1.6,
-                  }}
-                >
-                  Let's create your personalized fitness profile in just 3 simple steps. 
-                  This helps our AI generate workouts and meal plans tailored specifically for you.
-                </Typography>
-
-                {/* Feature Preview */}
-                <Grid container spacing={2} sx={{ maxWidth: 600, mx: 'auto', mb: 4 }}>
-                  <Grid item xs={4}>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Avatar sx={{ 
-                        width: 60, 
-                        height: 60, 
-                        mx: 'auto', 
-                        mb: 1,
-                        background: 'linear-gradient(135deg, #00D4FF 0%, #0EA5E9 100%)',
-                      }}>
-                        <AutoAwesome />
-                      </Avatar>
-                      <Typography variant="body2" sx={{ color: '#94A3B8', fontWeight: 500 }}>
-                        AI Workouts
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={4}>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Avatar sx={{ 
-                        width: 60, 
-                        height: 60, 
-                        mx: 'auto', 
-                        mb: 1,
-                        background: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
-                      }}>
-                        <Restaurant />
-                      </Avatar>
-                      <Typography variant="body2" sx={{ color: '#94A3B8', fontWeight: 500 }}>
-                        Meal Plans
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={4}>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Avatar sx={{ 
-                        width: 60, 
-                        height: 60, 
-                        mx: 'auto', 
-                        mb: 1,
-                        background: 'linear-gradient(135deg, #FF3366 0%, #FF6B35 100%)',
-                      }}>
-                        <TrendingUp />
-                      </Avatar>
-                      <Typography variant="body2" sx={{ color: '#94A3B8', fontWeight: 500 }}>
-                        Progress Tracking
-                      </Typography>
-                    </Box>
-                  </Grid>
-                </Grid>
+              <Box
+                component="h1"
+                sx={{
+                  m: 0,
+                  ...display,
+                  fontWeight: 400,
+                  fontSize: 'clamp(56px, 8vw, 120px)',
+                  lineHeight: 0.9,
+                  letterSpacing: '-0.025em',
+                  color: ev.chalk,
+                }}
+              >
+                Welcome to <Box component="em" sx={{ fontStyle: 'italic', color: ev.chalkDim }}>evolve</Box>
+                <Box component="span" sx={{ color: ev.accent }}>.</Box>
               </Box>
-
-              {/* Username Input */}
-              <ModernCard variant="glass" sx={{ maxWidth: 500, mx: 'auto' }}>
-                <Typography
-                  variant="h5"
-                  sx={{
-                    fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                    fontWeight: 400,
-                    color: '#FFFFFF',
-                    mb: 3,
-                    textAlign: 'center',
-                  }}
-                >
-                  Choose Your Username
-                </Typography>
-                
-                <ModernInput
-                  label="Username"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  placeholder="Enter a unique username"
-                  required
-                  variant="outlined"
-                  error={!!fieldErrors.username}
-                  helperText={fieldErrors.username || "This will be your public display name"}
-                  startIcon={<Person />}
-                  fullWidth
-                />
-              </ModernCard>
+              <Box sx={{ mt: 4, maxWidth: '54ch', color: ev.chalk, fontSize: 16, lineHeight: 1.55, fontWeight: 500 }}>
+                Three quick steps to set up your profile. We'll use these to tailor what you see — workouts, plans, and the analysis on your dashboard.
+              </Box>
             </Box>
-          </Fade>
+
+            <Box sx={{ pt: 4, borderTop: `1px solid ${ev.rule}` }}>
+              <Box sx={{ ...monoLabel, mb: 3 }}>Choose a username</Box>
+              <ModernInput
+                label="Username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="A unique display name"
+                required
+                error={!!fieldErrors.username}
+                helperText={fieldErrors.username || 'Visible to others — minimum 3 characters'}
+              />
+            </Box>
+          </Stack>
         );
 
       case 1:
         return (
-          <Slide direction="left" in timeout={500}>
+          <Stack spacing={5}>
             <Box>
-              <Box sx={{ textAlign: 'center', mb: 4 }}>
-                <Box
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: '20px',
-                    background: 'linear-gradient(135deg, #FF3366 0%, #FF6B35 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#FFFFFF',
-                    fontSize: '2rem',
-                    mx: 'auto',
-                    mb: 3,
-                  }}
-                >
-                  📊
-                </Box>
-                
-                <Typography
-                  variant="h4"
-                  sx={{
-                    fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                    fontWeight: 400,
-                    color: '#FFFFFF',
-                    mb: 2,
-                  }}
-                >
-                  Your Physical Stats
-                </Typography>
-                
-                <Typography
-                  variant="body1"
-                  sx={{
-                    color: '#CBD5E1',
-                    maxWidth: '500px',
-                    mx: 'auto',
-                  }}
-                >
-                  This information helps our AI create personalized workouts and accurate calorie estimates just for you.
-                </Typography>
+              <Box
+                component="h1"
+                sx={{
+                  m: 0,
+                  ...display,
+                  fontWeight: 400,
+                  fontSize: 'clamp(56px, 8vw, 120px)',
+                  lineHeight: 0.9,
+                  letterSpacing: '-0.025em',
+                  color: ev.chalk,
+                }}
+              >
+                Body <Box component="em" sx={{ fontStyle: 'italic', color: ev.chalkDim }}>basics</Box>
+                <Box component="span" sx={{ color: ev.accent }}>.</Box>
               </Box>
-
-              <ModernCard variant="glass" sx={{ maxWidth: 600, mx: 'auto' }}>
-                <Grid container spacing={3}>
-                  <Grid item xs={12} sm={4}>
-                    <ModernInput
-                      label="Age"
-                      name="age"
-                      type="number"
-                      value={formData.age}
-                      onChange={handleChange}
-                      placeholder="Your age"
-                      required
-                      variant="outlined"
-                      error={!!fieldErrors.age}
-                      helperText={fieldErrors.age}
-                      fullWidth
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={12} sm={4}>
-                    <ModernInput
-                      label="Weight (kg)"
-                      name="weight"
-                      type="number"
-                      value={formData.weight}
-                      onChange={handleChange}
-                      placeholder="Your weight"
-                      required
-                      variant="outlined"
-                      error={!!fieldErrors.weight}
-                      helperText={fieldErrors.weight}
-                      fullWidth
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={12} sm={4}>
-                    <ModernInput
-                      label="Height (cm)"
-                      name="height"
-                      type="number"
-                      value={formData.height}
-                      onChange={handleChange}
-                      placeholder="Your height"
-                      required
-                      variant="outlined"
-                      error={!!fieldErrors.height}
-                      helperText={fieldErrors.height}
-                      fullWidth
-                    />
-                  </Grid>
-                </Grid>
-
-                {/* BMI Preview */}
-                {formData.weight && formData.height && (
-                  <Box sx={{ mt: 3, textAlign: 'center' }}>
-                    <Box
-                      sx={{
-                        p: 3,
-                        borderRadius: '16px',
-                        background: 'linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%)',
-                        border: '1px solid rgba(0, 212, 255, 0.2)',
-                      }}
-                    >
-                      <Typography variant="body2" sx={{ color: '#CBD5E1', mb: 1 }}>
-                        Your BMI Preview
-                      </Typography>
-                      <Typography
-                        variant="h4"
-                        sx={{
-                          fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                          color: '#00D4FF',
-                          fontWeight: 400,
-                        }}
-                      >
-                        {((parseFloat(formData.weight) / (parseFloat(formData.height) / 100) ** 2) || 0).toFixed(1)}
-                      </Typography>
-                    </Box>
-                  </Box>
-                )}
-              </ModernCard>
+              <Box sx={{ mt: 4, maxWidth: '54ch', color: ev.chalk, fontSize: 16, lineHeight: 1.55, fontWeight: 500 }}>
+                We use these to calibrate calorie estimates, BMI, and intensity targets. Enter actual values, not aspirational ones.
+              </Box>
             </Box>
-          </Slide>
+
+            <Box sx={{ pt: 4, borderTop: `1px solid ${ev.rule}`, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 4 }}>
+              <ModernInput
+                label="Age"
+                name="age"
+                type="number"
+                value={formData.age}
+                onChange={handleChange}
+                placeholder="Years"
+                required
+                error={!!fieldErrors.age}
+                helperText={fieldErrors.age}
+              />
+              <ModernInput
+                label="Weight · kg"
+                name="weight"
+                type="number"
+                value={formData.weight}
+                onChange={handleChange}
+                placeholder="e.g. 72"
+                required
+                error={!!fieldErrors.weight}
+                helperText={fieldErrors.weight}
+              />
+              <ModernInput
+                label="Height · cm"
+                name="height"
+                type="number"
+                value={formData.height}
+                onChange={handleChange}
+                placeholder="e.g. 178"
+                required
+                error={!!fieldErrors.height}
+                helperText={fieldErrors.height}
+              />
+            </Box>
+          </Stack>
         );
 
       case 2:
         return (
-          <Slide direction="left" in timeout={500}>
+          <Stack spacing={5}>
             <Box>
-              <Box sx={{ textAlign: 'center', mb: 4 }}>
-                <Box
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: '20px',
-                    background: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#FFFFFF',
-                    fontSize: '2rem',
-                    mx: 'auto',
-                    mb: 3,
-                  }}
-                >
-                  🎯
-                </Box>
-                
-                <Typography
-                  variant="h4"
-                  sx={{
-                    fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                    fontWeight: 400,
-                    color: '#FFFFFF',
-                    mb: 2,
-                  }}
-                >
-                  Fitness Goals & Preferences
-                </Typography>
-                
-                <Typography
-                  variant="body1"
-                  sx={{
-                    color: '#CBD5E1',
-                    maxWidth: '500px',
-                    mx: 'auto',
-                  }}
-                >
-                  Tell us what you want to achieve and any dietary preferences you have.
-                </Typography>
+              <Box
+                component="h1"
+                sx={{
+                  m: 0,
+                  ...display,
+                  fontWeight: 400,
+                  fontSize: 'clamp(56px, 8vw, 120px)',
+                  lineHeight: 0.9,
+                  letterSpacing: '-0.025em',
+                  color: ev.chalk,
+                }}
+              >
+                Your <Box component="em" sx={{ fontStyle: 'italic', color: ev.chalkDim }}>goal</Box>
+                <Box component="span" sx={{ color: ev.accent }}>.</Box>
               </Box>
-
-              <Stack spacing={4}>
-                {/* Fitness Goals */}
-                <ModernCard variant="glass">
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                      fontWeight: 400,
-                      color: '#FFFFFF',
-                      mb: 3,
-                      textAlign: 'center',
-                    }}
-                  >
-                    Primary Fitness Goal
-                  </Typography>
-                  
-                  <Grid container spacing={2}>
-                    {fitnessGoals.map((goal) => (
-                      <Grid item xs={12} sm={6} md={4} key={goal.value}>
-                        <Box
-                          onClick={() => setFormData(prev => ({ ...prev, fitness_goal: goal.value }))}
-                          sx={{
-                            p: 3,
-                            borderRadius: '16px',
-                            border: '2px solid',
-                            borderColor: formData.fitness_goal === goal.value 
-                              ? goal.color 
-                              : 'rgba(255, 255, 255, 0.1)',
-                            background: formData.fitness_goal === goal.value 
-                              ? `${goal.color}20` 
-                              : 'rgba(255, 255, 255, 0.05)',
-                            cursor: 'pointer',
-                            textAlign: 'center',
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                              transform: 'translateY(-2px)',
-                              borderColor: goal.color,
-                              background: `${goal.color}10`,
-                            }
-                          }}
-                        >
-                          <Avatar
-                            sx={{
-                              width: 50,
-                              height: 50,
-                              mx: 'auto',
-                              mb: 2,
-                              background: `linear-gradient(135deg, ${goal.color} 0%, ${goal.color}80 100%)`,
-                            }}
-                          >
-                            {goal.icon}
-                          </Avatar>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: '#FFFFFF',
-                              fontWeight: 600,
-                              mb: 0.5,
-                            }}
-                          >
-                            {goal.label}
-                          </Typography>
-                        </Box>
-                      </Grid>
-                    ))}
-                  </Grid>
-                  
-                  {fieldErrors.fitness_goal && (
-                    <Alert severity="error" sx={{ mt: 2 }}>
-                      {fieldErrors.fitness_goal}
-                    </Alert>
-                  )}
-                </ModernCard>
-
-                {/* Dietary Restrictions */}
-                <ModernCard variant="glass">
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                      fontWeight: 400,
-                      color: '#FFFFFF',
-                      mb: 2,
-                      textAlign: 'center',
-                    }}
-                  >
-                    Dietary Preferences (Optional)
-                  </Typography>
-                  
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: '#94A3B8',
-                      textAlign: 'center',
-                      mb: 3,
-                    }}
-                  >
-                    Select any dietary restrictions to personalize your meal plans
-                  </Typography>
-                  
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, justifyContent: 'center' }}>
-                    {commonDietaryRestrictions.map((restriction) => (
-                      <Chip
-                        key={restriction.value}
-                        label={`${restriction.emoji} ${restriction.label}`}
-                        clickable
-                        color={formData.dietary_restrictions.includes(restriction.value) ? 'primary' : 'default'}
-                        onClick={() => handleDietaryRestrictionToggle(restriction.value)}
-                        sx={{
-                          borderRadius: '20px',
-                          fontWeight: 600,
-                          py: 2,
-                          px: 1,
-                          ...(formData.dietary_restrictions.includes(restriction.value) && {
-                            background: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
-                            color: '#FFFFFF',
-                          }),
-                          '&:hover': {
-                            transform: 'translateY(-1px)',
-                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
-                          }
-                        }}
-                      />
-                    ))}
-                  </Box>
-                </ModernCard>
-              </Stack>
+              <Box sx={{ mt: 4, maxWidth: '54ch', color: ev.chalk, fontSize: 16, lineHeight: 1.55, fontWeight: 500 }}>
+                Pick the primary thing you're training toward. You can change this anytime.
+              </Box>
             </Box>
-          </Slide>
+
+            <Box sx={{ pt: 4, borderTop: `1px solid ${ev.rule}` }}>
+              <Box sx={{ ...monoLabel, mb: 3 }}>Primary goal · pick one</Box>
+              <Box>
+                {fitnessGoals.map((g, i) => {
+                  const active = formData.fitness_goal === g.value;
+                  return (
+                    <Box
+                      key={g.value}
+                      onClick={() => setFormData((p) => ({ ...p, fitness_goal: g.value }))}
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: '40px 1fr 24px',
+                        gap: 3,
+                        alignItems: 'baseline',
+                        py: 3,
+                        borderTop: `1px solid ${ev.rule}`,
+                        '&:last-of-type': { borderBottom: `1px solid ${ev.rule}` },
+                        cursor: 'pointer',
+                        transition: 'padding-left .2s ease, background-color .15s ease',
+                        backgroundColor: active ? ev.ink2 : 'transparent',
+                        '&:hover': { pl: '12px' },
+                      }}
+                    >
+                      <Box sx={{ ...mono, fontSize: 11, letterSpacing: '0.1em', color: active ? ev.accent : ev.chalkMute }}>
+                        {String(i + 1).padStart(2, '0')}
+                      </Box>
+                      <Box sx={{ ...display, fontSize: 'clamp(22px, 2.2vw, 28px)', letterSpacing: '-0.01em', color: active ? ev.chalk : ev.chalk, lineHeight: 1.1 }}>
+                        {g.label}
+                      </Box>
+                      <Box sx={{ ...display, fontSize: 18, fontStyle: 'italic', color: active ? ev.accent : ev.chalkMute, justifySelf: 'end' }}>
+                        {active ? '✓' : '·'}
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Box>
+              {fieldErrors.fitness_goal && (
+                <Alert severity="error" sx={{ mt: 3 }}>{fieldErrors.fitness_goal}</Alert>
+              )}
+            </Box>
+
+            <Box sx={{ pt: 4, borderTop: `1px solid ${ev.rule}` }}>
+              <Box sx={{ ...monoLabel, mb: 3 }}>Dietary restrictions · optional</Box>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+                {dietaryRestrictions.map((d) => {
+                  const active = formData.dietary_restrictions.includes(d.value);
+                  return (
+                    <Box
+                      key={d.value}
+                      onClick={() => toggleRestriction(d.value)}
+                      sx={{
+                        cursor: 'pointer',
+                        px: 2.5,
+                        py: 1.25,
+                        border: `1px solid ${active ? ev.chalk : ev.rule}`,
+                        backgroundColor: active ? ev.chalk : 'transparent',
+                        color: active ? ev.ink : ev.chalkDim,
+                        ...mono,
+                        fontSize: 11,
+                        letterSpacing: '0.16em',
+                        textTransform: 'uppercase',
+                        transition: 'all .15s ease',
+                        '&:hover': { borderColor: active ? ev.chalk : ev.chalkMute, color: active ? ev.ink : ev.chalk },
+                      }}
+                    >
+                      {d.label}
+                    </Box>
+                  );
+                })}
+              </Box>
+            </Box>
+          </Stack>
         );
 
       default:
-        return 'Unknown step';
+        return null;
     }
   };
 
-  const progressPercentage = ((activeStep + 1) / steps.length) * 100;
+  const isLastStep = activeStep === steps.length - 1;
 
   return (
-    <PageContainer
-      title="Setup Your Profile"
-      subtitle="Let's personalize your EvolveFit AI experience"
-      icon="🚀"
-      maxWidth="lg"
-    >
-      {/* Progress Header */}
-      <ModernCard
-        variant="glass"
-        sx={{
-          mb: 4,
-          background: 'rgba(37, 42, 61, 0.6)',
-          backdropFilter: 'blur(20px)',
-        }}
-      >
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-            <Typography
-              variant="h5"
+    <Box sx={{ minHeight: '100vh', backgroundColor: ev.ink, animation: 'ev-rise .45s ease both' }}>
+
+      {/* ============ HEADER ============ */}
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        px: PAGE_X,
+        py: 4,
+        borderBottom: `1px solid ${ev.rule}`,
+      }}>
+        <Box sx={{ ...display, fontSize: 22, color: ev.chalk, letterSpacing: '-0.01em' }}>
+          evolve<Box component="sup" sx={{ ...mono, fontSize: 9, color: ev.chalkMute, letterSpacing: '0.24em', ml: 1, verticalAlign: 'super' }}>n.</Box>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 4 }}>
+          {steps.map((s, i) => (
+            <Box
+              key={s.num}
               sx={{
-                fontFamily: '"Gravitas One", "Montserrat", sans-serif',
-                fontWeight: 400,
-                color: '#FFFFFF',
+                ...mono,
+                fontSize: 11,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: i === activeStep ? ev.chalk : ev.chalkMute,
+                position: 'relative',
+                '&::before': i === activeStep ? {
+                  content: '"·"',
+                  position: 'absolute',
+                  left: -12,
+                  color: ev.accent,
+                } : {},
               }}
             >
-              Setup Progress
-            </Typography>
-            
-            <Typography variant="body1" sx={{ color: '#00D4FF', fontWeight: 600 }}>
-              {activeStep + 1} of {steps.length}
-            </Typography>
+              {s.num} · {s.name}
+            </Box>
+          ))}
+        </Box>
+      </Box>
+
+      {/* ============ PROGRESS BAR ============ */}
+      <Box sx={{ position: 'relative', height: '1px', backgroundColor: ev.rule }}>
+        <Box sx={{
+          position: 'absolute',
+          inset: 0,
+          width: `${((activeStep + 1) / steps.length) * 100}%`,
+          backgroundColor: ev.accent,
+          transition: 'width .4s cubic-bezier(.2,.7,.1,1)',
+        }} />
+      </Box>
+
+      {/* ============ MAIN ============ */}
+      <Box sx={{ px: PAGE_X, py: 'clamp(56px, 9vh, 110px)', maxWidth: 920, mx: 'auto' }}>
+        {submitError && <Alert severity="error" onClose={() => setSubmitError('')} sx={{ mb: 5 }}>{submitError}</Alert>}
+
+        {renderStepContent()}
+
+        {/* ============ NAV ============ */}
+        <Box sx={{
+          mt: 6,
+          pt: 5,
+          borderTop: `1px solid ${ev.rule}`,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 2,
+          flexWrap: 'wrap',
+        }}>
+          {activeStep > 0 ? (
+            <SecondaryButton onClick={handleBack} disabled={isSubmitting}>
+              ← Back
+            </SecondaryButton>
+          ) : <Box />}
+
+          <Box sx={{ ...monoLabel, color: ev.chalkMute }}>
+            Step {String(activeStep + 1).padStart(2, '0')} of {String(steps.length).padStart(2, '0')}
           </Box>
 
-          <LinearProgress
-            variant="determinate"
-            value={progressPercentage}
-            sx={{
-              height: 8,
-              borderRadius: 4,
-              mb: 3,
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              '& .MuiLinearProgress-bar': {
-                background: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)',
-                borderRadius: 4,
-              },
-            }}
-          />
-
-          <Stepper activeStep={activeStep} sx={{ '& .MuiStepLabel-label': { color: '#94A3B8' } }}>
-            {steps.map((label, index) => (
-              <Step key={label}>
-                <StepLabel
-                  StepIconComponent={({ active, completed }) => (
-                    <Avatar
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        background: completed || active 
-                          ? 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 100%)'
-                          : 'rgba(255, 255, 255, 0.1)',
-                        color: '#FFFFFF',
-                      }}
-                    >
-                      {completed ? <CheckCircle /> : getStepIcon(index)}
-                    </Avatar>
-                  )}
-                >
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: activeStep >= index ? '#FFFFFF' : '#94A3B8',
-                      fontWeight: activeStep === index ? 600 : 400,
-                    }}
-                  >
-                    {label}
-                  </Typography>
-                </StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-        </ModernCard>
-
-      {/* Error Message */}
-      {submitError && (
-        <Alert severity="error" closable sx={{ mb: 3 }}>
-          {submitError}
-        </Alert>
-      )}
-
-      {/* Step Content */}
-      <Box sx={{ mb: 4 }}>
-        {getStepContent(activeStep)}
+          {isLastStep ? (
+            <PrimaryButton onClick={handleFinish} loading={isSubmitting} disabled={isSubmitting}>
+              {isSubmitting ? 'Saving' : 'Finish ↗'}
+            </PrimaryButton>
+          ) : (
+            <PrimaryButton onClick={handleNext}>
+              Continue ↗
+            </PrimaryButton>
+          )}
+        </Box>
       </Box>
-
-      {/* Navigation Buttons */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-        {activeStep > 0 && (
-          <SecondaryButton
-            onClick={handleBack}
-            disabled={isSubmitting}
-          >
-            Back
-          </SecondaryButton>
-        )}
-
-        {activeStep === steps.length - 1 ? (
-          <PrimaryButton
-            onClick={handleFinish}
-            loading={isSubmitting}
-            disabled={isSubmitting}
-            size="large"
-            sx={{ minWidth: '200px' }}
-          >
-            {isSubmitting ? 'Setting up your profile...' : '🚀 Complete Setup'}
-          </PrimaryButton>
-        ) : (
-          <PrimaryButton
-            onClick={handleNext}
-            size="large"
-            sx={{ minWidth: '160px' }}
-          >
-            Next Step
-          </PrimaryButton>
-        )}
-      </Box>
-    </PageContainer>
+    </Box>
   );
 }
 

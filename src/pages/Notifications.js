@@ -1,69 +1,35 @@
-// src/pages/Notifications.js - Notifications Center
+// src/pages/Notifications.js — Evolve / minimal notifications
 
 import React, { useState } from 'react';
-import {
-  Typography,
-  Box,
-  Stack,
-  IconButton,
-  Chip,
-  Divider,
-  CircularProgress,
-  Button,
-} from '@mui/material';
-import {
-  Notifications as NotificationsIcon,
-  MarkEmailRead,
-  Delete,
-  FitnessCenter,
-  Info,
-  EmojiEvents,
-  Restaurant,
-  TrendingUp,
-  CheckCircle,
-  Refresh,
-} from '@mui/icons-material';
+import { Box, Stack, IconButton, CircularProgress, Alert } from '@mui/material';
+import { MarkEmailRead, CheckCircle, Refresh } from '@mui/icons-material';
 import { PageContainer } from '../components/design-system';
-import { Alert, EmptyState } from '../components/design-system';
-import ModernCard from '../components/ModernCard';
 import { useNotifications } from '../contexts/NotificationContext';
+import { ev } from '../theme/evolveDarkTheme';
 
-// Notification icon mapping
-const getNotificationIcon = (type) => {
-  const iconMap = {
-    workout: <FitnessCenter sx={{ color: '#00D4FF' }} />,
-    achievement: <EmojiEvents sx={{ color: '#FFD700' }} />,
-    meal: <Restaurant sx={{ color: '#10B981' }} />,
-    progress: <TrendingUp sx={{ color: '#7C3AED' }} />,
-    general: <Info sx={{ color: '#94A3B8' }} />,
-  };
-  return iconMap[type] || <NotificationsIcon sx={{ color: '#00D4FF' }} />;
-};
+const mono = { fontFamily: ev.mono };
+const display = { fontFamily: ev.display };
+const monoLabel = { ...mono, fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: ev.chalkDim };
 
-// Get color by notification type
-const getNotificationColor = (type) => {
-  const colorMap = {
-    workout: 'rgba(0, 212, 255, 0.1)',
-    achievement: 'rgba(255, 215, 0, 0.1)',
-    meal: 'rgba(16, 185, 129, 0.1)',
-    progress: 'rgba(124, 58, 237, 0.1)',
-    general: 'rgba(148, 163, 184, 0.1)',
-  };
-  return colorMap[type] || 'rgba(0, 212, 255, 0.1)';
-};
+const typeLabel = (t) => ({
+  workout: 'Workout',
+  achievement: 'Achievement',
+  meal: 'Meal',
+  progress: 'Progress',
+  general: 'General',
+}[t] || 'Update');
 
 function Notifications() {
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead, fetchNotifications } = useNotifications();
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
-  const handleMarkAsRead = async (notificationId) => {
+  const handleMarkAsRead = async (id) => {
     try {
-      await markAsRead(notificationId);
-      setMessage('Notification marked as read');
+      await markAsRead(id);
+      setMessage('Marked as read');
       setTimeout(() => setMessage(''), 2000);
     } catch (err) {
-      console.error('Failed to mark notification as read:', err);
       setError('Failed to update notification');
       setTimeout(() => setError(''), 3000);
     }
@@ -75,7 +41,6 @@ function Notifications() {
       setMessage('All notifications marked as read');
       setTimeout(() => setMessage(''), 2000);
     } catch (err) {
-      console.error('Failed to mark all as read:', err);
       setError('Failed to update notifications');
       setTimeout(() => setError(''), 3000);
     }
@@ -84,166 +49,140 @@ function Notifications() {
   return (
     <PageContainer
       title="Notifications"
-      subtitle="Stay updated with your fitness journey"
-      maxWidth="md"
+      subtitle="App and account updates. Nothing fluffy — only signals you should actually read."
     >
-      {/* Messages */}
-      {message && (
-        <Alert severity="success" closable sx={{ mb: 3 }}>
-          {message}
-        </Alert>
-      )}
+      {message && <Alert severity="success" onClose={() => setMessage('')} sx={{ mb: 3 }}>{message}</Alert>}
+      {error && <Alert severity="error" onClose={() => setError('')} sx={{ mb: 3 }}>{error}</Alert>}
 
-      {error && (
-        <Alert severity="error" closable sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
-
-      {/* Header Actions */}
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant="h6" sx={{ color: '#FFFFFF' }}>
-            {unreadCount > 0 ? `${unreadCount} Unread` : 'All Caught Up!'}
-          </Typography>
+      {/* ============ TOP BAR ============ */}
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'baseline',
+        py: 3,
+        borderTop: `1px solid ${ev.rule}`,
+        borderBottom: `1px solid ${ev.rule}`,
+        mb: 5,
+        gap: 3,
+        flexWrap: 'wrap',
+      }}>
+        <Box>
+          <Box sx={monoLabel}>Inbox</Box>
+          <Box sx={{ ...display, fontSize: 28, color: ev.chalk, letterSpacing: '-0.015em', mt: 1.5 }}>
+            {unreadCount > 0 ? <>
+              {unreadCount} <Box component="em" sx={{ fontStyle: 'italic', color: ev.chalkDim }}>unread</Box>
+            </> : <>All <Box component="em" sx={{ fontStyle: 'italic', color: ev.chalkDim }}>caught up</Box></>}
+          </Box>
         </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            startIcon={<Refresh />}
+
+        <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+          <Box
             onClick={fetchNotifications}
             sx={{
-              color: '#00D4FF',
-              textTransform: 'none',
-              '&:hover': {
-                background: 'rgba(0, 212, 255, 0.1)',
-              },
+              cursor: 'pointer',
+              ...mono,
+              fontSize: 11,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: ev.chalkDim,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 1,
+              '&:hover': { color: ev.chalk },
             }}
           >
-            Refresh
-          </Button>
+            <Refresh sx={{ fontSize: 14 }} /> Refresh
+          </Box>
           {unreadCount > 0 && (
-            <Button
-              startIcon={<CheckCircle />}
+            <Box
               onClick={handleMarkAllAsRead}
               sx={{
-                color: '#10B981',
-                textTransform: 'none',
-                '&:hover': {
-                  background: 'rgba(16, 185, 129, 0.1)',
-                },
+                cursor: 'pointer',
+                ...mono,
+                fontSize: 11,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: ev.chalkDim,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 1,
+                '&:hover': { color: ev.accent },
               }}
             >
-              Mark All Read
-            </Button>
+              <CheckCircle sx={{ fontSize: 14 }} /> Mark all read
+            </Box>
           )}
         </Box>
       </Box>
 
-      {/* Notifications List */}
+      {/* ============ LIST ============ */}
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress sx={{ color: '#00D4FF' }} />
+        <Box sx={{ display: 'grid', placeItems: 'center', py: 8 }}>
+          <CircularProgress size={28} />
         </Box>
       ) : notifications.length === 0 ? (
-        <EmptyState
-          title="No Notifications"
-          description="You're all caught up! Check back later for updates."
-        />
+        <Box sx={{ py: '80px', borderTop: `1px solid ${ev.rule}`, borderBottom: `1px solid ${ev.rule}`, textAlign: 'center' }}>
+          <Box sx={{ ...display, fontSize: 32, color: ev.chalk, letterSpacing: '-0.015em' }}>
+            Empty<Box component="span" sx={{ color: ev.accent }}>.</Box>
+          </Box>
+          <Box sx={{ ...monoLabel, color: ev.chalkMute, mt: 2 }}>Nothing new. Check back later.</Box>
+        </Box>
       ) : (
-        <Stack spacing={2}>
-          {notifications.map((notification) => (
-            <ModernCard
-              key={notification.id}
-              variant="glass"
+        <Stack spacing={0}>
+          {notifications.map((n, i) => (
+            <Box
+              key={n.id}
               sx={{
-                background: notification.is_read
-                  ? 'rgba(30, 41, 59, 0.4)'
-                  : getNotificationColor(notification.type),
-                border: notification.is_read
-                  ? '1px solid rgba(255, 255, 255, 0.05)'
-                  : '1px solid rgba(0, 212, 255, 0.2)',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 8px 32px rgba(0, 212, 255, 0.15)',
-                },
+                display: 'grid',
+                gridTemplateColumns: { xs: '40px 1fr auto', md: '40px 120px 1fr auto 40px' },
+                gap: 3,
+                alignItems: 'baseline',
+                py: '24px',
+                borderTop: `1px solid ${ev.rule}`,
+                '&:last-of-type': { borderBottom: `1px solid ${ev.rule}` },
+                transition: 'background-color .15s ease',
+                '&:hover': { backgroundColor: ev.ruleSoft },
               }}
             >
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-                {/* Icon */}
-                <Box
-                  sx={{
-                    p: 1.5,
-                    borderRadius: '12px',
-                    background: 'rgba(0, 212, 255, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {getNotificationIcon(notification.type)}
-                </Box>
-
-                {/* Content */}
-                <Box sx={{ flex: 1 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: notification.is_read ? '#94A3B8' : '#FFFFFF',
-                        fontWeight: notification.is_read ? 500 : 600,
-                        fontSize: '1rem',
-                      }}
-                    >
-                      {notification.title}
-                    </Typography>
-                    {!notification.is_read && (
-                      <Chip
-                        label="New"
-                        size="small"
-                        sx={{
-                          background: 'linear-gradient(135deg, #00D4FF 0%, #00A8FF 100%)',
-                          color: '#FFFFFF',
-                          fontWeight: 600,
-                          fontSize: '0.7rem',
-                        }}
-                      />
-                    )}
-                  </Box>
-
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: notification.is_read ? '#64748B' : '#CBD5E1',
-                      mb: 2,
-                    }}
-                  >
-                    {notification.message}
-                  </Typography>
-
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="caption" sx={{ color: '#64748B' }}>
-                      {new Date(notification.created_at).toLocaleString()}
-                    </Typography>
-
-                    {!notification.is_read && (
-                      <IconButton
-                        size="small"
-                        onClick={() => handleMarkAsRead(notification.id)}
-                        sx={{
-                          color: '#00D4FF',
-                          '&:hover': {
-                            background: 'rgba(0, 212, 255, 0.1)',
-                          },
-                        }}
-                      >
-                        <MarkEmailRead fontSize="small" />
-                      </IconButton>
-                    )}
-                  </Box>
+              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+                {!n.is_read && (
+                  <Box sx={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: ev.accent, mt: '4px' }} />
+                )}
+                <Box sx={{ ...mono, fontSize: 11, letterSpacing: '0.1em', color: ev.chalkMute }}>
+                  {String(i + 1).padStart(2, '0')}
                 </Box>
               </Box>
-            </ModernCard>
+              <Box sx={{ ...monoLabel, color: ev.chalkMute, display: { xs: 'none', md: 'block' } }}>
+                {typeLabel(n.type)}
+              </Box>
+              <Box>
+                <Box sx={{
+                  ...display,
+                  fontSize: 20,
+                  letterSpacing: '-0.005em',
+                  color: n.is_read ? ev.chalkDim : ev.chalk,
+                  lineHeight: 1.2,
+                }}>
+                  {n.title}
+                </Box>
+                <Box sx={{ color: n.is_read ? ev.chalkMute : ev.chalkDim, fontSize: 14, lineHeight: 1.55, mt: 1, maxWidth: '70ch' }}>
+                  {n.message}
+                </Box>
+                <Box sx={{ ...monoLabel, color: ev.chalkMute, mt: 1.5 }}>
+                  {new Date(n.created_at).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                </Box>
+              </Box>
+              <Box sx={{ ...monoLabel, color: ev.chalkMute, alignSelf: 'flex-start', display: { xs: 'block', md: 'none' } }}>
+                {typeLabel(n.type)}
+              </Box>
+              <Box sx={{ alignSelf: 'flex-start' }}>
+                {!n.is_read && (
+                  <IconButton size="small" onClick={() => handleMarkAsRead(n.id)} sx={{ color: ev.chalkMute, '&:hover': { color: ev.accent } }}>
+                    <MarkEmailRead fontSize="small" />
+                  </IconButton>
+                )}
+              </Box>
+            </Box>
           ))}
         </Stack>
       )}
